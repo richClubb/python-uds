@@ -1,0 +1,1 @@
+An extensible UDS library for python including the diagnostic service definitions from the ISO14229 standard

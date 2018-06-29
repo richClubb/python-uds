@@ -11,3 +11,4 @@ class DiagnostidId(IntEnum):
     vehicleManufacturerSparePartNumberDataIdentifier = 0xF187
     vehicleManufacturerEcuSoftwareNumberDataIdentifier = 0xF188
     vehicleManufacturerEcuSoftwareVersionNumberDataIdentifier = 0xF189
+    ecuSerialNumberDiagosticIdentifier = 0xF18C
