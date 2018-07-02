@@ -1,3 +1,13 @@
+#!/usr/bin/env python
+
+__author__ = "Richard Clubb"
+__copyrights__ = "Copyright 2018, the python-uds project"
+__credits__ = ["Richard Clubb"]
+
+__license__ = "MIT"
+__maintainer__ = "Richard Clubb"
+__email__ = "richard.clubb@embeduk.com"
+__status__ = "Development"
 
 
 class UdsMessage(object):
@@ -5,29 +15,19 @@ class UdsMessage(object):
     """
         General constructor for the UdsMessage class
     """
-    def __init__(self, servId=None, payload=None):
-        self.__serviceId = servId
+    def __init__(self, payload=None):
+        self.__length = None  # length can not be manually set
         self.__payload = payload
         pass
 
     """
-        @return an integer, the serviceId
+        @return an integer, the length of the payload
     """
     @property
-    def serviceId(self):
-        if(self.__serviceId == None):
+    def length(self):
+        if(self.__length is None):
             raise TypeError("ServiceId not initialised")
-        return self.__serviceId
-
-    """
-    
-    """
-    @serviceId.setter
-    def serviceId(self, val):
-        if type(val) == int:
-            self.__serviceId = val
-        else:
-            raise TypeError("Attempt to enter non-integer value to serviceId")
+        return self.__length
 
     """
         @return a list
@@ -35,7 +35,7 @@ class UdsMessage(object):
     """
     @property
     def payload(self):
-        if(self.__payload == None):
+        if(self.__payload is None):
             raise TypeError("Payload not initialised")
         return self.__payload
 
@@ -46,29 +46,11 @@ class UdsMessage(object):
     @payload.setter
     def payload(self, val):
         if type(val) == list:
+            self.__length = len(val)
             self.__payload = val
         else:
             raise TypeError("Attempt to enter non-list value to payload")
 
 
 if __name__ == "__main__":
-
-    test = UdsMessage()
-
-    try:
-        print(test.serviceId)
-    except TypeError:
-        print("Check Passed")
-    except:
-        print("Check Fail")
-
-    test.serviceId = 0x10
-    assert(test.serviceId == 0x10)
-
-    try:
-        test.serviceId = "int"
-    except TypeError:
-        print("Check passed")
-    except:
-        print("Check Failed")
-
+    pass

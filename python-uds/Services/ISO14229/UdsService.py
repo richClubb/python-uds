@@ -10,8 +10,8 @@ __email__ = "richard.clubb@embeduk.com"
 __status__ = "Development"
 
 
-# this may want to be a specialisation of the standard listener class
-class CanTpListener(object):
+class UdsService(object):
 
     def __init__(self):
+        self.__serviceId = None
         pass
