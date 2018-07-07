@@ -54,6 +54,16 @@ class UdsMessage(object):
         else:
             raise TypeError("Attempt to enter non-list value to payload")
 
+    @property
+    def raw(self):
+        return self.__payload
+
+    @property
+    def decode(self):
+        raise NotImplementedError("decode function not implemented for this UdsMessage")
+
+    def decodeFunc(self):
+        raise NotImplementedError("decode function not implemented for this UdsMessage")
 
 if __name__ == "__main__":
     pass

@@ -9,10 +9,12 @@ __maintainer__ = "Richard Clubb"
 __email__ = "richard.clubb@embeduk.com"
 __status__ = "Development"
 
+from can import Listener
+
 
 ##
 # @brief this may want to be a specialisation of the standard listener class
-class CanTpListener(object):
+class CanTpListener(Listener):
 
     def __init__(self):
-        pass
+        super().__init__()

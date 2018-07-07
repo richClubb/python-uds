@@ -42,6 +42,11 @@ class UdsMessageTestCase(unittest.TestCase):
         a.payload = testVal
         self.assertEqual(a.length, testVal_length)
 
+    def testMessageDecodeNotImplemented(self):
+        a = UdsMessage()
+        with self.assertRaises(NotImplementedError):
+            _ = a.decode
+
 
 if __name__ == "__main__":
     unittest.main()
