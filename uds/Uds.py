@@ -10,9 +10,10 @@ __email__ = "richard.clubb@embeduk.com"
 __status__ = "Development"
 
 from CanTp import CanTp
-from CanTpListener import CanTpListener
 from UdsMessage import UdsMessage
 import time
+import configparser
+import logging
 
 
 class UdsMessageTimeoutError(Exception):
@@ -27,37 +28,25 @@ class Uds(object):
 
     ##
     # @brief a constructor
-    def __init__(self, logger=None, reqId=None, resId=None):
+    def __init__(self, reqId=None, resId=None):
         # this might need a factory to create the relevant class
-        self.__tp = CanTp()
-        self.__listener = CanTpListener()
-        self.__logger = logger
+        self.__tp = CanTp(reqId, resId)
         self.__reqId = reqId
         self.__resId = resId
+
+        # set up logger
+        self.__logger = logging.getLogger('python-uds')
 
     ##
     # @brief
     def send(self, msg):
-        self.__tp.send(msg.payload)
+        self.__tp.send(msg.request)
+
+        if(msg.responseRequired):
+            msg.response_raw = self.__tp.recv(5000)
+            msg.checkResponse()
 
         return 0
-
-    def recv(self, msg, timeout_ms=0):
-        startTime = time.time()
-        currTime = startTime
-        timeout_flag = False
-        rc = -1
-        while(timeout_flag is False):
-            # rc = self.__tp.recv(msg)
-            currTime = time.time()
-            if(
-                    (currTime - startTime) >
-                    (timeout_ms / 1000.0)
-            ): timeout_flag = True
-            if(rc != -1): timeout_flag = True
-        if(rc == -1):
-            raise UdsMessageTimeoutError("Message timed out")
-        print("Finished")
 
 
 if __name__ == "__main__":

@@ -13,7 +13,7 @@ __status__ = "Development"
 from abc import ABCMeta, abstractmethod
 
 
-class ITp:
+class iTp:
     __metaclass__ = ABCMeta
 
     @classmethod

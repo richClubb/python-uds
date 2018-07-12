@@ -18,3 +18,9 @@ class CanTpListener(Listener):
 
     def __init__(self):
         super().__init__()
+
+    def on_message_received(self, msg):
+        raise NotImplementedError("Not implemented yet")
+
+    def stop(self):
+        self.on_message_received = None
