@@ -23,6 +23,7 @@ import config
 def time_ms():
     return time.time() * 1000
 
+
 ##
 # @class CanTp
 # @brief This is the main class to support CAN transport protocol

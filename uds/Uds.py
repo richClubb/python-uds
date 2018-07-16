@@ -9,7 +9,7 @@ __maintainer__ = "Richard Clubb"
 __email__ = "richard.clubb@embeduk.com"
 __status__ = "Development"
 
-from CanTp import CanTp
+from TpFactory import TpFactory
 from UdsMessage import UdsMessage
 import time
 import config
@@ -29,8 +29,7 @@ class Uds(object):
     ##
     # @brief a constructor
     def __init__(self, reqId=None, resId=None):
-        # this might need a factory to create the relevant class
-        self.__tp = CanTp(reqId, resId)
+        self.__tp = TpFactory.tpFactory("CAN", reqId=reqId, resId=resId)
         self.__reqId = reqId
         self.__resId = resId
 
@@ -52,4 +51,3 @@ class Uds(object):
 if __name__ == "__main__":
     a = Uds()
     b = UdsMessage()
-    a.recv(b, 5000)
