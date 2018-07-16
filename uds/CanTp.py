@@ -12,10 +12,12 @@ __status__ = "Development"
 from CanTpTypes import CanTpTimeoutWaitingForFlowControl, CanTpMessageType, CanTpFsType, CanTpMessageState
 from CanTpMessage import CanTpMessage
 import can
+from can.interfaces.pcan import pcan
 from iTp import iTp
 import time
-import configparser
 import os
+import sys
+import config
 
 
 def time_ms():
@@ -34,12 +36,6 @@ class CanTp(iTp):
     def __init__(self, reqId=None, resId=None):
         self.__config = None
 
-        try:
-            self.__config = configparser.ConfigParser()
-            self.__config.read('config.ini')
-        except:
-            pass
-
         self.__bus = self.createBusConnection()
         self.__listener = can.Listener()
         self.__listener.on_message_received = self.callback_onReceive
@@ -53,24 +49,23 @@ class CanTp(iTp):
         self.__recvMsg_flag = False
 
         if(self.__config is not None):
-            self.__stMin = int(self.__config['cantp']['STMin_default'])
-            self.__bs = int(self.__config['cantp']['BS_default'])
-            self.__timeout = int(self.__config['cantp']['Send_Timeout'])
-            self.__N_WFTmax = int(self.__config['cantp']['N_WFTmax'])
+            self.__stMin = int(self.__config['canTp']['STMin_default'])
+            self.__bs = int(self.__config['canTp']['BS_default'])
+            self.__timeout = int(self.__config['canTp']['Send_Timeout'])
+            self.__N_WFTmax = int(self.__config['canTp']['N_WFTmax'])
         else:
             self.__stMin = 10
             self.__bs = 0
-            self.__timeout = 2000
-            self.__N_WFTmax = 5
+            self.__timeout = 10000
+            self.__N_WFTmax = 3
+        self.__N_WFT = 0
 
     ##
     # @brief connection method
     def createBusConnection(self):
         # check config file and load
-        if self.__config is not None:
-            bus = can.interface.Bus('test', bustype='virtual')
-        else:
-            raise Exception("No configuration")
+        bus = can.interface.Bus('test', bustype='virtual')
+        #bus = pcan.PcanBus('PCAN_USBBUS1')
         return bus
 
     ##
@@ -78,12 +73,10 @@ class CanTp(iTp):
     # @param [in] payload the payload to be sent
     def send(self, payload):
         self.__recvBuffer = []
+        self.__N_WFT = 0
         msg = CanTpMessage(payload)
         outMsg = can.Message()
         outMsg.arbitration_id = self.__reqId
-
-        outMsg.data = msg.getNextSendFrame()
-        self.__bus.send(outMsg)
 
         startTime = time_ms()
         waitingForResponse = True
@@ -92,17 +85,33 @@ class CanTp(iTp):
 
             response = self.getNextBufferedMessage()
             if(response is not None):
-                msg.processResponse(response)
+                startTime = time_ms()
+                stMin, wait_flag = msg.processResponse(response)
+
+                if(
+                        (stMin is None) &
+                        (wait_flag is True)
+                ):
+                    self.__N_WFT += 1
+                    time.sleep(1)
+                elif(stMin is not None):
+                    self.__stMin = stMin
+                    self.__N_WFT = 0
 
             output = msg.getNextSendFrame()
             if(output is not None):
                 outMsg.data = output
                 self.__bus.send(outMsg)
+                startTime = time_ms()
 
             currTime = time_ms()
             if((currTime - startTime) > timeout):
                 raise Exception("Timeout")
-            time.sleep(self.__stmin / 1000)
+
+            if(self.__N_WFT >= self.__N_WFTmax):
+                raise Exception("Too many waits")
+
+            time.sleep(self.__stMin / 1000)
 
     ##
     # @brief recv method
@@ -126,8 +135,6 @@ class CanTp(iTp):
             if(output is not None):
                 outputMsg.data = output
                 self.__bus.send(outputMsg)
-            else:
-                pass
 
             if(msg.messageState == CanTpMessageState.FINISHED):
                 output = msg.payload
@@ -139,6 +146,9 @@ class CanTp(iTp):
                 waitingForResponse = False
                 raise Exception("Timeout waiting for response")
 
+    ##
+    # @brief retrieves the next message from the received message buffers
+    # @return list, or None if nothing is on the receive list
     def getNextBufferedMessage(self):
         length = len(self.__recvBuffer)
         if(length != 0):
@@ -161,6 +171,5 @@ class CanTp(iTp):
 
 
 if __name__ == "__main__":
-
     canTp = CanTp()
     pass

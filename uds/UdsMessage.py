@@ -52,12 +52,6 @@ class UdsMessage(object):
     # @throws TypeError if the val is not a list
     @request.setter
     def request(self, val):
-        self.__request = self.encodeFunc(val)
-        self.__length = len(self.__request)
-    ##
-    # @brief
-    @request.setter
-    def request_raw(self, val):
         self.__request = val
         self.__length = len(self.__request)
 
@@ -66,12 +60,6 @@ class UdsMessage(object):
     @property
     def response(self):
         raise NotImplementedError("response function not implemented")
-
-    ##
-    # @brief
-    @response.setter
-    def response(self, val):
-        raise NotImplementedError("response set not implemented")
 
     ##
     # @brief
@@ -101,11 +89,6 @@ class UdsMessage(object):
     # @brief
     def decodeFunc(self):
         raise NotImplementedError("decode function not implemented for this UdsMessage")
-
-    ##
-    # @brief
-    def encodeFunc(self, val):
-        raise NotImplementedError("Encode function not implemented for this UdsMessage")
 
     ##
     # @brief

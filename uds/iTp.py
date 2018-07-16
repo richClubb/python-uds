@@ -16,10 +16,14 @@ from abc import ABCMeta, abstractmethod
 class iTp:
     __metaclass__ = ABCMeta
 
+    ##
+    # @brief interface method
     @classmethod
     def send(self, payload):
         raise NotImplementedError("send function not implemented")
 
+    ##
+    # @brief interface method
     @classmethod
-    def recv(self, payload):
+    def recv(self, timeout_ms):
         raise NotImplementedError("receive function not implemented")

@@ -12,7 +12,7 @@ __status__ = "Development"
 from CanTp import CanTp
 from UdsMessage import UdsMessage
 import time
-import configparser
+import config
 import logging
 
 
@@ -41,12 +41,12 @@ class Uds(object):
     # @brief
     def send(self, msg):
         self.__tp.send(msg.request)
+        response = None
 
         if(msg.responseRequired):
             msg.response_raw = self.__tp.recv(5000)
-            msg.checkResponse()
 
-        return 0
+        return response
 
 
 if __name__ == "__main__":

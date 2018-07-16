@@ -17,6 +17,8 @@ from CanTpTypes import CanTpMessageType, CanTpMessageState, CanTpFsType
 #
 class CanTpMessage(object):
 
+    ##
+    # @brief
     def __init__(self, payload=None):
         self.__payload = None
         self.__length = None
@@ -65,18 +67,26 @@ class CanTpMessage(object):
     def response(self, val):
         self.__response = val
 
+    ##
+    # @brief
     @property
     def lengthExpected(self):
         return self.__lengthExpected
 
+    ##
+    # @brief
     @lengthExpected.setter
     def lengthExpected(self, val):
         self.__lengthExpected = val
 
+    ##
+    # @brief
     @property
     def messageState(self):
         return self.__messageState
 
+    ##
+    # @brief
     @messageState.setter
     def messageState(self, val):
         self.__messageState = val
@@ -139,8 +149,8 @@ class CanTpMessage(object):
             self.__blockPtr = blockPtr
             return output
 
-
-
+    ##
+    # @brief
     def getNextReceiveFrame(self):
         messageState = self.messageState
         output = None
@@ -200,7 +210,7 @@ class CanTpMessage(object):
         elif(N_PCI == CanTpMessageType.FLOW_CONTROL):
             fs = (response[0] & 0x0F)
             if(fs == CanTpFsType.WAIT):
-                print("Wait!!!")
+                return None, True
             elif(fs == CanTpFsType.OVERFLOW):
                 Exception("OVERFLOW!!!")
             elif(fs == CanTpFsType.CTS):
@@ -210,10 +220,13 @@ class CanTpMessage(object):
                     self.blockPayload(bs)
                 if(self.messageState == CanTpMessageState.WAITING_FC_CTS):
                     self.messageState = CanTpMessageState.SENDING_CF
+                return stMin, False
         else:
             raise Exception("Message N_PCI not supported")
         pass
 
+    ##
+    # @brief
     def blockPayload(self, bs):
         payloadPtr = self.__payloadPtr
         blockSize = bs * 7
@@ -238,6 +251,8 @@ class CanTpMessage(object):
 
         self.__currBlock = self.__blockList[blockPtr]
 
+    ##
+    # @brief
     def reset(self):
         self.__payload = None
         self.__length = None

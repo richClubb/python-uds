@@ -17,7 +17,7 @@ from enum import IntEnum
 ##
 # @brief A enumeration class to document the necessary DIDs
 class DiagnosticId(IntEnum):
-    bootSoftwareIdentificationDataIdentifierDataIdentifier = 0xF180  ## @enum Test
+    bootSoftwareIdentificationDataIdentifierDataIdentifier = 0xF180  # \var test
     applicationSoftwareIdentificationDataIdentifier = 0xF181
     applicationDataIdentificationDataIdentifier = 0xF182
     bootSoftwareFingerprintDataIdentifier = 0xF183

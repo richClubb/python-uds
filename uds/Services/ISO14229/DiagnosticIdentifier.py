@@ -10,6 +10,9 @@ __email__ = "richard.clubb@embeduk.com"
 __status__ = "Development"
 
 
+## @package test
+#
+
 ##
 #
 class DiagnosticIdentifier(object):
