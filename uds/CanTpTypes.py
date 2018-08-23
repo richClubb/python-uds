@@ -25,65 +25,35 @@ class N_Result(Enum):
     N_ERROR = 8
 
 
-##
-#
+class CanTpState(Enum):
+    IDLE = 0
+    RECEIVING_SINGLE_FRAME = 1
+    RECEIVING_FIRST_FRAME = 2
+    RECEIVING_CONSECUTIVE_FRAME = 3
+    SENDING_FC_CTS = 4
+    FINISHED = 5
+
+
+class CanTpMessageState(Enum):
+    END_OF_MESSAGE = 0
+    END_OF_BLOCK = 1
+    SINGLE_FRAME = 2
+    FIRST_FRAME = 3
+    CONSECUTIVE_FRAME = 4
+    INIT = 5
+
+
 class CanTpMessageType(IntEnum):
     SINGLE_FRAME = 0
     FIRST_FRAME = 1
     CONSECUTIVE_FRAME = 2
     FLOW_CONTROL = 3
-    MULTI_FRAME = 4
 
 
-##
-#
 class CanTpFsType(IntEnum):
-    CTS = 0
+    CONTINUE_TO_SEND = 0
     WAIT = 1
     OVERFLOW = 2
-
-
-class CanTpMessageState(IntEnum):
-    FINISHED = 0
-    WAITING_FC_CTS = 1
-    WAITING_CF = 2
-    SENDING_FC_CTS = 3
-    IDLE = 4
-    RECEIVING_CF = 5
-    SENDING_SF = 6
-    SENDING_FF = 7
-    SENDING_CF = 8
-
-##
-#
-class CanTpPayloadTooLargeForSfError(Exception):
-
-    def __init__(self, message):
-        self.message = message
-
-
-##
-#
-class CanTpPayloadTooSmallForMfError(Exception):
-
-    def __init__(self, message):
-        self.message = message
-
-
-##
-# @brief exception for payload exceeding maximum payload size for a CAN Tp Message
-class CanTpPayloadTooLarge(Exception):
-
-    def __init__(self, message):
-        self.message = message
-
-
-##
-# @brief exception for timeout waiting for FC
-class CanTpTimeoutWaitingForFlowControl(Exception):
-    def __init__(self, message):
-        self.message = message
-
 
 ##
 # @brief exception for the consecutive frame out of sequence

@@ -28,13 +28,15 @@ class Uds(object):
 
     ##
     # @brief a constructor
+    # @param [in] reqId The request ID used by the UDS connection, defaults to None if not used
+    # @param [in] resId The response Id used by the UDS connection, defaults to None if not used
     def __init__(self, reqId=None, resId=None):
         self.__tp = TpFactory.tpFactory("CAN", reqId=reqId, resId=resId)
         self.__reqId = reqId
         self.__resId = resId
 
         # set up logger
-        self.__logger = logging.getLogger('python-uds')
+        # self.__logger = logging.getLogger('python-uds')
 
     ##
     # @brief
