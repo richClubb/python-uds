@@ -3328,7 +3328,6 @@ Remove write from F180 &amp; F181 (application software Id &amp; ver)</CHANGE>
               </DIAG-CODED-TYPE>
               <PHYSICAL-TYPE BASE-DATA-TYPE="A_BYTEFIELD"/>
             </DATA-OBJECT-PROP>
-            
             <DATA-OBJECT-PROP ID="_Bootloader_90">
               <SHORT-NAME>Start_NR_DOP</SHORT-NAME>
               <LONG-NAME>Start NR_DOP</LONG-NAME>
@@ -3362,7 +3361,6 @@ Remove write from F180 &amp; F181 (application software Id &amp; ver)</CHANGE>
                 </SCALE-CONSTRS>
               </INTERNAL-CONSTR>
             </DATA-OBJECT-PROP>
-            
             <DATA-OBJECT-PROP ID="_Bootloader_91">
               <SHORT-NAME>Start_NR_DOP_1</SHORT-NAME>
               <LONG-NAME>Start NR_DOP</LONG-NAME>

@@ -10,25 +10,32 @@ __email__ = "richard.clubb@embeduk.com"
 __status__ = "Development"
 
 
-from abc import ABC, abstractmethod
+from SupportedServices.iContainer import iContainer
 
 
-class iContainer(ABC):
+class DiagnosticSessionControlContainer(iContainer):
 
-    @abstractmethod
+    def __init__(self):
+        self.requestFunctions = {}
+        self.checkFunctions = {}
+        self.negativeResponseFunctions = {}
+        self.positiveResponseFunctions = {}
+
+    @staticmethod
+    def __diagnosticSessionControl(target, parameter, **kwargs):
+        pass
+
+    def bind_function(self, bindObject):
+        pass
+
     def add_requestFunction(self, aFunction, dictionaryEntry):
-        raise NotImplementedError("add_requestFucntion not implemented")
+        pass
 
-    @abstractmethod
     def add_checkFunction(self, aFunction, dictionaryEntry):
-        raise NotImplementedError("add_checkFunction not implemented")
+        pass
 
-    @abstractmethod
     def add_negativeResponseFunction(self, aFunction, dictionaryEntry):
-        raise NotImplementedError("add_negativeResponseFunction not implemented")
+        pass
 
-    @abstractmethod
     def add_positiveResponseFunction(self, aFunction, dictionaryEntry):
-        raise NotImplementedError("add_positiveResponseFunction not implemented")
-
-    pass
+        pass

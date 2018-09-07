@@ -1,9 +1,22 @@
-import xml.etree.ElementTree as ET
+#!/usr/bin/env python
+
+__author__ = "Richard Clubb"
+__copyrights__ = "Copyright 2018, the python-uds project"
+__credits__ = ["Richard Clubb"]
+
+__license__ = "MIT"
+__maintainer__ = "Richard Clubb"
+__email__ = "richard.clubb@embeduk.com"
+__status__ = "Development"
+
+
 import DecodeFunctions
 import sys
+from FunctionCreation.iServiceMethodFactory import IServiceMethodFactory
+
 
 requestFuncTemplate = str("def {0}():\n"
-                              "    return {1} + {2}")
+                          "    return {1} + {2}")
 
 checkFunctionTemplate = str("def {0}(input):\n"
                             "    serviceIdExpected = {1}\n"
@@ -22,9 +35,10 @@ encodePositiveResponseFuncTemplate = str("def {0}(input):\n"
                                          "    {1}\n"
                                          "    return result")
 
+
 ##
 # @brief this should be static
-class ReadDataByIdentifierMethodFactory(object):
+class ReadDataByIdentifierMethodFactory(IServiceMethodFactory):
 
     @staticmethod
     def create_requestFunction(diagServiceElement, xmlElements):
@@ -50,7 +64,7 @@ class ReadDataByIdentifierMethodFactory(object):
         funcString = requestFuncTemplate.format(shortName,
                                                 serviceId,
                                                 diagnosticId)
-        #print(funcString)
+        # print(funcString)
         exec(funcString)
         return locals()[shortName]
 
@@ -120,7 +134,7 @@ class ReadDataByIdentifierMethodFactory(object):
                                                            diagnosticIdEnd, # 6
                                                            totalLength) # 7
 
-        print(checkFunctionString)
+        # print(checkFunctionString)
         exec(checkFunctionString)
         return locals()[checkFunctionName]
 
@@ -169,7 +183,7 @@ class ReadDataByIdentifierMethodFactory(object):
         encodeFunctionString = encodePositiveResponseFuncTemplate.format(encodePositiveResponseFunctionName,
                                                                          "\n    ".join(encodeFunctions))
 
-        #print(encodeFunctionString)
+        # print(encodeFunctionString)
         exec(encodeFunctionString)
         a = locals()[encodePositiveResponseFunctionName]
         return locals()[encodePositiveResponseFunctionName]
@@ -208,7 +222,7 @@ class ReadDataByIdentifierMethodFactory(object):
                     checkString = "if input[{0}:{1}] == {2}: raise Exception(\"Detected negative response: [hex(n) for n in input]\")".format(start,
                                                                                                                                               end,
                                                                                                                                               serviceId)
-                    #print(checkString)
+                    # print(checkString)
                     negativeResponseChecks.append(checkString)
 
                     pass
@@ -216,7 +230,7 @@ class ReadDataByIdentifierMethodFactory(object):
 
         negativeResponseFunctionString = negativeResponseFuncTemplate.format(check_negativeResponseFunctionName,
                                                                              "\n....".join(negativeResponseChecks))
-        #print(negativeResponseFunctionString)
+        # print(negativeResponseFunctionString)
         exec(negativeResponseFunctionString)
         return locals()[check_negativeResponseFunctionName]
 

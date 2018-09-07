@@ -1,6 +1,18 @@
+#!/usr/bin/env python
+
+__author__ = "Richard Clubb"
+__copyrights__ = "Copyright 2018, the python-uds project"
+__credits__ = ["Richard Clubb"]
+
+__license__ = "MIT"
+__maintainer__ = "Richard Clubb"
+__email__ = "richard.clubb@embeduk.com"
+__status__ = "Development"
+
+
 from SupportedServices.iContainer import iContainer
 from types import MethodType
-import UdsMessage
+
 
 class ReadDataByIdentifierContainer(iContainer):
 
@@ -11,22 +23,21 @@ class ReadDataByIdentifierContainer(iContainer):
         self.positiveResponseFunctions = {}
 
     @staticmethod
-    def __readDataByIdentifier(self, parameter):
-        requestFunction = self.readDataByIdentifierContainer.requestFunctions[parameter]
-        checkFunction = self.readDataByIdentifierContainer.checkFunctions[parameter]
-        negativeResponseFunction = self.readDataByIdentifierContainer.negativeResponseFunctions[parameter]
-        positiveResponseFunction = self.readDataByIdentifierContainer.positiveResponseFunctions[parameter]
+    def __readDataByIdentifier(target, parameter):
+        requestFunction = target.readDataByIdentifierContainer.requestFunctions[parameter]
+        checkFunction = target.readDataByIdentifierContainer.checkFunctions[parameter]
+        negativeResponseFunction = target.readDataByIdentifierContainer.negativeResponseFunctions[parameter]
+        positiveResponseFunction = target.readDataByIdentifierContainer.positiveResponseFunctions[parameter]
 
-        udsMsg = UdsMessage.UdsMessage()
-        udsMsg.request = requestFunction()
+        request = requestFunction()
 
-        a = self.send(udsMsg)
+        response = target.send(request)
 
-        checkFunction(udsMsg.response_raw)
-        negativeResponseFunction(udsMsg.response_raw)
-        return positiveResponseFunction(udsMsg.response_raw)
+        checkFunction(response)
+        negativeResponseFunction(response)
+        return positiveResponseFunction(response)
 
-    def bind_readDataByIdentifierFunction(self, bindObject):
+    def bind_function(self, bindObject):
         bindObject.readDataByIdentifier = MethodType(self.__readDataByIdentifier, bindObject)
 
     def add_requestFunction(self, aFunction, dictionaryEntry):

@@ -9,17 +9,3 @@ __maintainer__ = "Richard Clubb"
 __email__ = "richard.clubb@embeduk.com"
 __status__ = "Development"
 
-
-import configparser
-
-configList = {}
-
-
-def getConfig(configName):
-
-    if configName in configList:
-        return configList[configName]
-    else:
-        aConfig = configparser.ConfigParser()
-        configList[configName] = aConfig
-        return aConfig

@@ -9,17 +9,8 @@ __maintainer__ = "Richard Clubb"
 __email__ = "richard.clubb@embeduk.com"
 __status__ = "Development"
 
+
 from TpFactory import TpFactory
-from UdsMessage import UdsMessage
-import time
-import config
-import logging
-
-
-class UdsMessageTimeoutError(Exception):
-
-    def __init__(self, message):
-        self.message = message
 
 
 ##
@@ -35,21 +26,20 @@ class Uds(object):
         self.__reqId = reqId
         self.__resId = resId
 
-        # set up logger
-        # self.__logger = logging.getLogger('python-uds')
 
     ##
     # @brief
-    def send(self, msg):
-        self.__tp.send(msg.request)
+    def send(self, msg, responseRequired = False):
+
         response = None
 
-        if(msg.responseRequired):
-            msg.response_raw = self.__tp.recv(5000)
+        self.__tp.send(msg)
+
+        if(responseRequired):
+            response = self.__tp.recv(5000)
 
         return response
 
 
 if __name__ == "__main__":
-    a = Uds()
-    b = UdsMessage()
+    pass

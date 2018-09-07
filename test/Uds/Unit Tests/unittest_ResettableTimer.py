@@ -1,103 +1,94 @@
+#!/usr/bin/env python
+
+__author__ = "Richard Clubb"
+__copyrights__ = "Copyright 2018, the python-uds project"
+__credits__ = ["Richard Clubb"]
+
+__license__ = "MIT"
+__maintainer__ = "Richard Clubb"
+__email__ = "richard.clubb@embeduk.com"
+__status__ = "Development"
+
+
 import unittest
-from Utilities.TimerState import TimerState
 from Utilities.ResettableTimer import ResettableTimer
-#from Utilities.ResettableTimerThreaded import ResettableTimerThreaded as ResettableTimer
-import time
+from time import sleep
 
 class CanTpMessageTestCase(unittest.TestCase):
 
-    def testStateWhenInitialised(self):
+    def testIsRunningWhenInitialised(self):
         a = ResettableTimer(0.6)
-        self.assertEqual(TimerState.STOPPED, a.state)
+        result = a.isRunning()
 
-    def testStateWhenStarted(self):
-        a = ResettableTimer(0.6)
+        self.assertEqual(False, result)
+
+
+    def testIsExpiredWhenInitialised(self):
+        a = ResettableTimer(0.2)
+        result = a.isExpired()
+
+        self.assertEqual(False, result)
+
+    def testIsRunningAfterStart(self):
+        a = ResettableTimer(0.2)
         a.start()
-        self.assertEqual(TimerState.RUNNING, a.state)
+        result = a.isRunning()
 
-    def testExpiredAfterStarted(self):
-        pass
+        self.assertEqual(True, result)
 
-    def testStateWhenExpired(self):
-        a = ResettableTimer(0.5)
+    def testIsExpiredAfterStart(self):
+        a = ResettableTimer(0.2)
         a.start()
-        time.sleep(0.6)
-        self.assertEqual(TimerState.STOPPED, a.state)
+        result = a.isExpired()
 
-    def testIsExpired(self):
-        a = ResettableTimer(0.5)
+        self.assertEqual(False, result)
+
+    def testIsRunningAfterTimeoutTime(self):
+        a = ResettableTimer(0.2)
         a.start()
-        time.sleep(0.6)
-        self.assertEqual(True, a.expired())
+        sleep(0.25)
+        result = a.isRunning()
 
-    def testNotExpired(self):
-        a = ResettableTimer(0.5)
+        self.assertEqual(False, result)
+
+    def testIsExpiredAfterTimeoutTime(self):
+        a = ResettableTimer(0.2)
         a.start()
-        time.sleep(0.4)
-        self.assertEqual(False, a.expired())
+        sleep(0.25)
+        result = a.isExpired()
 
-    def testResetTimerStateCheckBeforeExpiry(self):
-        a = ResettableTimer(0.5)
+        self.assertEqual(True, result)
+
+    def testIsRunningAfterRestart(self):
+        a = ResettableTimer(0.4)
         a.start()
-        time.sleep(0.4)
-        a.reset()
-        time.sleep(0.4)
-        self.assertEqual(TimerState.RUNNING, a.state)
+        sleep(0.3)
+        a.restart()
+        sleep(0.2)
+        result = a.isRunning()
 
-    def testResetTimerStateCheckBeforeAndAfterExpiry(self):
-        a = ResettableTimer(0.5)
+        self.assertEqual(True, result)
+
+    def testIsExpiredAfterRestart(self):
+        a = ResettableTimer(0.4)
         a.start()
-        time.sleep(0.4)
-        a.reset()
-        time.sleep(0.4)
-        self.assertEqual(TimerState.RUNNING, a.state)
-        time.sleep(0.2)
-        self.assertEqual(TimerState.STOPPED, a.state)
+        sleep(0.3)
+        a.restart()
+        sleep(0.2)
+        result = a.isExpired()
 
-    def testResetTimerExpiredCheckBeforeAndAfterExpiry(self):
-        a = ResettableTimer(0.5)
+        self.assertEqual(False, result)
+
+    def testExpiredAfterRestart(self):
+        a = ResettableTimer(0.4)
         a.start()
-        time.sleep(0.4)
-        self.assertEqual(False, a.expired())
-        time.sleep(0.2)
-        self.assertEqual(True, a.expired())
-
-    def testExpiryWhenTimeoutIsZero(self):
-        a = ResettableTimer(0)
-        a.start()
-        self.assertEqual(True, a.expired())
-
-    def testStateAfterRunWhenTimeoutIsZero(self):
-        a = ResettableTimer(0)
-        a.start()
-        self.assertEqual(TimerState.STOPPED, a.state)
-
-    def testTimeoutChangedWhileStopped(self):
-        a = ResettableTimer(0.5)
-        a.timeoutTime = 0.7
-        a.start()
-        time.sleep(0.6)
-        self.assertEqual(TimerState.RUNNING, a.state)
-        time.sleep(0.2)
-        self.assertEqual(TimerState.STOPPED, a.state)
-
-    def testTimeoutChangedWhileRunning(self):
-        a = ResettableTimer(1)
-        a.start()
-        time.sleep(0.4)
-        self.assertEqual(TimerState.RUNNING, a.state)
-        a.timeoutTime = 0.5
-        time.sleep(0.1)
-        self.assertEqual(TimerState.STOPPED, a.state)
-
-    def testResetWhenStopped(self):
-        a = ResettableTimer(0.5)
-        a.reset()
-        self.assertEqual(TimerState.RUNNING, a.state)
-        time.sleep(0.4)
-        self.assertEqual(TimerState.RUNNING, a.state)
-        time.sleep(0.2)
-        self.assertEqual(TimerState.STOPPED, a.state)
+        sleep(0.3)
+        result = a.isExpired()
+        self.assertEqual(False, result)
+        a.restart()
+        sleep(0.45)
+        result = a.isExpired()
+        self.assertEqual(True, result)
 
 if __name__ == "__main__":
     unittest.main()

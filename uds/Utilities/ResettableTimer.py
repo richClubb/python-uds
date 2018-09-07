@@ -1,14 +1,27 @@
-from time import time
+#!/usr/bin/env python
+
+__author__ = "Richard Clubb"
+__copyrights__ = "Copyright 2018, the python-uds project"
+__credits__ = ["Richard Clubb"]
+
+__license__ = "MIT"
+__maintainer__ = "Richard Clubb"
+__email__ = "richard.clubb@embeduk.com"
+__status__ = "Development"
+
+
+from time import perf_counter
 from Utilities.iResettableTimer import iResettableTimer
-from Utilities.TimerState import TimerState
 
 
 class ResettableTimer(iResettableTimer):
 
-    def __init__(self, timeoutTime):
+    def __init__(self, timeoutTime=0):
+
         self.__timeoutTime = timeoutTime
-        self.__running = False
-        self.__state = TimerState.STOPPED
+        self.__active_flag = False
+        self.__expired_flag = False
+        self.__startTime = None
 
     @property
     def timeoutTime(self):
@@ -18,52 +31,31 @@ class ResettableTimer(iResettableTimer):
     def timeoutTime(self, val):
         self.__timeoutTime = val
 
-    @property
-    def state(self):
-        _ = self.expired()
-        return self.__state
-
     def start(self):
-        self.__startTime = time()
-        self.__running = True
-        self.__state = TimerState.RUNNING
+        self.__startTime = perf_counter()
+        self.__active_flag = True
+        self.__expired_flag = False
 
-    def reset(self):
+    def restart(self):
         self.start()
 
     def stop(self):
-        self.__expired = False
-        self.__state = TimerState.STOPPED
+        self.__active_flag = False
+        self.__expired_flag = False
 
     def isRunning(self):
-        _ = self.expired()
-        return self.__running
+        _ = self.isExpired()
+        return self.__active_flag
 
-    ##
-    # @brief checks if the timer has expired
-    # the check to see if the timeoutTime == 0 is due to a limitation in the
-    # time comparison. If the timer is tarted  (with a timeout of 0) and then
-    # checked if it is running immediately it will think it i running.
-    def expired(self):
-        if(self.__timeoutTime == 0):
-            self.__running = False
-            self.__state = TimerState.STOPPED
-            return True
-        if(self.__running):
-            startTime = self.__startTime
-            currTime = time()
-            timeoutTime = self.__timeoutTime
-            delta = currTime - startTime
-            if(delta > timeoutTime):
-                self.__running = False
-                self.__state = TimerState.STOPPED
-                return True
-            else:
-                self.__state = TimerState.RUNNING
-                return False
-        else:
-            return False
+    def isExpired(self):
 
+        if(self.__active_flag):
+            currTime = perf_counter()
+            if (currTime - self.__startTime) > self.__timeoutTime:
+                self.__expired_flag = True
+                self.__active_flag = False
+
+        return self.__expired_flag
 
 if __name__ == "__main__":
 

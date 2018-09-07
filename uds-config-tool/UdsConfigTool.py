@@ -1,9 +1,23 @@
+#!/usr/bin/env python
+
+__author__ = "Richard Clubb"
+__copyrights__ = "Copyright 2018, the python-uds project"
+__credits__ = ["Richard Clubb"]
+
+__license__ = "MIT"
+__maintainer__ = "Richard Clubb"
+__email__ = "richard.clubb@embeduk.com"
+__status__ = "Development"
+
+
 import Uds
 import xml.etree.ElementTree as ET
 from SupportedServices.ReadDataByIdentifierContainer import ReadDataByIdentifierContainer
 from FunctionCreation.ReadDataByIdentifierMethodFactory import  ReadDataByIdentifierMethodFactory
 
+
 supportedServices = {22, }
+
 
 def get_serviceIdFromXmlElement(diagServiceElement, xmlElements):
 
@@ -26,6 +40,7 @@ def fill_dictionary(xmlElement):
         temp_dictionary[i.attrib['ID']] = i
 
     return temp_dictionary
+
 
 def createUdsConnection(xmlFile, ecuName):
 
@@ -73,7 +88,7 @@ def createUdsConnection(xmlFile, ecuName):
     outputEcu = Uds.Uds(0x600, 0x650)
 
     setattr(outputEcu, 'readDataByIdentifierContainer', rdbiContainer)
-    rdbiContainer.bind_readDataByIdentifierFunction(outputEcu)
+    rdbiContainer.bind_function(outputEcu)
 
     return outputEcu
 

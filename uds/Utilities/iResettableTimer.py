@@ -1,4 +1,17 @@
+#!/usr/bin/env python
+
+__author__ = "Richard Clubb"
+__copyrights__ = "Copyright 2018, the python-uds project"
+__credits__ = ["Richard Clubb"]
+
+__license__ = "MIT"
+__maintainer__ = "Richard Clubb"
+__email__ = "richard.clubb@embeduk.com"
+__status__ = "Development"
+
+
 import abc
+
 
 class iResettableTimer(object):
     __metaclass__ = abc.ABCMeta
@@ -13,17 +26,12 @@ class iResettableTimer(object):
     def timeoutTime(self, val):
         raise NotImplementedError("class has not implemented this method")
 
-    @property
-    @abc.abstractmethod
-    def state(self):
-        raise NotImplementedError("class has not implemented this method")
-
     @abc.abstractmethod
     def start(self):
         raise NotImplementedError("class has not implemented this method")
 
     @abc.abstractmethod
-    def reset(self):
+    def restart(self):
         raise NotImplementedError("class has not implemented this method")
 
     @abc.abstractmethod
@@ -35,5 +43,5 @@ class iResettableTimer(object):
         raise NotImplementedError("class has not implemented this method")
 
     @abc.abstractmethod
-    def expired(self):
+    def isExpired(self):
         raise NotImplementedError("class has not implemented this method")
