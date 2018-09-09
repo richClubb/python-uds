@@ -46,6 +46,7 @@ def createUdsConnection(xmlFile, ecuName):
 
     root = ET.parse(xmlFile)
 
+    # create any supported containers
     rdbiContainer = ReadDataByIdentifierContainer()
 
     xmlElements = {}
@@ -87,6 +88,7 @@ def createUdsConnection(xmlFile, ecuName):
 
     outputEcu = Uds.Uds(0x600, 0x650)
 
+    # check to see if any rdbi services have been found
     setattr(outputEcu, 'readDataByIdentifierContainer', rdbiContainer)
     rdbiContainer.bind_function(outputEcu)
 

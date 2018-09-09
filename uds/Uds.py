@@ -29,7 +29,7 @@ class Uds(object):
 
     ##
     # @brief
-    def send(self, msg, responseRequired = False):
+    def send(self, msg, responseRequired=True):
 
         response = None
 

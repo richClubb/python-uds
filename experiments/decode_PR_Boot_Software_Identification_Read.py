@@ -1,5 +1,13 @@
 #!/usr/bin/env python
 
+"""
+This file provides an example of the different stages of the uds communication flow.
+Its intention is to describe how the auto-coder would produce the code for the system
+
+It is not intended as a piece of usable code
+"""
+
+
 __author__ = "Richard Clubb"
 __copyrights__ = "Copyright 2018, the python-uds project"
 __credits__ = ["Richard Clubb"]

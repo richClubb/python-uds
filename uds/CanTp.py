@@ -261,7 +261,7 @@ class CanTp(iTp):
     def callback_onReceive(self, msg):
         if(msg.arbitration_id == self.__resId):
             # print("CanTp Instance received message")
-            #print(unpack('BBBBBBBB', msg.data))
+            # print(unpack('BBBBBBBB', msg.data))
             self.__recvBuffer.append(msg.data[self.__pduStartIndex:])
 
     ##
