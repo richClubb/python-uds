@@ -26,8 +26,9 @@ class N_Result(Enum):
 
 
 class CanTpAddressingTypes(Enum):
-    NORMAL_FIXED = 0
-    MIXED = 1
+    NORMAL = 0
+    NORMAL_FIXED = 1
+    MIXED = 2
 
 
 class CanTpState(Enum):
