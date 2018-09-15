@@ -1,0 +1,12 @@
+Metadata-Version: 1.1
+Name: python-uds
+Version: 0.1.2
+Summary: A library for interfacing with UDS using python
+Home-page: https://github.com/richClubb/python-uds
+Author: Richard Clubb
+Author-email: richard.clubb@embeduk.com
+License: MIT
+Description: UNKNOWN
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Operating System :: OS Independent
