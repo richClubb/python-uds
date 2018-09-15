@@ -9,8 +9,6 @@ __maintainer__ = "Richard Clubb"
 __email__ = "richard.clubb@embeduk.com"
 __status__ = "Development"
 
+__name__ = "utilities"
 
-from .Uds import Uds
-
-
-from Utilities import ResettableTimer
+from .ResettableTimer import ResettableTimer

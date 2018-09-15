@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/../UdsManager/.idea/UdsManager.iml" filepath="$PROJECT_DIR$/../UdsManager/.idea/UdsManager.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/python-uds.iml" filepath="$PROJECT_DIR$/.idea/python-uds.iml" />
     </modules>
   </component>
