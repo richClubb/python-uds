@@ -44,18 +44,20 @@ class ResettableTimer(iResettableTimer):
         self.__expired_flag = False
 
     def isRunning(self):
-        _ = self.isExpired()
+        self.__timerCheck()
         return self.__active_flag
 
     def isExpired(self):
+        self.__timerCheck()
+        return self.__expired_flag
 
-        if(self.__active_flag):
+    def __timerCheck(self):
+        if (self.__active_flag):
             currTime = perf_counter()
             if (currTime - self.__startTime) > self.__timeoutTime:
                 self.__expired_flag = True
                 self.__active_flag = False
 
-        return self.__expired_flag
 
 if __name__ == "__main__":
 
