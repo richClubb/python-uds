@@ -1,4 +1,0 @@
-uds_communications
-uds_communications/Utilities
-uds_config_tool
-uds_configuration
