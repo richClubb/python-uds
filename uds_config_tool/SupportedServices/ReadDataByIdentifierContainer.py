@@ -22,6 +22,10 @@ class ReadDataByIdentifierContainer(iContainer):
         self.negativeResponseFunctions = {}
         self.positiveResponseFunctions = {}
 
+    ##
+    # @brief this method is bound to an external Uds object so that it call be called
+    # as one of the in-built methods. uds.readDataByIdentifier("something") It does not operate
+    # on this instance of the container class.
     @staticmethod
     def __readDataByIdentifier(target, parameter):
         requestFunction = target.readDataByIdentifierContainer.requestFunctions[parameter]
