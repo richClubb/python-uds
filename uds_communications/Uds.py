@@ -25,8 +25,8 @@ class Uds(object):
 
         self.__config = get_config()
 
-        self.__reqId = None
-        self.__resId = None
+        self.__reqId = reqId
+        self.__resId = resId
 
         if reqId is None:
             self.__reqId = int(self.__config['connection']['defaultReqId'], 16)

@@ -13,11 +13,11 @@ __status__ = "Development"
 import can
 from threading import Thread
 from time import time, sleep
-from Uds import Uds
+from uds_communications.Uds import Uds
 
 
 recvBuffer = []
-bus = can.interface.Bus('test', bustype='virtual')
+bus = can.interface.Bus('virtualInterface', bustype='virtual')
 
 
 def clearReceiveBuffer():
@@ -88,10 +88,10 @@ def multiFrameResponse_target():
                 canMsg.data = [0x10, 0x13, 0x62, 0xF1, 0x8C, 0x30, 0x30, 0x30]
                 index = 1
             elif index == 1:
-                canMsg.data = [0x20, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30]
+                canMsg.data = [0x21, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30]
                 index = 2
             elif index == 2:
-                canMsg.data = [0x21, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x00]
+                canMsg.data = [0x22, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x00]
                 working = False
 
             bus.send(canMsg)

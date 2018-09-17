@@ -11,7 +11,7 @@ __status__ = "Development"
 
 
 import unittest
-import CanTp
+import uds_communications.CanTp
 from unittest.mock import patch
 
 

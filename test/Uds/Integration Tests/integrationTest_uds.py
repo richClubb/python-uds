@@ -11,7 +11,7 @@ __status__ = "Development"
 
 
 import unittest
-from Uds import Uds
+from uds_communications.Uds import Uds
 from unittest import mock
 
 
