@@ -10,7 +10,7 @@ __email__ = "richard.clubb@embeduk.com"
 __status__ = "Development"
 
 
-from uds_communications.TpFactory import TpFactory
+from uds_communications.TransportProtocols.TpFactory import TpFactory
 from uds_configuration.ConfigSingleton import get_config
 
 ##

@@ -13,10 +13,10 @@ __status__ = "Development"
 import can
 from can.interfaces import pcan, vector
 
-from uds_communications.iTp import iTp
+from uds_communications.TransportProtocols.iTp import iTp
 from uds_communications.Utilities.ResettableTimer import ResettableTimer
-from uds_communications.CanTpTypes import CanTpAddressingTypes, CanTpState, CanTpMessageType, CanTpFsTypes
-from uds_communications.CanTpTypes import CANTP_MAX_PAYLOAD_LENGTH, SINGLE_FRAME_DL_INDEX, FIRST_FRAME_DL_INDEX_HIGH, \
+from uds_communications.TransportProtocols.Can.CanTpTypes import CanTpAddressingTypes, CanTpState, CanTpMessageType, CanTpFsTypes
+from uds_communications.TransportProtocols.Can.CanTpTypes import CANTP_MAX_PAYLOAD_LENGTH, SINGLE_FRAME_DL_INDEX, FIRST_FRAME_DL_INDEX_HIGH, \
     FIRST_FRAME_DL_INDEX_LOW, FC_BS_INDEX, FC_STMIN_INDEX, N_PCI_INDEX, FIRST_FRAME_DATA_START_INDEX, \
     SINGLE_FRAME_DATA_START_INDEX, CONSECUTIVE_FRAME_SEQUENCE_NUMBER_INDEX, \
     CONSECUTIVE_FRAME_SEQUENCE_DATA_START_INDEX, FLOW_CONTROL_BS_INDEX, FLOW_CONTROL_STMIN_INDEX

@@ -11,7 +11,7 @@ __status__ = "Development"
 
 
 from threading import Thread
-from uds_communications.CanTp import CanTp
+from uds_communications.TransportProtocols.Can.CanTp import CanTp
 from time import sleep
 
 

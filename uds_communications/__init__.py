@@ -13,4 +13,6 @@ __status__ = "Development"
 name = "uds_communications"
 
 
-from .Uds import Uds
+from uds_communications.Uds.Uds import Uds
+
+from uds_communications.TransportProtocols import TpFactory
