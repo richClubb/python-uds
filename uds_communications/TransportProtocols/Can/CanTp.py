@@ -21,6 +21,7 @@ from uds_communications.TransportProtocols.Can.CanTpTypes import CANTP_MAX_PAYLO
     SINGLE_FRAME_DATA_START_INDEX, CONSECUTIVE_FRAME_SEQUENCE_NUMBER_INDEX, \
     CONSECUTIVE_FRAME_SEQUENCE_DATA_START_INDEX, FLOW_CONTROL_BS_INDEX, FLOW_CONTROL_STMIN_INDEX
 from uds_configuration.ConfigSingleton import get_config
+from uds_communications.TransportProtocols.Can.CanConnectionFactory import CanConnectionFactory
 
 
 def fillArray(data, length, fillValue=0):
@@ -46,7 +47,8 @@ class CanTp(iTp):
 
         self.__config = get_config()
 
-        self.__bus = self.createBusConnection()
+        canConnectionFactory = CanConnectionFactory()
+        self.__bus = canConnectionFactory()
 
         # there probably needs to be an adapter to deal with these parts as they couple to python-can heavily
         self.__listener = can.Listener()
