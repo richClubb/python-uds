@@ -20,7 +20,7 @@ class TpFactory(object):
     ##
     # @brief method to create the different connection types
     @staticmethod
-    def tpFactory(tpType, **kwargs):
+    def __call__(tpType, **kwargs):
         if(tpType == "CAN"):
             if('reqId' in kwargs):
                 reqId = kwargs['reqId']
