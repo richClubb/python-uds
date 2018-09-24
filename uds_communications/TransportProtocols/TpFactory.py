@@ -10,31 +10,31 @@ __email__ = "richard.clubb@embeduk.com"
 __status__ = "Development"
 
 
+from uds_configuration.Config import Config
 from uds_communications.TransportProtocols.Can.CanTp import CanTp
+from os import path
 
 
 ##
 # @brief class for creating Tp objects
 class TpFactory(object):
 
+    configType = ''
+    configParameters = []
+
+    config = None
+
     ##
     # @brief method to create the different connection types
     @staticmethod
     def __call__(tpType, **kwargs):
-        if(tpType == "CAN"):
-            if('reqId' in kwargs):
-                reqId = kwargs['reqId']
-            else:
-                reqId = None
 
-            if('resId' in kwargs):
-                resId = kwargs['resId']
-            else:
-                resId = None
-            return CanTp(reqId, resId)
-        elif(tpType == "IP"):
-            raise NotImplementedError("IP transport not currently supported")
-        elif(tpType == "KLINE"):
+        if(tpType == "CAN"):
+            TpFactory.loadConfiguration(kwargs['config'])
+            return CanTp(config=kwargs['config'])
+        elif(tpType == "DoIP"):
+            raise NotImplementedError("DoIP transport not currently supported")
+        elif(tpType == "K-LINE"):
             raise NotImplementedError("K-Line Transport not currently supported")
         elif(tpType == "LIN"):
             raise NotImplementedError("LIN Transport not currently supported")
@@ -42,6 +42,27 @@ class TpFactory(object):
             raise NotImplementedError("FlexRay Transport not currently supported")
         else:
             raise Exception("Unknown transport type selected")
+
+    @staticmethod
+    def loadConfiguration(configPath):
+
+        #load the base config
+        baseConfig = path.dirname(__file__) + "\config.ini"
+        config = Config()
+        if path.exists(baseConfig):
+            config.read(baseConfig)
+        else:
+            raise FileNotFoundError("No base config file")
+
+        # check the config path
+        if configPath is not None:
+            if path.exists(configPath):
+                config.read(configPath)
+            else:
+                raise FileNotFoundError("specified config not found")
+
+        TpFactory.config = config
+
 
 if __name__ == "__main__":
 

@@ -20,8 +20,10 @@ from uds_communications.TransportProtocols.Can.CanTpTypes import CANTP_MAX_PAYLO
     FIRST_FRAME_DL_INDEX_LOW, FC_BS_INDEX, FC_STMIN_INDEX, N_PCI_INDEX, FIRST_FRAME_DATA_START_INDEX, \
     SINGLE_FRAME_DATA_START_INDEX, CONSECUTIVE_FRAME_SEQUENCE_NUMBER_INDEX, \
     CONSECUTIVE_FRAME_SEQUENCE_DATA_START_INDEX, FLOW_CONTROL_BS_INDEX, FLOW_CONTROL_STMIN_INDEX
-from uds_configuration.ConfigSingleton import get_config
 from uds_communications.TransportProtocols.Can.CanConnectionFactory import CanConnectionFactory
+from uds_configuration.Config import Config
+
+from os import path
 
 
 def fillArray(data, length, fillValue=0):
@@ -41,22 +43,22 @@ def fillArray(data, length, fillValue=0):
 # depends on a bus object for communication on CAN
 class CanTp(iTp):
 
+    configParams = ['reqId','resId', 'addressingType']
+
     ##
     # @brief constructor for the CanTp object
-    def __init__(self, reqId=None, resId=None):
+    def __init__(self, reqId=None, resId=None, **kwargs):
 
-        self.__config = get_config()
+        if 'config' in kwargs:
+            self.__loadConfiguration(kwargs['config'])
 
         canConnectionFactory = CanConnectionFactory()
-        self.__bus = canConnectionFactory()
+        self.__bus = canConnectionFactory(kwargs['config'])
 
         # there probably needs to be an adapter to deal with these parts as they couple to python-can heavily
         self.__listener = can.Listener()
         self.__listener.on_message_received = self.callback_onReceive
         self.__notifier = can.Notifier(self.__bus, [self.__listener], 0)
-
-        self.__reqId = reqId
-        self.__resId = resId
 
         self.__recvBuffer = []
 
@@ -74,6 +76,36 @@ class CanTp(iTp):
         self.__N_AE = 0xFF
         self.__N_TA = 0xFF
         self.__N_SA = 0xFF
+
+    ##
+    #
+    def __loadConfiguration(self, configPath):
+
+        #load the base config
+        baseConfig = path.dirname(__file__) + "\config.ini"
+        config = Config()
+        if path.exists(baseConfig):
+            config.read(baseConfig)
+        else:
+            raise FileNotFoundError("No base config file")
+
+        # check the config path
+        if configPath is not None:
+            if path.exists(configPath):
+                config.read(configPath)
+            else:
+                raise FileNotFoundError("specified config not found")
+
+        self.__reqId = int(config['canTp']['reqId'], 16)
+        self.__resId = int(config['canTp']['resId'], 16)
+
+        addressingType = config['canTp']['addressingType']
+        if addressingType == "NORMAL":
+            self.__addressingType = CanTpAddressingTypes.NORMAL
+        elif addressingType == "NORMAL_FIXED":
+            self.__addressingType = CanTpAddressingTypes.NORMAL_FIXED
+        elif addressingType == "MIXED":
+            self.__addressingType = CanTpAddressingTypes.MIXED
 
 
     ##

@@ -10,33 +10,64 @@ __email__ = "richard.clubb@embeduk.com"
 __status__ = "Development"
 
 
+from uds_configuration.Config import Config
 from uds_communications.TransportProtocols.TpFactory import TpFactory
-from uds_configuration.ConfigSingleton import get_config
 from os import path
 
 ##
 # @brief a description is needed
 class Uds(object):
 
+    configParameters = ['transportProtocol', 'P2_Client', 'P2_Server']
+
     ##
     # @brief a constructor
     # @param [in] reqId The request ID used by the UDS connection, defaults to None if not used
     # @param [in] resId The response Id used by the UDS connection, defaults to None if not used
-    def __init__(self, config=None):
+    def __init__(self, config=None, **kwargs):
 
-        if config is None:
-            dirPath = path.dirname(__file__)
-            configPath = dirpath + "/config.ini"
+        self.__transportProtocol = None
+        self.__P2_CAN_Client = None
+        self.__P2_CAN_Server = None
 
-        # currently the TP Factory only supports can
+        self.__loadConfiguration(config, kwargs)
+
         tpFactory = TpFactory()
-        self.__tp = tpFactory("CAN", config)
-
-        self.__P2_CAN_Client = int(self.__config['connection']['P2_Client'])
-        self.__P2_CAN_Server = int(self.__config['connection']['P2_Server'])
+        self.__tp = tpFactory(self.__transportProtocol, config=config)
 
         # used as a semaphore for the tester present
         self.__transmissionActive_flag = False
+
+    def __loadConfiguration(self, configPath, configArguments):
+
+        # useful shorthand lambda
+        checkParam = lambda x: True if x in configArguments else False
+        loadConfigItem = lambda x, y: configArguments[x] if x in configArguments else None
+
+        #load the base config
+        baseConfig = path.dirname(__file__) + "\config.ini"
+        config = Config()
+        if path.exists(baseConfig):
+            config.read(baseConfig)
+        else:
+            raise FileNotFoundError("No base config file")
+
+        # check the config path
+        if configPath is not None:
+            if path.exists(configPath):
+                config.read(configPath)
+            else:
+                raise FileNotFoundError("specified config not found")
+
+        if len(configArguments) > 0:
+            for i in self.configParameters:
+                if checkParam(i):
+                    config['uds'][i] = loadConfigItem(i)
+
+        self.__transportProtocol = config['uds']['transportProtocol']
+        self.__P2_CAN_Client = int(config['uds']['P2_CAN_Client'])
+        self.__P2_CAN_Server = int(config['uds']['P2_CAN_Server'])
+
 
     ##
     # @brief
