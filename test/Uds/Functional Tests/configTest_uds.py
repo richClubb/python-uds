@@ -36,6 +36,12 @@ if __name__ == "__main__":
     c = Uds("bootloader2.ini")
     c.send([0x22, 0xF1, 0x81], responseRequired=False)
 
-    d = Uds("subaruEcm.ini")
+    try:
+        d = Uds("subaruEcm.ini")
+    except:
+        print("Subaru ECM test passed, using doip, exception caught")
+
+    e = Uds(reqId=0x620, resId=0x670)
+    e.send([0x22, 0xf1, 0x83], responseRequired=False)
 
     sleep(1)

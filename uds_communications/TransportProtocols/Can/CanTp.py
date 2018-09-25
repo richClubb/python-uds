@@ -47,13 +47,12 @@ class CanTp(iTp):
 
     ##
     # @brief constructor for the CanTp object
-    def __init__(self, reqId=None, resId=None, **kwargs):
+    def __init__(self, reqId=None, resId=None, configPath=None, **kwargs):
 
-        if 'config' in kwargs:
-            self.__loadConfiguration(kwargs['config'])
+        self.__loadConfiguration(configPath, **kwargs)
 
         canConnectionFactory = CanConnectionFactory()
-        self.__bus = canConnectionFactory(kwargs['config'])
+        self.__bus = canConnectionFactory(configPath, **kwargs)
 
         # there probably needs to be an adapter to deal with these parts as they couple to python-can heavily
         self.__listener = can.Listener()
@@ -73,13 +72,19 @@ class CanTp(iTp):
             self.__maxPduLength = 6
             self.__pduStartIndex = 1
 
+        if reqId is not None:
+            self.__reqId = reqId
+
+        if resId is not None:
+            self.__resId = resId
+
         self.__N_AE = 0xFF
         self.__N_TA = 0xFF
         self.__N_SA = 0xFF
 
     ##
     #
-    def __loadConfiguration(self, configPath):
+    def __loadConfiguration(self, configPath, **kwargs):
 
         #load the base config
         baseConfig = path.dirname(__file__) + "\config.ini"
@@ -96,8 +101,8 @@ class CanTp(iTp):
             else:
                 raise FileNotFoundError("specified config not found")
 
-        self.__reqId = int(config['canTp']['reqId'], 16)
-        self.__resId = int(config['canTp']['resId'], 16)
+        self.__reqId = kwargs['reqId'] if ('reqId' in kwargs) else int(config['canTp']['reqId'], 16)
+        self.__resId = kwargs['resId'] if ('resId' in kwargs) else int(config['canTp']['resId'], 16)
 
         addressingType = config['canTp']['addressingType']
         if addressingType == "NORMAL":

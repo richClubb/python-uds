@@ -27,11 +27,11 @@ class TpFactory(object):
     ##
     # @brief method to create the different connection types
     @staticmethod
-    def __call__(tpType, **kwargs):
+    def __call__(tpType, configPath=None, **kwargs):
 
         if(tpType == "CAN"):
-            TpFactory.loadConfiguration(kwargs['config'])
-            return CanTp(config=kwargs['config'])
+            TpFactory.loadConfiguration(configPath, **kwargs)
+            return CanTp(configPath=configPath, **kwargs)
         elif(tpType == "DoIP"):
             raise NotImplementedError("DoIP transport not currently supported")
         elif(tpType == "K-LINE"):
@@ -44,7 +44,7 @@ class TpFactory(object):
             raise Exception("Unknown transport type selected")
 
     @staticmethod
-    def loadConfiguration(configPath):
+    def loadConfiguration(configPath=None, **kwargs):
 
         #load the base config
         baseConfig = path.dirname(__file__) + "\config.ini"

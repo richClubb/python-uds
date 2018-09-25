@@ -24,25 +24,25 @@ class Uds(object):
     # @brief a constructor
     # @param [in] reqId The request ID used by the UDS connection, defaults to None if not used
     # @param [in] resId The response Id used by the UDS connection, defaults to None if not used
-    def __init__(self, config=None, **kwargs):
+    def __init__(self, configPath=None, **kwargs):
 
         self.__transportProtocol = None
         self.__P2_CAN_Client = None
         self.__P2_CAN_Server = None
 
-        self.__loadConfiguration(config, kwargs)
+        self.__loadConfiguration(configPath, **kwargs)
 
         tpFactory = TpFactory()
-        self.__tp = tpFactory(self.__transportProtocol, config=config)
+        self.__tp = tpFactory(self.__transportProtocol, configPath=configPath, **kwargs)
 
         # used as a semaphore for the tester present
         self.__transmissionActive_flag = False
 
-    def __loadConfiguration(self, configPath, configArguments):
+    def __loadConfiguration(self, configPath, **kwargs):
 
         # useful shorthand lambda
-        checkParam = lambda x: True if x in configArguments else False
-        loadConfigItem = lambda x, y: configArguments[x] if x in configArguments else None
+        checkParam = lambda x: True if x in kwargs else False
+        loadConfigItem = lambda x, y: kwargs[x] if x in kwargs else None
 
         #load the base config
         baseConfig = path.dirname(__file__) + "\config.ini"
@@ -59,7 +59,7 @@ class Uds(object):
             else:
                 raise FileNotFoundError("specified config not found")
 
-        if len(configArguments) > 0:
+        if len(kwargs) > 0:
             for i in self.configParameters:
                 if checkParam(i):
                     config['uds'][i] = loadConfigItem(i)
