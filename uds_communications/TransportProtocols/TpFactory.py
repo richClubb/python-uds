@@ -29,8 +29,9 @@ class TpFactory(object):
     @staticmethod
     def __call__(tpType, configPath=None, **kwargs):
 
+        #TpFactory.loadConfiguration(configPath)
+
         if(tpType == "CAN"):
-            TpFactory.loadConfiguration(configPath, **kwargs)
             return CanTp(configPath=configPath, **kwargs)
         elif(tpType == "DoIP"):
             raise NotImplementedError("DoIP transport not currently supported")
@@ -44,7 +45,7 @@ class TpFactory(object):
             raise Exception("Unknown transport type selected")
 
     @staticmethod
-    def loadConfiguration(configPath=None, **kwargs):
+    def loadConfiguration(configPath=None):
 
         #load the base config
         baseConfig = path.dirname(__file__) + "\config.ini"

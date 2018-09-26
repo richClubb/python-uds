@@ -47,9 +47,26 @@ class CanTp(iTp):
 
     ##
     # @brief constructor for the CanTp object
-    def __init__(self, reqId=None, resId=None, configPath=None, **kwargs):
+    def __init__(self, configPath=None, **kwargs):
 
-        self.__loadConfiguration(configPath, **kwargs)
+        self.__config = None
+
+        self.__loadConfiguration(configPath)
+
+        # this should probably be in the config file as well
+        # this needs expanding to support the other addressing types
+        addressingType = self.__config['canTp']['addressingType']
+        if addressingType == "NORMAL":
+            self.__addressingType = CanTpAddressingTypes.NORMAL
+        elif addressingType == "NORMAL_FIXED":
+            self.__addressingType = CanTpAddressingTypes.NORMAL_FIXED
+        elif addressingType == "MIXED":
+            self.__addressingType = CanTpAddressingTypes.MIXED
+
+        self.__reqId = int(self.__config['canTp']['reqId'], 16)
+        self.__resId = int(self.__config['canTp']['resId'], 16)
+
+        self.__checkKwargs(**kwargs)
 
         canConnectionFactory = CanConnectionFactory()
         self.__bus = canConnectionFactory(configPath, **kwargs)
@@ -61,22 +78,12 @@ class CanTp(iTp):
 
         self.__recvBuffer = []
 
-        # this should probably be in the config file as well
-        # this needs expanding to support the other addressing types
-        self.__addressingType = CanTpAddressingTypes.NORMAL_FIXED
-
         if(self.__addressingType == CanTpAddressingTypes.NORMAL_FIXED):
             self.__maxPduLength = 7
             self.__pduStartIndex = 0
         else:
             self.__maxPduLength = 6
             self.__pduStartIndex = 1
-
-        if reqId is not None:
-            self.__reqId = reqId
-
-        if resId is not None:
-            self.__resId = resId
 
         self.__N_AE = 0xFF
         self.__N_TA = 0xFF
@@ -88,30 +95,28 @@ class CanTp(iTp):
 
         #load the base config
         baseConfig = path.dirname(__file__) + "\config.ini"
-        config = Config()
+        self.__config = Config()
         if path.exists(baseConfig):
-            config.read(baseConfig)
+            self.__config.read(baseConfig)
         else:
             raise FileNotFoundError("No base config file")
 
         # check the config path
         if configPath is not None:
             if path.exists(configPath):
-                config.read(configPath)
+                self.__config.read(configPath)
             else:
                 raise FileNotFoundError("specified config not found")
 
-        self.__reqId = kwargs['reqId'] if ('reqId' in kwargs) else int(config['canTp']['reqId'], 16)
-        self.__resId = kwargs['resId'] if ('resId' in kwargs) else int(config['canTp']['resId'], 16)
+    def __checkKwargs(self, **kwargs):
 
-        addressingType = config['canTp']['addressingType']
-        if addressingType == "NORMAL":
-            self.__addressingType = CanTpAddressingTypes.NORMAL
-        elif addressingType == "NORMAL_FIXED":
-            self.__addressingType = CanTpAddressingTypes.NORMAL_FIXED
-        elif addressingType == "MIXED":
-            self.__addressingType = CanTpAddressingTypes.MIXED
+        if 'addressingType' in kwargs: self.__addressingType = kwargs['addressingType']
 
+        if 'reqId' in kwargs: self.__reqId = kwargs['reqId']
+
+        if 'resId' in kwargs: self.__reqId = kwargs['resId']
+
+        pass
 
     ##
     # @brief connection method

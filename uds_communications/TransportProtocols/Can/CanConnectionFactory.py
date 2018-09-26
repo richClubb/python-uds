@@ -10,9 +10,10 @@ class CanConnectionFactory(object):
     config = None
 
     @staticmethod
-    def __call__(config=None):
+    def __call__(configPath=None, **kwargs):
 
-        CanConnectionFactory.loadConfiguration(config)
+        CanConnectionFactory.loadConfiguration(configPath)
+        CanConnectionFactory.checkKwargs(**kwargs)
 
         # check config file and load
         connectionType = CanConnectionFactory.config['can']['interface']
@@ -45,16 +46,34 @@ class CanConnectionFactory(object):
             return CanConnectionFactory.connections[connectionKey]
 
     @staticmethod
-    def loadConfiguration(config=None):
+    def loadConfiguration(configPath=None):
 
         CanConnectionFactory.config = Config()
 
         localConfig = path.dirname(__file__) + "\config.ini"
         CanConnectionFactory.config.read(localConfig)
 
-        if config is not None:
-            if path.exists(config):
-                CanConnectionFactory.config.read(config)
+        if configPath is not None:
+            if path.exists(configPath):
+                CanConnectionFactory.config.read(configPath)
             else:
                 raise FileNotFoundError("Can not find config file")
+
+    @staticmethod
+    def checkKwargs(**kwargs):
+
+        if 'interface' in kwargs:
+            CanConnectionFactory.config['can']['interface'] = kwargs['interface']
+
+        if 'baudrate' in kwargs:
+            CanConnectionFactory.config['can']['baudrate'] = kwargs['baudrate']
+
+        if 'device' in kwargs:
+            CanConnectionFactory.config['peak']['device'] = kwargs['device']
+
+        if 'appName' in kwargs:
+            CanConnectionFactory.config['vector']['appName'] = kwargs['appName']
+
+        if 'channel' in kwargs:
+            CanConnectionFactory.config['vector']['channel'] = kwargs['channel']
 
