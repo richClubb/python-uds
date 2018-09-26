@@ -23,7 +23,7 @@ setup(
     author='Richard Clubb',
     author_email='richard.clubb@embeduk.com',
     # Needed to actually package something
-    packages=['uds_configuration', 'uds_communications', 'uds_communications/Utilities', 'uds_config_tool'],
+    packages=['uds'],
     # Needed for dependencies
     install_requires=['python-can'],
     # *strongly* suggested for sharing
