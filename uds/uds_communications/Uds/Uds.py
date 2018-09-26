@@ -10,8 +10,8 @@ __email__ = "richard.clubb@embeduk.com"
 __status__ = "Development"
 
 
-from uds_configuration.Config import Config
-from uds_communications.TransportProtocols.TpFactory import TpFactory
+from uds import Config
+from uds import TpFactory
 from os import path
 
 ##

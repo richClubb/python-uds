@@ -11,7 +11,7 @@ __status__ = "Development"
 
 
 from time import perf_counter
-from uds_communications.Utilities.iResettableTimer import iResettableTimer
+from uds.uds_communications.Utilities.iResettableTimer import iResettableTimer
 
 
 class ResettableTimer(iResettableTimer):

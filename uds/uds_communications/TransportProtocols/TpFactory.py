@@ -10,8 +10,8 @@ __email__ = "richard.clubb@embeduk.com"
 __status__ = "Development"
 
 
-from uds_configuration.Config import Config
-from uds_communications.TransportProtocols.Can.CanTp import CanTp
+from uds import Config
+from uds import CanTp
 from os import path
 
 

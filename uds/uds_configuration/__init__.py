@@ -9,10 +9,5 @@ __maintainer__ = "Richard Clubb"
 __email__ = "richard.clubb@embeduk.com"
 __status__ = "Development"
 
+name = "uds_configuration"
 
-name = "uds_communications"
-
-
-from uds_communications.Uds.Uds import Uds
-
-from uds_communications.TransportProtocols import TpFactory

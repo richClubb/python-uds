@@ -10,6 +10,12 @@ __email__ = "richard.clubb@embeduk.com"
 __status__ = "Development"
 
 
-name = "uds_config_tool"
+from configparser import ConfigParser
 
-from .UdsConfigTool import createUdsConnection
+
+class Config(ConfigParser):
+
+    def __init__(self):
+        super(Config, self).__init__()
+
+

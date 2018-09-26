@@ -1,5 +1,5 @@
-from uds_communications import Uds
-from can import Bus, Listener, Notifier, Message
+from uds.uds_communications import Uds
+from can import Bus, Listener, Notifier
 from time import sleep
 
 def callback_onReceive(msg):

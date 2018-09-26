@@ -8,8 +8,3 @@ __license__ = "MIT"
 __maintainer__ = "Richard Clubb"
 __email__ = "richard.clubb@embeduk.com"
 __status__ = "Development"
-
-name = "uds_configuration"
-
-
-from .ConfigSingleton import get_config, load_additional_config

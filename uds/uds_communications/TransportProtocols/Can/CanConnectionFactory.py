@@ -1,6 +1,6 @@
 import can
 from can.interfaces import pcan, vector
-from uds_configuration.Config import Config
+from uds.uds_configuration.Config import Config
 from os import path
 
 
@@ -28,20 +28,20 @@ class CanConnectionFactory(object):
         elif connectionType == 'peak':
             channel = CanConnectionFactory.config['peak']['device']
             if channel not in CanConnectionFactory.connections:
-                baudrate = CanConnectionFactory.config['connection']['baudrate']
+                baudrate = CanConnectionFactory.config['can']['baudrate']
                 CanConnectionFactory.connections[channel] = pcan.PcanBus(channel,
                                                                          bitrate=baudrate)
             return CanConnectionFactory.connections[channel]
 
         elif connectionType == 'vector':
-            channel = CanConnectionFactory.config['vector']['channel']
-            app_name = CanConnectionFactory.config['vector']['app_name']
+            channel = int(CanConnectionFactory.config['vector']['channel'])
+            app_name = CanConnectionFactory.config['vector']['appName']
             connectionKey = str("{0}_{1}").format(app_name, channel)
             if connectionKey not in CanConnectionFactory.connections:
-                baudrate = int(CanConnectionFactory.config['connection']['baudrate']) * 1000
-                bus = vector.VectorBus(channel,
-                                       app_name=app_name,
-                                       data_bitrate=baudrate)
+                baudrate = int(CanConnectionFactory.config['can']['baudrate'])
+                CanConnectionFactory.connections[connectionKey] = vector.VectorBus(channel,
+                                                                             app_name=app_name,
+                                                                             data_bitrate=baudrate)
 
             return CanConnectionFactory.connections[connectionKey]
 

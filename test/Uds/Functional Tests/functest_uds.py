@@ -13,7 +13,7 @@ __status__ = "Development"
 import can
 from threading import Thread
 from time import time, sleep
-from uds_communications.Uds.Uds import Uds
+from uds.uds_communications.Uds import Uds
 
 
 recvBuffer = []

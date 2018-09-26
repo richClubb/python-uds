@@ -10,10 +10,10 @@ __email__ = "richard.clubb@embeduk.com"
 __status__ = "Development"
 
 
-from uds_communications import Uds
+from uds.uds_communications import Uds
 import xml.etree.ElementTree as ET
-from uds_config_tool.SupportedServices.ReadDataByIdentifierContainer import ReadDataByIdentifierContainer
-from uds_config_tool.FunctionCreation.ReadDataByIdentifierMethodFactory import ReadDataByIdentifierMethodFactory
+from uds.uds_config_tool.SupportedServices.ReadDataByIdentifierContainer import ReadDataByIdentifierContainer
+from uds.uds_config_tool.FunctionCreation.ReadDataByIdentifierMethodFactory import ReadDataByIdentifierMethodFactory
 
 
 supportedServices = {22, }

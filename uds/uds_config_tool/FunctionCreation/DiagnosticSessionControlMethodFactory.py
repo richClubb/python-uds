@@ -10,10 +10,10 @@ __email__ = "richard.clubb@embeduk.com"
 __status__ = "Development"
 
 
-from uds_config_tool.FunctionCreation.iServiceMethodFactory import IServiceMethodFactory
+from uds.uds_config_tool import IServiceMethodFactory
 
 
-class WriteDataByIdentifierMethodFactory(IServiceMethodFactory):
+class DiagnosticSessionControlMethodFactory(IServiceMethodFactory):
 
     ##
     # @brief method to create the request function for the service element
