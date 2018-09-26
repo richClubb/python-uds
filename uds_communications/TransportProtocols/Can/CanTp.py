@@ -52,20 +52,6 @@ class CanTp(iTp):
         self.__config = None
 
         self.__loadConfiguration(configPath)
-
-        # this should probably be in the config file as well
-        # this needs expanding to support the other addressing types
-        addressingType = self.__config['canTp']['addressingType']
-        if addressingType == "NORMAL":
-            self.__addressingType = CanTpAddressingTypes.NORMAL
-        elif addressingType == "NORMAL_FIXED":
-            self.__addressingType = CanTpAddressingTypes.NORMAL_FIXED
-        elif addressingType == "MIXED":
-            self.__addressingType = CanTpAddressingTypes.MIXED
-
-        self.__reqId = int(self.__config['canTp']['reqId'], 16)
-        self.__resId = int(self.__config['canTp']['resId'], 16)
-
         self.__checkKwargs(**kwargs)
 
         canConnectionFactory = CanConnectionFactory()
@@ -77,6 +63,17 @@ class CanTp(iTp):
         self.__notifier = can.Notifier(self.__bus, [self.__listener], 0)
 
         self.__recvBuffer = []
+
+        addressingType = self.__config['canTp']['addressingType']
+        if addressingType == "NORMAL":
+            self.__addressingType = CanTpAddressingTypes.NORMAL
+        elif addressingType == "NORMAL_FIXED":
+            self.__addressingType = CanTpAddressingTypes.NORMAL_FIXED
+        elif addressingType == "MIXED":
+            self.__addressingType = CanTpAddressingTypes.MIXED
+
+        self.__reqId = int(self.__config['canTp']['reqId'], 16)
+        self.__resId = int(self.__config['canTp']['resId'], 16)
 
         if(self.__addressingType == CanTpAddressingTypes.NORMAL_FIXED):
             self.__maxPduLength = 7
@@ -110,12 +107,14 @@ class CanTp(iTp):
 
     def __checkKwargs(self, **kwargs):
 
-        if 'addressingType' in kwargs: self.__addressingType = kwargs['addressingType']
+        if 'addressingType' in kwargs:
+            self.__config['canTp']['addressingType'] = kwargs['addressingType']
 
-        if 'reqId' in kwargs: self.__reqId = kwargs['reqId']
+        if 'reqId' in kwargs:
+            self.__config['canTp']['reqId'] = str(hex(kwargs['reqId']))
 
-        if 'resId' in kwargs: self.__reqId = kwargs['resId']
-
+        if 'resId' in kwargs:
+            self.__config['canTp']['resId'] = str(hex(kwargs['resId']))
         pass
 
     ##

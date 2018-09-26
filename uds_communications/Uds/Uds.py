@@ -30,12 +30,11 @@ class Uds(object):
         self.__P2_CAN_Server = None
 
         self.__loadConfiguration(configPath)
+        self.__checkKwargs(**kwargs)
 
         self.__transportProtocol = self.__config['uds']['transportProtocol']
-        self.__P2_CAN_Client = int(self.__config['uds']['P2_CAN_Client'])
-        self.__P2_CAN_Server = int(self.__config['uds']['P2_CAN_Server'])
-
-        self.__checkKwargs(**kwargs)
+        self.__P2_CAN_Client = float(self.__config['uds']['P2_CAN_Client'])
+        self.__P2_CAN_Server = float(self.__config['uds']['P2_CAN_Server'])
 
         tpFactory = TpFactory()
         self.__tp = tpFactory(self.__transportProtocol, configPath=configPath, **kwargs)
@@ -62,13 +61,13 @@ class Uds(object):
     def __checkKwargs(self, **kwargs):
 
         if 'transportProtocol' in kwargs:
-            self.__transportProtocol = kwargs['transportProtocol']
+            self.__config['uds']['transportProtocol'] = kwargs['transportProtocol']
 
         if 'P2_CAN_Server' in kwargs:
-            self.__P2_CAN_Server = kwargs['P2_CAN_Server']
+            self.__config['uds']['P2_CAN_Server'] = str(kwargs['P2_CAN_Server'])
 
         if 'P2_CAN_Client' in kwargs:
-            self.__P2_CAN_Client = kwargs['P2_CAN_Client']
+            self.__config['uds']['P2_CAN_Client'] = str(kwargs['P2_CAN_Client'])
 
     ##
     # @brief
