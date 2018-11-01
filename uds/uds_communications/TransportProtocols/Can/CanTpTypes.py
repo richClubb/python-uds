@@ -28,7 +28,8 @@ class N_Result(Enum):
 class CanTpAddressingTypes(Enum):
     NORMAL = 0
     NORMAL_FIXED = 1
-    MIXED = 2
+    EXTENDED = 2
+    MIXED = 3
 
 
 class CanTpState(Enum):
@@ -39,7 +40,7 @@ class CanTpState(Enum):
     SEND_FLOW_CONTROL = 4
     WAIT_FLOW_CONTROL = 5
     WAIT_STMIN_TIMEOUT = 6
-    WAIT_WAIT_TIMEOUT  = 7
+    WAIT_WAIT_TIMEOUT = 7
     RECEIVING_CONSECUTIVE_FRAME = 8
 
 
@@ -56,6 +57,11 @@ class CanTpFsTypes(IntEnum):
     OVERFLOW = 0x02
 
 
+class CanTpMTypes(Enum):
+    DIAGNOSTICS = 0x01
+    REMOTE_DIAGNOSTICS = 0x02
+
+
 CANTP_MAX_PAYLOAD_LENGTH = 4095
 N_PCI_INDEX = 0
 SINGLE_FRAME_DL_INDEX = 0
@@ -69,6 +75,3 @@ CONSECUTIVE_FRAME_SEQUENCE_NUMBER_INDEX = 0
 CONSECUTIVE_FRAME_SEQUENCE_DATA_START_INDEX = 1
 FLOW_CONTROL_BS_INDEX = 1
 FLOW_CONTROL_STMIN_INDEX = 2
-
-##
-# @brief exception for the consecutive frame out of sequence

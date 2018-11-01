@@ -16,7 +16,7 @@ from can.interfaces import pcan, vector
 from uds import iTp
 from uds import ResettableTimer
 from uds.uds_communications.TransportProtocols.Can.CanTpTypes import CanTpAddressingTypes, CanTpState, \
-    CanTpMessageType, CanTpFsTypes
+    CanTpMessageType, CanTpFsTypes, CanTpMTypes
 from uds.uds_communications.TransportProtocols.Can.CanTpTypes import CANTP_MAX_PAYLOAD_LENGTH, SINGLE_FRAME_DL_INDEX, \
     FIRST_FRAME_DL_INDEX_HIGH, FIRST_FRAME_DL_INDEX_LOW, FC_BS_INDEX, FC_STMIN_INDEX, N_PCI_INDEX, \
     FIRST_FRAME_DATA_START_INDEX, SINGLE_FRAME_DATA_START_INDEX, CONSECUTIVE_FRAME_SEQUENCE_NUMBER_INDEX, \
@@ -26,7 +26,8 @@ from uds import Config
 
 from os import path
 
-
+##
+# @brief pads out an array with a fill value
 def fillArray(data, length, fillValue=0):
     output = []
     for i in range(0, length):
@@ -44,51 +45,72 @@ def fillArray(data, length, fillValue=0):
 # depends on a bus object for communication on CAN
 class CanTp(iTp):
 
-    configParams = ['reqId','resId', 'addressingType']
+    configParams = ['reqId', 'resId', 'addressingType']
 
     ##
     # @brief constructor for the CanTp object
     def __init__(self, configPath=None, **kwargs):
 
+        # perform the instance config
         self.__config = None
 
         self.__loadConfiguration(configPath)
         self.__checkKwargs(**kwargs)
 
+        # set up the CAN connection
         canConnectionFactory = CanConnectionFactory()
         self.__bus = canConnectionFactory(configPath, **kwargs)
 
-        # there probably needs to be an adapter to deal with these parts as they couple to python-can heavily
         self.__listener = can.Listener()
         self.__listener.on_message_received = self.callback_onReceive
         self.__notifier = can.Notifier(self.__bus, [self.__listener], 0)
 
         self.__recvBuffer = []
 
+        # load variables from the config
+        self.__N_AE = int(self.__config['canTp']['N_AE'], 16)
+        self.__N_TA = int(self.__config['canTp']['N_TA'], 16)
+        self.__N_SA = int(self.__config['canTp']['N_SA'], 16)
+
+        Mtype = self.__config['canTp']['Mtype']
+        if (Mtype == "DIAGNOSTICS"):
+            self.__Mtype = CanTpMTypes.DIAGNOSTICS
+        elif (Mtype == "REMOTE_DIAGNOSTICS"):
+            self.__Mtype = CanTpMTypes.REMOTE_DIAGNOSTICS
+        else:
+            raise Exception("Do not understand the Mtype config")
+
         addressingType = self.__config['canTp']['addressingType']
         if addressingType == "NORMAL":
             self.__addressingType = CanTpAddressingTypes.NORMAL
         elif addressingType == "NORMAL_FIXED":
             self.__addressingType = CanTpAddressingTypes.NORMAL_FIXED
+        elif self.__addressingType == "EXTENDED":
+            self.__addressingType = CanTpAddressingTypes.EXTENDED
         elif addressingType == "MIXED":
             self.__addressingType = CanTpAddressingTypes.MIXED
+        else:
+            raise Exception("Do not understand the addressing config")
 
         self.__reqId = int(self.__config['canTp']['reqId'], 16)
         self.__resId = int(self.__config['canTp']['resId'], 16)
 
-        if(self.__addressingType == CanTpAddressingTypes.NORMAL_FIXED):
+        # sets up the relevant parameters in the instance
+        if(
+                (self.__addressingType == CanTpAddressingTypes.NORMAL) |
+                (self.__addressingType == CanTpAddressingTypes.NORMAL_FIXED)
+        ):
             self.__maxPduLength = 7
             self.__pduStartIndex = 0
-        else:
+        elif(
+                (self.__addressingType == CanTpAddressingTypes.EXTENDED) |
+                (self.__addressingType == CanTpAddressingTypes.MIXED)
+        ):
             self.__maxPduLength = 6
             self.__pduStartIndex = 1
 
-        self.__N_AE = 0xFF
-        self.__N_TA = 0xFF
-        self.__N_SA = 0xFF
-
     ##
-    #
+    # @brief used to load the local configuration options and override them with any passed in from a config file
     def __loadConfiguration(self, configPath, **kwargs):
 
         #load the base config
@@ -106,6 +128,8 @@ class CanTp(iTp):
             else:
                 raise FileNotFoundError("specified config not found")
 
+    ##
+    # @brief goes through the kwargs and overrides any of the local configuration options
     def __checkKwargs(self, **kwargs):
 
         if 'addressingType' in kwargs:
@@ -116,7 +140,18 @@ class CanTp(iTp):
 
         if 'resId' in kwargs:
             self.__config['canTp']['resId'] = str(hex(kwargs['resId']))
-        pass
+
+        if 'N_SA' in kwargs:
+            self.__config['canTp']['N_SA'] = str(kwargs['N_SA'])
+
+        if 'N_TA' in kwargs:
+            self.__config['canTp']['N_TA'] = str(kwargs['N_TA'])
+
+        if 'N_AE' in kwargs:
+            self.__config['canTp']['N_AE'] = str(kwargs['N_AE'])
+
+        if 'Mtype' in kwargs:
+            self.__config['canTp']['Mtype'] = str(kwargs['Mtype'])
 
     ##
     # @brief connection method
@@ -330,10 +365,15 @@ class CanTp(iTp):
     ##
     # @brief the listener callback used when a message is received
     def callback_onReceive(self, msg):
-        if(msg.arbitration_id == self.__resId):
-            # print("CanTp Instance received message")
-            # print(unpack('BBBBBBBB', msg.data))
-            self.__recvBuffer.append(msg.data[self.__pduStartIndex:])
+        if self.__addressingType == CanTpAddressingTypes.NORMAL:
+            if msg.arbitration_id == self.__resId:
+                self.__recvBuffer.append(msg.data[self.__pduStartIndex:])
+        elif self.__addressingType == CanTpAddressingTypes.NORMAL_FIXED:
+            raise Exception("I do not know how to receive this addressing type yet")
+        elif self.__addressingType == CanTpAddressingTypes.MIXED:
+            raise Exception("I do not know how to receive this addressing type yet")
+        else:
+            raise Exception("I do not know how to receive this addressing type")
 
     ##
     # @brief function to decode the StMin parameter
@@ -351,6 +391,8 @@ class CanTp(iTp):
         else:
             raise Exception("Unknown STMin time")
 
+    ##
+    # @brief creates the blocklist from the blocksize and payload
     def create_blockList(self, payload, blockSize):
 
         blockList = []
@@ -385,6 +427,8 @@ class CanTp(iTp):
 
         return blockList
 
+    ##
+    # @brief transmits the data over can
     def transmit(self, data, functionalReq=False):
 
         # check functional request
@@ -405,10 +449,6 @@ class CanTp(iTp):
             canMsg.data[0] = self.__N_AE
             canMsg.data[1:] = data
         else:
-            raise Exception("Do not know how to deal with this type of addressing scheme")
+            raise Exception("I do not know how to send this addressing type")
 
         self.__bus.send(canMsg)
-
-
-if __name__ == "__main__":
-    pass
