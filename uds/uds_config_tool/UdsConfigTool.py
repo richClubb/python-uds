@@ -71,20 +71,22 @@ def createUdsConnection(xmlFile, ecuName):
                     pass
 
             if(serviceId == 0x22):
-                requestFunc = ReadDataByIdentifierMethodFactory.create_requestFunction(value, xmlElements)
-                rdbiContainer.add_requestFunction(requestFunc, humanName)
+                # The new code extends the range of functions required, in order to handle RDBI working for concatenated lists of DIDs ...
+                requestFunctions = ReadDataByIdentifierMethodFactory.create_requestFunctions(value, xmlElements)
+                rdbiContainer.add_requestSIDFunction(requestFunctions[0], humanName)  # ... note: this will now need to handle replication of this one!!!!
+                rdbiContainer.add_requestDIDFunction(requestFunctions[1], humanName)
 
-                negativeResponseFunction = ReadDataByIdentifierMethodFactory.create_checkNegativeResponseFunction(value,
-                                                                                                                  xmlElements)
+                negativeResponseFunction = ReadDataByIdentifierMethodFactory.create_checkNegativeResponseFunction(value, xmlElements)
                 rdbiContainer.add_negativeResponseFunction(negativeResponseFunction, humanName)
-                checkFunc = ReadDataByIdentifierMethodFactory.create_checkPositiveResponseFunction(value, xmlElements)
 
-                rdbiContainer.add_checkFunction(checkFunc, humanName)
+                checkFunctions = ReadDataByIdentifierMethodFactory.create_checkPositiveResponseFunctions(value, xmlElements)
+                rdbiContainer.add_checkSIDResponseFunction(checkFunctions[0], humanName)
+                rdbiContainer.add_checkSIDLengthFunction(checkFunctions[1], humanName)
+                rdbiContainer.add_checkSIDResponseFunction(checkFunctions[2], humanName)
+                rdbiContainer.add_checkSIDLengthFunction(checkFunctions[3], humanName)
 
                 positiveResponseFunction = ReadDataByIdentifierMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
                 rdbiContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
-
-                # print("\n")
 
     outputEcu = Uds.Uds(0x600, 0x650)
 

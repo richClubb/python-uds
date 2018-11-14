@@ -14,23 +14,35 @@ from uds.uds_config_tool import DecodeFunctions
 import sys
 from uds.uds_config_tool.FunctionCreation.iServiceMethodFactory import IServiceMethodFactory
 
+# Extended to cater for multiple DIDs in a request - typically rather than processing
+# a whole response in one go, we break it down and process each part separately.
+# We can cater for multiple DIDs by then combining whatever calls we need to.
 
-requestFuncTemplate = str("def {0}():\n"
-                          "    return {1} + {2}")
+requestSIDFuncTemplate = str("def {0}():\n"
+                          "    return {1}")
+requestDIDFuncTemplate = str("def {0}():\n"
+                          "    return {1}")
 
-checkFunctionTemplate = str("def {0}(input):\n"
+checkSIDRespFuncTemplate = str("def {0}(input):\n"
                             "    serviceIdExpected = {1}\n"
-                            "    diagnosticIdExpected = {2}\n"
-                            "    serviceId = DecodeFunctions.buildIntFromList(input[{3}:{4}])\n"
-                            "    diagnosticId = DecodeFunctions.buildIntFromList(input[{5}:{6}])\n"
-                            "    if(len(input) != {7}): raise Exception(\"Total length returned not as expected. Expected: {7}; Got {{0}}\".format(len(input)))\n"
-                            "    if(serviceId != serviceIdExpected): raise Exception(\"Service Id Received not expected. Expected {{0}}; Got {{1}} \".format(serviceIdExpected, serviceId))\n"
+                            "    serviceId = DecodeFunctions.buildIntFromList(input[{2}:{3}])\n"
+                            "    if(serviceId != serviceIdExpected): raise Exception(\"Service Id Received not expected. Expected {{0}}; Got {{1}} \".format(serviceIdExpected, serviceId))")
+
+checkSIDLenFuncTemplate = str("def {0}(input):\n"
+                            "    return {1}")
+
+checkDIDRespFuncTemplate = str("def {0}(input):\n"
+                            "    diagnosticIdExpected = {1}\n"
+                            "    diagnosticId = DecodeFunctions.buildIntFromList(input[{2}:{3}])\n"
                             "    if(diagnosticId != diagnosticIdExpected): raise Exception(\"Diagnostic Id Received not as expected. Expected: {{0}}; Got {{1}}\".format(diagnosticIdExpected, diagnosticId))")
+
+checkDIDLenFuncTemplate = str("def {0}(input):\n"
+                            "    return {1}")
 
 negativeResponseFuncTemplate = str("def {0}(input):\n"
                                    "    {1}")
 
-encodePositiveResponseFuncTemplate = str("def {0}(input):\n"
+encodePositiveResponseFuncTemplate = str("def {0}(input,offset):\n"
                                          "    result = {{}}\n"
                                          "    {1}\n"
                                          "    return result")
@@ -41,12 +53,14 @@ encodePositiveResponseFuncTemplate = str("def {0}(input):\n"
 class ReadDataByIdentifierMethodFactory(IServiceMethodFactory):
 
     @staticmethod
-    def create_requestFunction(diagServiceElement, xmlElements):
+    def create_requestFunctions(diagServiceElement, xmlElements):
 
         serviceId = 0
         diagnosticId = 0
 
         shortName = "request_{0}".format(diagServiceElement.find('SHORT-NAME').text)
+        requestSIDFuncName = "requestSID_{0}".format(shortName)
+        requestDIDFuncName = "requestDID_{0}".format(shortName)
         requestElement = xmlElements[diagServiceElement.find('REQUEST-REF').attrib['ID-REF']]
         paramsElement = requestElement.find('PARAMS')
         for param in paramsElement:
@@ -61,26 +75,33 @@ class ReadDataByIdentifierMethodFactory(IServiceMethodFactory):
             elif(semantic == 'ID'):
                 diagnosticId = DecodeFunctions.intArrayToIntArray([int(param.find('CODED-VALUE').text)], 'int16', 'int8')
 
-        funcString = requestFuncTemplate.format(shortName,
-                                                serviceId,
-                                                diagnosticId)
-        # print(funcString)
+        funcString = requestSIDFuncTemplate.format(requestSIDFuncName, # 0
+                                                serviceId) #1
         exec(funcString)
-        return locals()[shortName]
+
+        funcString = requestDIDFuncTemplate.format(requestDIDFuncName, #0
+                                                diagnosticId) # 1
+        exec(funcString)
+
+        return (locals()[requestSIDFuncName],locals()[requestDIDFuncName])
 
     @staticmethod
-    def create_checkPositiveResponseFunction(diagServiceElement, xmlElements):
+    def create_checkPositiveResponseFunctions(diagServiceElement, xmlElements):
 
         responseId = 0
         diagnosticId = 0
 
         shortName = diagServiceElement.find('SHORT-NAME').text
-        checkFunctionName = "check_{0}".format(shortName)
+        checkSIDRespFuncName = "checkSIDResp_{0}".format(shortName)
+        checkSIDLenFuncName = "checkSIDLen_{0}".format(shortName)
+        checkDIDRespFuncName = "checkDIDResp_{0}".format(shortName)
+        checkDIDLenFuncName = "checkDIDLen_{0}".format(shortName)
         positiveResponseElement = xmlElements[(diagServiceElement.find('POS-RESPONSE-REFS')).find('POS-RESPONSE-REF').attrib['ID-REF']]
 
         paramsElement = positiveResponseElement.find('PARAMS')
 
         totalLength = 0
+		SIDLength = 0
 
         for param in paramsElement:
             try:
@@ -99,6 +120,7 @@ class ReadDataByIdentifierMethodFactory(IServiceMethodFactory):
                     responseIdStart = startByte
                     responseIdEnd = startByte + listLength
                     totalLength += listLength
+					SIDLength = listLength
                 elif(semantic == 'ID'):
                     diagnosticId = int(param.find('CODED-VALUE').text)
                     bitLength = int((param.find('DIAG-CODED-TYPE')).find('BIT-LENGTH').text)
@@ -125,21 +147,28 @@ class ReadDataByIdentifierMethodFactory(IServiceMethodFactory):
                 print(sys.exc_info())
                 pass
 
-        checkFunctionString = checkFunctionTemplate.format(checkFunctionName, # 0
+        checkSIDRespFuncString = checkSIDRespFuncTemplate.format(checkSIDRespFuncName, # 0
                                                            responseId, # 1
-                                                           diagnosticId, # 2
-                                                           responseIdStart, # 3
-                                                           responseIdEnd, # 4
-                                                           diagnosticIdStart, # 5
-                                                           diagnosticIdEnd, # 6
-                                                           totalLength) # 7
+                                                           responseIdStart, # 2
+                                                           responseIdEnd) # 3
+        exec(checkSIDRespFuncString)
+        checkSIDLenFuncString = checkSIDLenFuncTemplate.format(checkSIDLenFuncName, # 0
+                                                           totalLength) # 1
+        exec(checkSIDLenFuncString)
+        checkDIDRespFuncString = checkDIDRespFuncTemplate.format(checkDIDRespFuncName, # 0
+                                                           diagnosticId, # 1
+                                                           diagnosticIdStart - SIDLength, # 2... note: we no longer look at absolute pos in the response,
+                                                           diagnosticIdEnd - SIDLength) # 3      but look at the DID response as an isolated extracted element.
+        exec(checkDIDRespFuncString)
+        checkDIDLenFuncString = checkDIDLenFuncTemplate.format(checkDIDLenFuncName, # 0
+                                                           totalLength) # 1
+        exec(checkDIDLenFuncString)
 
-        # print(checkFunctionString)
-        exec(checkFunctionString)
-        return locals()[checkFunctionName]
+        return (locals()[checkSIDRespFuncName],locals()[checkSIDLenFuncName],locals()[checkDIDRespFuncName],locals()[checkDIDLenFuncName])
+
 
     ##
-    # @brief may need refactoring to deal with multiple positive-responses
+    # @brief may need refactoring to deal with multiple positive-responses (WIP)
     @staticmethod
     def create_encodePositiveResponseFunction(diagServiceElement, xmlElements):
 
@@ -169,10 +198,10 @@ class ReadDataByIdentifierMethodFactory(IServiceMethodFactory):
                     endPosition = bytePosition + listLength
                     encodingType = dataObjectElement.find('DIAG-CODED-TYPE').attrib['BASE-DATA-TYPE']
                     if(encodingType) == "A_ASCIISTRING":
-                        functionString = "DecodeFunctions.intListToString(input[{0}:{1}], None)".format(bytePosition,
+                        functionString = "DecodeFunctions.intListToString(input[{0}-offset:{1}-offset], None)".format(bytePosition,
                                                                                                         endPosition)
                     else:
-                        functionString = "input[{1}:{2}]".format(longName,
+                        functionString = "input[{1}-offest:{2}-offset]".format(longName,
                                                                  bytePosition,
                                                                  endPosition)
                     encodeFunctions.append("result['{0}'] = {1}".format(longName,
@@ -182,10 +211,7 @@ class ReadDataByIdentifierMethodFactory(IServiceMethodFactory):
 
         encodeFunctionString = encodePositiveResponseFuncTemplate.format(encodePositiveResponseFunctionName,
                                                                          "\n    ".join(encodeFunctions))
-
-        # print(encodeFunctionString)
         exec(encodeFunctionString)
-        a = locals()[encodePositiveResponseFunctionName]
         return locals()[encodePositiveResponseFunctionName]
 
     @staticmethod
@@ -230,7 +256,6 @@ class ReadDataByIdentifierMethodFactory(IServiceMethodFactory):
 
         negativeResponseFunctionString = negativeResponseFuncTemplate.format(check_negativeResponseFunctionName,
                                                                              "\n....".join(negativeResponseChecks))
-        # print(negativeResponseFunctionString)
         exec(negativeResponseFunctionString)
         return locals()[check_negativeResponseFunctionName]
 
