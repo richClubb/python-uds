@@ -18,7 +18,7 @@ __email__ = "richard.clubb@embeduk.com"
 __status__ = "Development"
 
 
-import DecodeFunctions
+from uds import DecodeFunctions
 
 
 def check_Boot_Software_Identification_Read(payload):

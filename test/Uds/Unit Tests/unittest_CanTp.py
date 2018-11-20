@@ -13,6 +13,7 @@ __status__ = "Development"
 import unittest
 from unittest.mock import patch
 
+from uds import CanTp
 
 class CanTpTestCase(unittest.TestCase):
 
@@ -21,7 +22,7 @@ class CanTpTestCase(unittest.TestCase):
         for i in range(0, 4096):
             payload.append(0)
 
-        tpConnection = CanTp.CanTp(0x600, 0x650)
+        tpConnection = CanTp(reqId=0x600, resId=0x650)
         with self.assertRaises(Exception):
             tpConnection.send(payload)
 
