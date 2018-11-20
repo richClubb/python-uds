@@ -14,6 +14,8 @@ from uds.uds_communications import Uds
 import xml.etree.ElementTree as ET
 from uds.uds_config_tool.SupportedServices.ReadDataByIdentifierContainer import ReadDataByIdentifierContainer
 from uds.uds_config_tool.FunctionCreation.ReadDataByIdentifierMethodFactory import ReadDataByIdentifierMethodFactory
+from uds.uds_config_tool.SupportedServices.WriteDataByIdentifierContainer import WriteDataByIdentifierContainer
+from uds.uds_config_tool.FunctionCreation.WriteDataByIdentifierMethodFactory import WriteDataByIdentifierMethodFactory
 
 
 supportedServices = {22, }
@@ -48,6 +50,7 @@ def createUdsConnection(xmlFile, ecuName):
 
     # create any supported containers
     rdbiContainer = ReadDataByIdentifierContainer()
+    wdbiContainer = WriteDataByIdentifierContainer()
 
     xmlElements = {}
 
@@ -85,12 +88,32 @@ def createUdsConnection(xmlFile, ecuName):
                 rdbiContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
 
                 # print("\n")
+				
+            if(serviceId == 0x2E):
+                requestFunc = WriteDataByIdentifierMethodFactory.create_requestFunction(value, xmlElements)
+                wdbiContainer.add_requestFunction(requestFunc, humanName)
+
+                negativeResponseFunction = WriteDataByIdentifierMethodFactory.create_checkNegativeResponseFunction(value,
+                                                                                                                  xmlElements)
+                wdbiContainer.add_negativeResponseFunction(negativeResponseFunction, humanName)
+                checkFunc = WriteDataByIdentifierMethodFactory.create_checkPositiveResponseFunction(value, xmlElements)
+
+                wdbiContainer.add_checkFunction(checkFunc, humanName)
+
+                positiveResponseFunction = WriteDataByIdentifierMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
+                wdbiContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
+
+                # print("\n")
 
     outputEcu = Uds.Uds(0x600, 0x650)
 
-    # check to see if any rdbi services have been found
+    # Bind any rdbi services have been found
     setattr(outputEcu, 'readDataByIdentifierContainer', rdbiContainer)
     rdbiContainer.bind_function(outputEcu)
+
+    # Bind any wdbi services have been found
+    setattr(outputEcu, 'writeDataByIdentifierContainer', wdbiContainer)
+    wdbiContainer.bind_function(outputEcu)
 
     return outputEcu
 
@@ -100,4 +123,5 @@ if __name__ == "__main__":
     a = createUdsConnection('Bootloader.odx', 'bootloader')
 
     a.readDataByIdentifier('ECU Serial Number')
+    #a.writeDataByIdentifier('ECU Serial Number','??????????')  # Not sure what format we need for the dataRecord going into writeDataByIdentifier()
     pass
