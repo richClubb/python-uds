@@ -1,4 +1,4 @@
-from uds.uds_communications import Uds
+from uds import Uds
 from can import Bus, Listener, Notifier
 from time import sleep
 

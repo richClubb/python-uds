@@ -13,7 +13,7 @@ __status__ = "Development"
 import can
 from threading import Thread
 from time import time, sleep
-from uds.uds_communications.Uds import Uds
+from uds import Uds
 
 
 recvBuffer = []
@@ -105,7 +105,7 @@ if __name__ == "__main__":
 
     listener.on_message_received = onReceiveCallback
 
-    udsConnection = Uds(0x600, 0x650)
+    udsConnection = Uds()
 
     print("Test 1")
     clearReceiveBuffer()

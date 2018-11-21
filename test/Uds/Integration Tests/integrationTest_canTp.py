@@ -11,17 +11,17 @@ __status__ = "Development"
 
 
 from threading import Thread
-from uds.uds_communications import CanTp
+from uds import CanTp
 from time import sleep
 
 
 if __name__ == "__main__":
 
-    sender = CanTp(0x600, 0x650)
+    sender = CanTp(reqId=0x600, resId=0x650)
 
     def receiverFunc():
 
-        receiver = CanTp(0x650, 0x600)
+        receiver = CanTp(reqId=0x650, resId=0x600)
 
         a = receiver.recv(100)
 

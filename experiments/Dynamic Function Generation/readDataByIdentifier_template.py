@@ -23,7 +23,7 @@ def readDataByIdentifier(diagnosticIdentifier):
 ##
 # function template for checking the response
 check_rdbiPayload_template = str("def check_{0}(payload):\n"
-                                 "    import DecodeFunctions\n"
+                                 "    from uds import DecodeFunctions\n"
                                  "    expectedLength = {1}\n"
                                  "    if(len(payload) != expectedLength):\n"
                                  "        raise Exception(\"Unexpected length of response: Received length: \" "
@@ -51,7 +51,7 @@ check_rdbiPayload_template = str("def check_{0}(payload):\n"
 ##
 # function template for decoding the response and presenting it to the user
 decode_rdbiPayload_template =   str("def decode_{0}(payload):\n"
-                                    "    import DecodeFunctions\n"
+                                    "    from uds import DecodeFunctions\n"
                                     "    check_{0}(payload)\n"
                                     "    numberOfModules = payload[3:4]\n"                   # these two lines need to be dynamically populated based on the content
                                     "    Boot_Software_Identification = payload[4:28]\n"     # these two lines need to be dynamically populated based on the content

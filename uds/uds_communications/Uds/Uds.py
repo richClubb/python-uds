@@ -37,7 +37,7 @@ class Uds(object):
         self.__P2_CAN_Server = float(self.__config['uds']['P2_CAN_Server'])
 
         tpFactory = TpFactory()
-        self.__tp = tpFactory(self.__transportProtocol, configPath=configPath, **kwargs)
+        self.tp = tpFactory(self.__transportProtocol, configPath=configPath, **kwargs)
 
         # used as a semaphore for the tester present
         self.__transmissionActive_flag = False
@@ -78,13 +78,13 @@ class Uds(object):
 
         response = None
 
-        self.__tp.send(msg, functionalReq)
+        a = self.tp.send(msg, functionalReq)
 
         if functionalReq is True:
             responseRequired = False
 
         if responseRequired:
-            response = self.__tp.recv(self.__P2_CAN_Client)
+            response = self.tp.recv(self.__P2_CAN_Client)
 
         # lets go of the hold on transmissions
         self.__transmissionActive_flag = False
@@ -93,4 +93,5 @@ class Uds(object):
 
 
 if __name__ == "__main__":
+
     pass

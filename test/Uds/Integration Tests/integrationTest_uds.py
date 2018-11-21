@@ -11,15 +11,15 @@ __status__ = "Development"
 
 
 import unittest
-from uds.uds_communications.Uds import Uds
+from uds import Uds
 from unittest import mock
 
 
 class UdsTestCase(unittest.TestCase):
 
     # these are inserted in reverse order to what you'd expect
-    @mock.patch('CanTp.CanTp.recv')
-    @mock.patch('CanTp.CanTp.send')
+    @mock.patch('uds.CanTp.send')
+    @mock.patch('uds.CanTp.recv')
     def test_udsSendWithResponse(self,
                      canTp_recv,
                      canTp_send):
