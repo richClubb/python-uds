@@ -18,7 +18,7 @@ from uds.uds_config_tool.SupportedServices.WriteDataByIdentifierContainer import
 from uds.uds_config_tool.FunctionCreation.WriteDataByIdentifierMethodFactory import WriteDataByIdentifierMethodFactory
 
 
-supportedServices = {22, }
+supportedServices = {22, }  # ?????????????? what's this used for? Doesn't appear to have a purposeat present - should be [0x22, 0x2E] ?
 
 
 def get_serviceIdFromXmlElement(diagServiceElement, xmlElements):
@@ -112,8 +112,7 @@ def createUdsConnection(xmlFile, ecuName):
                 wdbiContainer.add_requestFunction(requestFunc, humanName)
 
 
-                negativeResponseFunction = WriteDataByIdentifierMethodFactory.create_checkNegativeResponseFunction(value,
-                                                                                                                  xmlElements)
+                negativeResponseFunction = WriteDataByIdentifierMethodFactory.create_checkNegativeResponseFunction(value, xmlElements)
                 wdbiContainer.add_negativeResponseFunction(negativeResponseFunction, humanName)
                 checkFunc = WriteDataByIdentifierMethodFactory.create_checkPositiveResponseFunction(value, xmlElements)
 
@@ -135,8 +134,9 @@ def createUdsConnection(xmlFile, ecuName):
         rdbiContainer.bind_function(outputEcu)
 
     # Bind any wdbi services have been found
-    setattr(outputEcu, 'writeDataByIdentifierContainer', wdbiContainer)
-    wdbiContainer.bind_function(outputEcu)
+    if wdbiService_flag:
+        setattr(outputEcu, 'writeDataByIdentifierContainer', wdbiContainer)
+        wdbiContainer.bind_function(outputEcu)
 
     return outputEcu
 
