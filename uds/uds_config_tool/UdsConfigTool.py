@@ -49,7 +49,8 @@ def createUdsConnection(xmlFile, ecuName):
     root = ET.parse(xmlFile)
 
     # create any supported containers
-    rdbiContainer = ReadDataByIdentifierContainer()    wdbiContainer = WriteDataByIdentifierContainer()
+    rdbiContainer = ReadDataByIdentifierContainer()
+    wdbiContainer = WriteDataByIdentifierContainer()
     sessionService_flag = False
     ecuResetService_flag = False
     rdbiService_flag = False
@@ -111,11 +112,10 @@ def createUdsConnection(xmlFile, ecuName):
                 requestFunc = WriteDataByIdentifierMethodFactory.create_requestFunction(value, xmlElements)
                 wdbiContainer.add_requestFunction(requestFunc, humanName)
 
-
                 negativeResponseFunction = WriteDataByIdentifierMethodFactory.create_checkNegativeResponseFunction(value, xmlElements)
                 wdbiContainer.add_negativeResponseFunction(negativeResponseFunction, humanName)
-                checkFunc = WriteDataByIdentifierMethodFactory.create_checkPositiveResponseFunction(value, xmlElements)
 
+                checkFunc = WriteDataByIdentifierMethodFactory.create_checkPositiveResponseFunction(value, xmlElements)
                 wdbiContainer.add_checkFunction(checkFunc, humanName)
 
                 positiveResponseFunction = WriteDataByIdentifierMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
@@ -123,11 +123,10 @@ def createUdsConnection(xmlFile, ecuName):
             elif serviceId == 0x2F:
                 pass
 
-                # print("\n")
-				
 
+    #need to be able to extract the reqId and resId
+    outputEcu = Uds.Uds(reqId=0x600, resId=0x650)
 
-    outputEcu = Uds.Uds(0x600, 0x650)
     # Bind any rdbi services have been found
     if rdbiService_flag:
         setattr(outputEcu, 'readDataByIdentifierContainer', rdbiContainer)
@@ -147,4 +146,4 @@ if __name__ == "__main__":
 
     a.readDataByIdentifier('ECU Serial Number')
     #a.writeDataByIdentifier('ECU Serial Number','??????????')  # Not sure what format we need for the dataRecord going into writeDataByIdentifier()
-    pass
+
