@@ -14,7 +14,9 @@ from uds.uds_config_tool.SupportedServices.iContainer import iContainer
 from types import MethodType
 
 
-class WriteDataByIdentifierContainer(iContainer):
+class WriteDataByIdentifierContainer(object):
+
+    __metaclass__ = iContainer
 
     def __init__(self):
         self.requestFunctions = {}

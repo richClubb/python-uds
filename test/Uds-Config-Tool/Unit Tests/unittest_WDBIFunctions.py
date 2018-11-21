@@ -11,19 +11,10 @@ __status__ = "Development"
 
 
 import unittest
-from uds.uds_communications.Uds.Uds import Uds
 from unittest import mock
-
-"""
-mockConfig = {
-    'connection': {
-        "defaultReqId": 0x600,
-        "defaultResId": 0x650,
-        "P2_Client": 1,
-        "P2_Server": 1
-    }
-}
-"""
+from uds import Uds
+from uds.uds_config_tool.UdsConfigTool import createUdsConnection
+import sys
 
 
 class WDBITestCase(unittest.TestCase):
@@ -40,7 +31,7 @@ class WDBITestCase(unittest.TestCase):
         canTp_recv.return_value = [0x22, 0xF1, 0x8C]
 
         # Parameters: xml file (odx file), ecu name (not currently used) ...
-        a = createUdsConnection('Bootloader.odx', 'bootloader')
+        a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __readDataByIdentifier to readDataByIdentifier in the uds object, so can now call below
 
         b = a.writeDataByIdentifier('ECU Serial Number','??????????')	# ... calls __readDataByIdentifier, which does the Uds.send
@@ -62,7 +53,7 @@ class WDBITestCase(unittest.TestCase):
 
 
         # Parameters: xml file (odx file), ecu name (not currently used) ...
-        a = createUdsConnection('Bootloader.odx', 'bootloader')
+        a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __readDataByIdentifier to readDataByIdentifier in the uds object, so can now call below
 
         b = a.writeDataByIdentifier('Boot Software Identification',{'Boot Software Identification':[0x00],'numberOfModules':[0x00]})	# ... calls __readDataByIdentifier, which does the Uds.send

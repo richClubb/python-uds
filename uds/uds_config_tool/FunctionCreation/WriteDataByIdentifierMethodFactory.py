@@ -12,7 +12,7 @@ __status__ = "Development"
 
 from uds.uds_config_tool import DecodeFunctions
 import sys
-from uds.uds_config_tool import IServiceMethodFactory
+from uds.uds_config_tool.FunctionCreation.iServiceMethodFactory import IServiceMethodFactory
 
 
 # When encode the dataRecord for transmission we have to allow for multiple elements in the data record
@@ -56,6 +56,7 @@ class WriteDataByIdentifierMethodFactory(IServiceMethodFactory):
 
         encodeFunctions = []
         encodeFunction = "None"
+        debug_count = 0  # ??????????????????????temp count only
 
         for param in paramsElement:
             semantic = None
@@ -72,27 +73,27 @@ class WriteDataByIdentifierMethodFactory(IServiceMethodFactory):
                 dataObjectElement = xmlElements[(param.find('DOP-REF')).attrib['ID-REF']]
                 longName = param.find('LONG-NAME').text
                 bytePosition = int(param.find('BYTE-POSITION').text)
-                bitLength = int(dataObjectElement.find('DIAG-CODED-TYPE').find('BIT-LENGTH').text)    # ?????????????????need to force lengths as well - may need an optional param to the encode??????????????
-                listLength = int(bitLength / 8)
-                endPosition = bytePosition + listLength
+                print(longName)
+                # ?????????????????need to force lengths as well - may need an optional param to the encode??????????????
+				
                 encodingType = dataObjectElement.find('DIAG-CODED-TYPE').attrib['BASE-DATA-TYPE']
                 if(encodingType) == "A_ASCIISTRING":
-                    functionStringList = "DecodeFunctions.stringTointList(dataRecord[{0}], None)".format(longName)
+                    functionStringList = "DecodeFunctions.stringTointList(dataRecord['{0}'], None)".format(longName)
                     functionStringSingle = "DecodeFunctions.stringTointList(dataRecord, None)"
                 elif(encodingType) == "A_INT8":
-                    functionStringList = "DecodeFunctions.intArrayToIntArray(dataRecord[{0}], 'int8', 'int8')".format(longName)
+                    functionStringList = "DecodeFunctions.intArrayToIntArray(dataRecord['{0}'], 'int8', 'int8')".format(longName)
                     functionStringSingle = "DecodeFunctions.intArrayToIntArray(dataRecord, 'int8', 'int8')"
                 elif(encodingType) == "A_INT16":
-                    functionStringList = "DecodeFunctions.intArrayToIntArray(dataRecord[{0}], 'int16', 'int8')".format(longName)
+                    functionStringList = "DecodeFunctions.intArrayToIntArray(dataRecord['{0}'], 'int16', 'int8')".format(longName)
                     functionStringSingle = "DecodeFunctions.intArrayToIntArray(dataRecord, 'int16', 'int8')"
-               elif(encodingType) == "A_INT32":
-                    functionStringList = "DecodeFunctions.intArrayToIntArray(dataRecord[{0}], 'int32', 'int8')".format(longName)
+                elif(encodingType) == "A_INT32":
+                    functionStringList = "DecodeFunctions.intArrayToIntArray(dataRecord['{0}'], 'int32', 'int8')".format(longName)
                     functionStringSingle = "DecodeFunctions.intArrayToIntArray(dataRecord, 'int32', 'int8')"
                 else:
-                    functionStringList = "dataRecord[{0}]".format(longName)
+                    functionStringList = "dataRecord['{0}']".format(longName)
                     functionStringSingle = "dataRecord"
 
-					""" No input types in intArrayToIntArray for anyhting else at present ... extend in DecodeFunction.py first ...
+                """ No input types in intArrayToIntArray for anyhting else at present ... extend in DecodeFunction.py first ...
                 elif(encodingType) == "A_INT64":
                     functionStringList = DecodeFunctions.intArrayToIntArray([int(param.find('CODED-VALUE').text)], 'int64', 'int8')
                 """
@@ -126,8 +127,7 @@ Anything on scaling?
                 # 
                 encodeFunctions.append("encoded += [{1}]".format(longName,
                                                                  functionStringList))
-                encodeFunction = "    else:\n        encoded = [{1}]".format(longName,
-                                                                             functionStringSingle))
+                encodeFunction = "    else:\n        encoded = [{1}]".format(longName,functionStringSingle)
 
 
 
@@ -142,7 +142,9 @@ Anything on scaling?
                                                 diagnosticId,
 												"\n        ".join(encodeFunctions),  # ... handles input via list
 												encodeFunction)                  # ... handles input via single value
-        # print(funcString)
+        print("\n\n=====================================================================================================")
+        print(funcString)
+        print("=====================================================================================================\n\n")
         exec(funcString)
         return locals()[shortName]
 
