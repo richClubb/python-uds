@@ -1,6 +1,6 @@
-import Uds
+from uds import Uds
 import xml.etree.ElementTree as ET
-import DecodeFunctions
+from uds import DecodeFunctions
 
 from types import MethodType
 
@@ -263,7 +263,7 @@ def create_udsConnection(xmlElement, ecuName):
         requestFunctions[shortName] = requestFunction
 
 
-    temp_ecu = Uds.Uds(0x600, 0x650)
+    temp_ecu = Uds()
 
     setattr(temp_ecu, '__requestFunctions', requestFunctions)
 

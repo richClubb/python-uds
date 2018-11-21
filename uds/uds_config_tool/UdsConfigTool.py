@@ -48,6 +48,10 @@ def createUdsConnection(xmlFile, ecuName):
 
     # create any supported containers
     rdbiContainer = ReadDataByIdentifierContainer()
+    sessionService_flag = False
+    ecuResetService_flag = False
+    rdbiService_flag = False
+    wdbiService_flag = False
 
     xmlElements = {}
 
@@ -70,7 +74,14 @@ def createUdsConnection(xmlFile, ecuName):
                 except KeyError:
                     pass
 
-            if(serviceId == 0x22):
+            if serviceId == 0x10:
+                sessionService_flag = True
+                pass
+            elif serviceId == 0x11:
+                ecuResetService_flag = True
+                pass
+            elif serviceId == 0x22:
+                rdbiService_flag = True
                 # The new code extends the range of functions required, in order to handle RDBI working for concatenated lists of DIDs ...
                 requestFunctions = ReadDataByIdentifierMethodFactory.create_requestFunctions(value, xmlElements)
                 rdbiContainer.add_requestSIDFunction(requestFunctions[0], humanName)  # ... note: this will now need to handle replication of this one!!!!
@@ -87,12 +98,24 @@ def createUdsConnection(xmlFile, ecuName):
 
                 positiveResponseFunction = ReadDataByIdentifierMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
                 rdbiContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
+            elif serviceId == 0x27:
+                pass
 
-    outputEcu = Uds.Uds(0x600, 0x650)
+            elif serviceId == 0x2E:
+                pass
+
+            elif serviceId == 0x2F:
+                pass
+
+                # print("\n") 
+    #need to be able to extract the reqId and resId
+    outputEcu = Uds.Uds(reqId=0x600, resId=0x650)
 
     # check to see if any rdbi services have been found
-    setattr(outputEcu, 'readDataByIdentifierContainer', rdbiContainer)
-    rdbiContainer.bind_function(outputEcu)
+
+    if rdbiService_flag:
+        setattr(outputEcu, 'readDataByIdentifierContainer', rdbiContainer)
+        rdbiContainer.bind_function(outputEcu)
 
     return outputEcu
 

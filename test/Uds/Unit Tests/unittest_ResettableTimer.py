@@ -11,7 +11,7 @@ __status__ = "Development"
 
 
 import unittest
-from uds.uds_communications import ResettableTimer
+from uds import ResettableTimer
 from time import sleep, perf_counter
 
 
