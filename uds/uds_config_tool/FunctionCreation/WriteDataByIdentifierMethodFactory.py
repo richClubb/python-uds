@@ -15,8 +15,16 @@ import sys
 from uds.uds_config_tool import IServiceMethodFactory
 
 
+# When encode the dataRecord for transmission we have to allow for multiple elements in the data record
+# i.e. 'value1' - for a single value, or [('param1','value1'),('param2','value2')]  for more complex data records
 requestFuncTemplate = str("def {0}(dataRecord):\n"
-                          "    return {1} + {2} + dataRecord")
+                          "    if type(dataRecord) == list:\n"
+                          "        drDict = dict(dataRecord)\n"
+                          "        encoded = []\n"
+                          "        {3}\n"
+                          "{4}\n"
+                          "    return {1} + {2} + encoded")									 
+
 
 checkFunctionTemplate = str("def {0}(input):\n"
                             "    serviceIdExpected = {1}\n"
@@ -45,6 +53,10 @@ class WriteDataByIdentifierMethodFactory(IServiceMethodFactory):
         shortName = "request_{0}".format(diagServiceElement.find('SHORT-NAME').text)
         requestElement = xmlElements[diagServiceElement.find('REQUEST-REF').attrib['ID-REF']]
         paramsElement = requestElement.find('PARAMS')
+
+        encodeFunctions = []
+        encodeFunction = "None"
+
         for param in paramsElement:
             semantic = None
             try:
@@ -56,10 +68,80 @@ class WriteDataByIdentifierMethodFactory(IServiceMethodFactory):
                 serviceId = [int(param.find('CODED-VALUE').text)]
             elif(semantic == 'ID'):
                 diagnosticId = DecodeFunctions.intArrayToIntArray([int(param.find('CODED-VALUE').text)], 'int16', 'int8')
+            elif semantic == 'DATA':
+                dataObjectElement = xmlElements[(param.find('DOP-REF')).attrib['ID-REF']]
+                longName = param.find('LONG-NAME').text
+                bytePosition = int(param.find('BYTE-POSITION').text)
+                bitLength = int(dataObjectElement.find('DIAG-CODED-TYPE').find('BIT-LENGTH').text)    # ?????????????????need to force lengths as well - may need an optional param to the encode??????????????
+                listLength = int(bitLength / 8)
+                endPosition = bytePosition + listLength
+                encodingType = dataObjectElement.find('DIAG-CODED-TYPE').attrib['BASE-DATA-TYPE']
+                if(encodingType) == "A_ASCIISTRING":
+                    functionStringList = "DecodeFunctions.stringTointList(dataRecord[{0}], None)".format(longName)
+                    functionStringSingle = "DecodeFunctions.stringTointList(dataRecord, None)"
+                elif(encodingType) == "A_INT8":
+                    functionStringList = "DecodeFunctions.intArrayToIntArray(dataRecord[{0}], 'int8', 'int8')".format(longName)
+                    functionStringSingle = "DecodeFunctions.intArrayToIntArray(dataRecord, 'int8', 'int8')"
+                elif(encodingType) == "A_INT16":
+                    functionStringList = "DecodeFunctions.intArrayToIntArray(dataRecord[{0}], 'int16', 'int8')".format(longName)
+                    functionStringSingle = "DecodeFunctions.intArrayToIntArray(dataRecord, 'int16', 'int8')"
+               elif(encodingType) == "A_INT32":
+                    functionStringList = "DecodeFunctions.intArrayToIntArray(dataRecord[{0}], 'int32', 'int8')".format(longName)
+                    functionStringSingle = "DecodeFunctions.intArrayToIntArray(dataRecord, 'int32', 'int8')"
+                else:
+                    functionStringList = "dataRecord[{0}]".format(longName)
+                    functionStringSingle = "dataRecord"
+
+					""" No input types in intArrayToIntArray for anyhting else at present ... extend in DecodeFunction.py first ...
+                elif(encodingType) == "A_INT64":
+                    functionStringList = DecodeFunctions.intArrayToIntArray([int(param.find('CODED-VALUE').text)], 'int64', 'int8')
+                """
+
+                """
+?????????????????????? need to cater for ...
+BASE-DATA-TYPE="A_UINT32"
+BASE-DATA-TYPE="A_BYTEFIELD"  ... these are already in the test ODX file
+
+Any others?
+    A_VOID: pseudo type for non-existing elements
+    A_BIT: one bit
+    A_UINT8: unsigned integer 8-bit
+    A_UINT16: unsigned integer 16-bit
+    A_UINT32: unsigned integer 32-bit
+    A_INT8: signed integer 8-bit, two's complement
+    A_INT16: signed integer 16-bit, two's complement
+    A_INT32: signed integer 32-bit, two's complement
+    A_INT64: signed integer 64-bit, two's complement
+    A_FLOAT32: IEEE 754 single precision
+    A_FLOAT64: IEEE 754 double precision
+    A_ASCIISTRING: string, ISO-8859-1 encoded
+    A_UTF8STRING: string, UTF-8 encoded
+    A_UNICODE2STRING: string, UCS-2 encoded
+    A_BYTEFIELD: Field of bytes
+	
+Anything on scaling?
+????????????????? this is from the rdbi response formatting - we need to invert this to go the other way
+                """
+
+                # 
+                encodeFunctions.append("encoded += [{1}]".format(longName,
+                                                                 functionStringList))
+                encodeFunction = "    else:\n        encoded = [{1}]".format(longName,
+                                                                             functionStringSingle))
+
+
+
+        # If we have only a single value for the dataRecord to send, then we can simply suppress the single value sending option.
+        # Note: in the reverse case, we do not suppress the dictionary method of sending, as this allows extra flexibility, allowing 
+        # a user to use a consistent list format in all situations if desired.
+        if len(encodeFunctions) > 1:
+            encodeFunction = ""
 
         funcString = requestFuncTemplate.format(shortName,
                                                 serviceId,
-                                                diagnosticId)
+                                                diagnosticId,
+												"\n        ".join(encodeFunctions),  # ... handles input via list
+												encodeFunction)                  # ... handles input via single value
         # print(funcString)
         exec(funcString)
         return locals()[shortName]
