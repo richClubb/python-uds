@@ -10,14 +10,13 @@ __email__ = "richard.clubb@embeduk.com"
 __status__ = "Development"
 
 
-from uds.uds_communications import Uds
 import xml.etree.ElementTree as ET
+
+from uds.uds_communications.Uds.Uds import Uds
 from uds.uds_config_tool.SupportedServices.ReadDataByIdentifierContainer import ReadDataByIdentifierContainer
 from uds.uds_config_tool.FunctionCreation.ReadDataByIdentifierMethodFactory import ReadDataByIdentifierMethodFactory
 
-
 supportedServices = {22, }
-
 
 def get_serviceIdFromXmlElement(diagServiceElement, xmlElements):
 
@@ -114,7 +113,7 @@ def createUdsConnection(xmlFile, ecuName):
                 # print("\n")
 
     #need to be able to extract the reqId and resId
-    outputEcu = Uds.Uds(reqId=0x600, resId=0x650)
+    outputEcu = Uds(reqId=0x600, resId=0x650)
 
     # check to see if any rdbi services have been found
     if rdbiService_flag:
