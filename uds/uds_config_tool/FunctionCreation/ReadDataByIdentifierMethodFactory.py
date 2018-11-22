@@ -28,7 +28,7 @@ checkSIDRespFuncTemplate = str("def {0}(input):\n"
                             "    serviceId = DecodeFunctions.buildIntFromList(input[{2}:{3}])\n"
                             "    if(serviceId != serviceIdExpected): raise Exception(\"Service Id Received not expected. Expected {{0}}; Got {{1}} \".format(serviceIdExpected, serviceId))")
 
-checkSIDLenFuncTemplate = str("def {0}(input):\n"
+checkSIDLenFuncTemplate = str("def {0}():\n"
                             "    return {1}")
 
 checkDIDRespFuncTemplate = str("def {0}(input):\n"
@@ -36,7 +36,7 @@ checkDIDRespFuncTemplate = str("def {0}(input):\n"
                             "    diagnosticId = DecodeFunctions.buildIntFromList(input[{2}:{3}])\n"
                             "    if(diagnosticId != diagnosticIdExpected): raise Exception(\"Diagnostic Id Received not as expected. Expected: {{0}}; Got {{1}}\".format(diagnosticIdExpected, diagnosticId))")
 
-checkDIDLenFuncTemplate = str("def {0}(input):\n"
+checkDIDLenFuncTemplate = str("def {0}():\n"
                             "    return {1}")
 
 negativeResponseFuncTemplate = str("def {0}(input):\n"
@@ -101,7 +101,7 @@ class ReadDataByIdentifierMethodFactory(IServiceMethodFactory):
         paramsElement = positiveResponseElement.find('PARAMS')
 
         totalLength = 0
-		SIDLength = 0
+        SIDLength = 0
 
         for param in paramsElement:
             try:
@@ -120,7 +120,7 @@ class ReadDataByIdentifierMethodFactory(IServiceMethodFactory):
                     responseIdStart = startByte
                     responseIdEnd = startByte + listLength
                     totalLength += listLength
-					SIDLength = listLength
+                    SIDLength = listLength
                 elif(semantic == 'ID'):
                     diagnosticId = int(param.find('CODED-VALUE').text)
                     bitLength = int((param.find('DIAG-CODED-TYPE')).find('BIT-LENGTH').text)
@@ -153,7 +153,7 @@ class ReadDataByIdentifierMethodFactory(IServiceMethodFactory):
                                                            responseIdEnd) # 3
         exec(checkSIDRespFuncString)
         checkSIDLenFuncString = checkSIDLenFuncTemplate.format(checkSIDLenFuncName, # 0
-                                                           totalLength) # 1
+                                                           SIDLength) # 1
         exec(checkSIDLenFuncString)
         checkDIDRespFuncString = checkDIDRespFuncTemplate.format(checkDIDRespFuncName, # 0
                                                            diagnosticId, # 1
@@ -161,11 +161,18 @@ class ReadDataByIdentifierMethodFactory(IServiceMethodFactory):
                                                            diagnosticIdEnd - SIDLength) # 3      but look at the DID response as an isolated extracted element.
         exec(checkDIDRespFuncString)
         checkDIDLenFuncString = checkDIDLenFuncTemplate.format(checkDIDLenFuncName, # 0
-                                                           totalLength) # 1
+                                                           totalLength - SIDLength) # 1
         exec(checkDIDLenFuncString)
 
         return (locals()[checkSIDRespFuncName],locals()[checkSIDLenFuncName],locals()[checkDIDRespFuncName],locals()[checkDIDLenFuncName])
-
+    """
+????????????????????????
+checkDIDRespFuncTemplate = str("def {0}(input):\n"
+                            "    diagnosticIdExpected = {1}\n"
+                            "    diagnosticId = DecodeFunctions.buildIntFromList(input[{2}:{3}])\n"
+                            "    if(diagnosticId != diagnosticIdExpected): raise Exception(\"Diagnostic Id Received not as expected. Expected: {{0}}; Got {{1}}\".format(diagnosticIdExpected, diagnosticId))")
+????????????????????
+    """
 
     ##
     # @brief may need refactoring to deal with multiple positive-responses (WIP)
@@ -201,7 +208,7 @@ class ReadDataByIdentifierMethodFactory(IServiceMethodFactory):
                         functionString = "DecodeFunctions.intListToString(input[{0}-offset:{1}-offset], None)".format(bytePosition,
                                                                                                         endPosition)
                     else:
-                        functionString = "input[{1}-offest:{2}-offset]".format(longName,
+                        functionString = "input[{1}-offset:{2}-offset]".format(longName,
                                                                  bytePosition,
                                                                  endPosition)
                     encodeFunctions.append("result['{0}'] = {1}".format(longName,

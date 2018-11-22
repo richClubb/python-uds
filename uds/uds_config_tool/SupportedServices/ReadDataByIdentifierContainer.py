@@ -14,7 +14,9 @@ from uds.uds_config_tool.SupportedServices.iContainer import iContainer
 from types import MethodType
 
 
-class ReadDataByIdentifierContainer(iContainer):
+class ReadDataByIdentifierContainer(object):
+
+    __metaclass__ = iContainer
 
     def __init__(self):
 
@@ -48,11 +50,11 @@ class ReadDataByIdentifierContainer(iContainer):
         # After an array of lengths has been constructed for the individual response elements, we need a simple function to check it against the response
         def checkTotalResponseLength(input,expectedLengthsList):
             lengthExpected = sum(expectedLengthsList)
-            if(len(input) != lengthExpected): raise Exception("Total length returned not as expected. Expected: lengthExpected; Got {0}".format(len(input)))
+            if(len(input) != lengthExpected): raise Exception("Total length returned not as expected. Expected: {0}; Got {1}".format(lengthExpected,len(input)))
 
         # The check functions just want to know about the next bit of the response, so this just pops it of the front of the response
         def popResponseElement(input,expectedList):
-            if expectedList == []: raise Exception("Total length returned not as expected. Expected: lengthExpected; Got {0}")
+            if expectedList == []: raise Exception("Total length returned not as expected. Missing elements.")
             return (input[0:expectedList[0]], input[expectedList[0]:], expectedList[1:])
 
 
@@ -62,7 +64,7 @@ class ReadDataByIdentifierContainer(iContainer):
 
         # Adding acceptance of lists at this point, as the spec allows for multiple rdbi request to be concatenated ...
         requestSIDFunction = target.readDataByIdentifierContainer.requestSIDFunctions[dids[0]]  # ... the SID should be the same for all DIDs, so just use the first
-        requestDIDFunctions = [target.readDataByIdentifierContainer.requestSIDFunctions[did] for did in dids]
+        requestDIDFunctions = [target.readDataByIdentifierContainer.requestDIDFunctions[did] for did in dids]
 
         # Adding acceptance of lists at this point, as the spec allows for multiple rdbi request to be concatenated ...
         checkSIDResponseFunction = target.readDataByIdentifierContainer.checkSIDResponseFunctions[dids[0]]
@@ -92,20 +94,20 @@ class ReadDataByIdentifierContainer(iContainer):
         # We have a positive response so check that it makes sense to us ...
         SIDLength = checkSIDLengthFunction()
         expectedLengths = [SIDLength]
-        expectedLengths += [checkDIDLengthFunctions[did]() for did in dids]
+        expectedLengths += [checkDIDLengthFunctions[i]() for i in range(len(checkDIDLengthFunctions))]
         checkTotalResponseLength(response,expectedLengths)
 
         # We've passed the length check, so check each element (which has to be present if the length is ok) ...
         SIDResponseComponent, responseRemaining, lengthsRemaining = popResponseElement(response,expectedLengths)
         checkSIDResponseFunction(SIDResponseComponent)
-		DIDresponses = []
+        DIDresponses = []
         for i in range(len(expectedLengths)-1):
             DIDResponseComponent, responseRemaining, lengthsRemaining = popResponseElement(responseRemaining,lengthsRemaining)
             DIDresponses.append(DIDResponseComponent)
             checkDIDResponseFunctions[i](DIDResponseComponent)
 
         # All is still good, so return the response ...
-        returnValue = tuple([positiveResponseFunctions[i](DIDresponses[i],SIDLength) for i in range(len(DIDresponses)))])
+        returnValue = tuple([positiveResponseFunctions[i](DIDresponses[i],SIDLength) for i in range(len(DIDresponses))])
         if len(returnValue) == 1:
             returnValue = returnValue[0]  # ...we only send back a tuple if there were multiple DIDs
         return returnValue

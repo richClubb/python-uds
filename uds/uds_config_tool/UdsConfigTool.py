@@ -10,8 +10,9 @@ __email__ = "richard.clubb@embeduk.com"
 __status__ = "Development"
 
 
-from uds.uds_communications import Uds
 import xml.etree.ElementTree as ET
+
+from uds.uds_communications.Uds.Uds import Uds
 from uds.uds_config_tool.SupportedServices.ReadDataByIdentifierContainer import ReadDataByIdentifierContainer
 from uds.uds_config_tool.FunctionCreation.ReadDataByIdentifierMethodFactory import ReadDataByIdentifierMethodFactory
 
@@ -93,8 +94,8 @@ def createUdsConnection(xmlFile, ecuName):
                 checkFunctions = ReadDataByIdentifierMethodFactory.create_checkPositiveResponseFunctions(value, xmlElements)
                 rdbiContainer.add_checkSIDResponseFunction(checkFunctions[0], humanName)
                 rdbiContainer.add_checkSIDLengthFunction(checkFunctions[1], humanName)
-                rdbiContainer.add_checkSIDResponseFunction(checkFunctions[2], humanName)
-                rdbiContainer.add_checkSIDLengthFunction(checkFunctions[3], humanName)
+                rdbiContainer.add_checkDIDResponseFunction(checkFunctions[2], humanName)
+                rdbiContainer.add_checkDIDLengthFunction(checkFunctions[3], humanName)
 
                 positiveResponseFunction = ReadDataByIdentifierMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
                 rdbiContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
@@ -109,7 +110,7 @@ def createUdsConnection(xmlFile, ecuName):
 
                 # print("\n") 
     #need to be able to extract the reqId and resId
-    outputEcu = Uds.Uds(reqId=0x600, resId=0x650)
+    outputEcu = Uds(reqId=0x600, resId=0x650)
 
     # check to see if any rdbi services have been found
 
