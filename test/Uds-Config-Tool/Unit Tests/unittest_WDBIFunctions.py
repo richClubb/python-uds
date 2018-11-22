@@ -18,7 +18,7 @@ import sys
 
 
 class WDBITestCase(unittest.TestCase):
-		
+	
     # patches are inserted in reverse order
     @mock.patch('uds.CanTp.recv')
     @mock.patch('uds.CanTp.send')
@@ -27,8 +27,7 @@ class WDBITestCase(unittest.TestCase):
                      canTp_recv):
 
         canTp_send.return_value = False
-        #???????????we need to assert the send value
-        canTp_recv.return_value = [0x22, 0xF1, 0x8C]
+        canTp_recv.return_value = [0x6E, 0xF1, 0x8C]
 
         # Parameters: xml file (odx file), ecu name (not currently used) ...
         a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
@@ -36,9 +35,10 @@ class WDBITestCase(unittest.TestCase):
 
         b = a.writeDataByIdentifier('ECU Serial Number','??????????')	# ... calls __readDataByIdentifier, which does the Uds.send
 	
+        canTp_send.assert_called_with([0x2E, 0xF1, 0x8C, 0x00, 0x00, 0x00])
         self.assertEqual(None, b)  # ... wdbi should not return a value
 		
-		
+
     # patches are inserted in reverse order
     @mock.patch('uds.CanTp.recv')
     @mock.patch('uds.CanTp.send')
@@ -47,8 +47,7 @@ class WDBITestCase(unittest.TestCase):
                      canTp_recv):
 
         canTp_send.return_value = False
-        #???????????we need to assert the send value
-        canTp_recv.return_value = [0x22, 0xF1, 0x80]
+        canTp_recv.return_value = [0x6E, 0xF1, 0x80]
 
 
 
@@ -56,8 +55,9 @@ class WDBITestCase(unittest.TestCase):
         a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __readDataByIdentifier to readDataByIdentifier in the uds object, so can now call below
 
-        b = a.writeDataByIdentifier('Boot Software Identification',{'Boot Software Identification':[0x00],'numberOfModules':[0x00]})	# ... calls __readDataByIdentifier, which does the Uds.send
+        b = a.writeDataByIdentifier('Boot Software Identification',[('Boot Software Identification',[0x00]),('numberOfModules',[0x00])])	# ... calls __readDataByIdentifier, which does the Uds.send
 	
+        canTp_send.assert_called_with([0x2E, 0xF1, 0x80, 0x00, 0x00, 0x00])
         self.assertEqual(None, b)  # ... wdbi should not return a value
 
 """

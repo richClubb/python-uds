@@ -12,7 +12,7 @@ __status__ = "Development"
 
 import xml.etree.ElementTree as ET
 
-from uds.uds_communications import Uds
+from uds.uds_communications.Uds.Uds import Uds
 from uds.uds_config_tool.SupportedServices.ReadDataByIdentifierContainer import ReadDataByIdentifierContainer
 from uds.uds_config_tool.FunctionCreation.ReadDataByIdentifierMethodFactory import ReadDataByIdentifierMethodFactory
 from uds.uds_config_tool.SupportedServices.WriteDataByIdentifierContainer import WriteDataByIdentifierContainer

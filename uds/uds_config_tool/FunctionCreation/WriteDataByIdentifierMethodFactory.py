@@ -18,9 +18,9 @@ from uds.uds_config_tool.FunctionCreation.iServiceMethodFactory import IServiceM
 # When encode the dataRecord for transmission we have to allow for multiple elements in the data record
 # i.e. 'value1' - for a single value, or [('param1','value1'),('param2','value2')]  for more complex data records
 requestFuncTemplate = str("def {0}(dataRecord):\n"
+                          "    encoded = []\n"
                           "    if type(dataRecord) == list:\n"
                           "        drDict = dict(dataRecord)\n"
-                          "        encoded = []\n"
                           "        {3}\n"
                           "{4}\n"
                           "    return {1} + {2} + encoded")									 
@@ -73,13 +73,45 @@ class WriteDataByIdentifierMethodFactory(IServiceMethodFactory):
                 dataObjectElement = xmlElements[(param.find('DOP-REF')).attrib['ID-REF']]
                 longName = param.find('LONG-NAME').text
                 bytePosition = int(param.find('BYTE-POSITION').text)
-                print(longName)
-                # ?????????????????need to force lengths as well - may need an optional param to the encode??????????????
-				
-                encodingType = dataObjectElement.find('DIAG-CODED-TYPE').attrib['BASE-DATA-TYPE']
+                """ ?????????????????????????????????????????????????????????????????????????????????
+				This code is currently thrown by Structures, as there isno immediate 'DIAG-CODED-TYPE' e.g. in the form ...
+            <STRUCTURE ID="_Bootloader_92">
+              <SHORT-NAME>Module_Clock_Source</SHORT-NAME>
+              <LONG-NAME>Module Clock Source</LONG-NAME>
+              <BYTE-SIZE>1</BYTE-SIZE>
+              <PARAMS>
+                <PARAM SEMANTIC="DATA" xsi:type="VALUE">
+                  <SHORT-NAME>Xtral</SHORT-NAME>
+                  <LONG-NAME>Xtral</LONG-NAME>
+                  <BYTE-POSITION>0</BYTE-POSITION>
+                  <DOP-REF ID-REF="_Bootloader_21"/>
+                </PARAM>
+                <PARAM SEMANTIC="DATA" xsi:type="VALUE">
+                  <SHORT-NAME>PLL</SHORT-NAME>
+                  <LONG-NAME>PLL</LONG-NAME>
+                  <BYTE-POSITION>0</BYTE-POSITION>
+                  <BIT-POSITION>1</BIT-POSITION>
+                  <DOP-REF ID-REF="_Bootloader_21"/>
+                </PARAM>
+                <PARAM xsi:type="RESERVED">
+                  <SHORT-NAME>RESERVED_TO_FILL_STRUCTURE_0</SHORT-NAME>
+                  <BYTE-POSITION>0</BYTE-POSITION>
+                  <BIT-POSITION>2</BIT-POSITION>
+                  <BIT-LENGTH>6</BIT-LENGTH>
+                </PARAM>
+              </PARAMS>
+            </STRUCTURE>
+
+                ... I need to discuss the handling of these with Richard - in the meantime, I'm ignoring this one!			
+                """
+                # Cathing any exceptions where we don't know the type - these will fail elsewhere, but at least we can test what does work.
+                try:
+                    encodingType = dataObjectElement.find('DIAG-CODED-TYPE').attrib['BASE-DATA-TYPE']
+                except:
+                    encodingType = "unknown"  # ... for now just drop into the "else" catch-all ??????????????????????????????????????????????
                 if(encodingType) == "A_ASCIISTRING":
-                    functionStringList = "DecodeFunctions.stringTointList(dataRecord['{0}'], None)".format(longName)
-                    functionStringSingle = "DecodeFunctions.stringTointList(dataRecord, None)"
+                    functionStringList = "DecodeFunctions.stringToIntList(dataRecord['{0}'], None)".format(longName)
+                    functionStringSingle = "DecodeFunctions.stringToIntList(dataRecord, None)"
                 elif(encodingType) == "A_INT8":
                     functionStringList = "DecodeFunctions.intArrayToIntArray(dataRecord['{0}'], 'int8', 'int8')".format(longName)
                     functionStringSingle = "DecodeFunctions.intArrayToIntArray(dataRecord, 'int8', 'int8')"
@@ -142,9 +174,6 @@ Anything on scaling?
                                                 diagnosticId,
 												"\n        ".join(encodeFunctions),  # ... handles input via list
 												encodeFunction)                  # ... handles input via single value
-        print("\n\n=====================================================================================================")
-        print(funcString)
-        print("=====================================================================================================\n\n")
         exec(funcString)
         return locals()[shortName]
 
