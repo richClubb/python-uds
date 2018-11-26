@@ -15,8 +15,10 @@ import xml.etree.ElementTree as ET
 from uds.uds_communications.Uds.Uds import Uds
 from uds.uds_config_tool.SupportedServices.ReadDataByIdentifierContainer import ReadDataByIdentifierContainer
 from uds.uds_config_tool.FunctionCreation.ReadDataByIdentifierMethodFactory import ReadDataByIdentifierMethodFactory
+from uds.uds_config_tool.SupportedServices.WriteDataByIdentifierContainer import WriteDataByIdentifierContainer
+from uds.uds_config_tool.FunctionCreation.WriteDataByIdentifierMethodFactory import WriteDataByIdentifierMethodFactory
 
-supportedServices = {22, }
+supportedServices = {22, }  # ?????????????? what's this used for? Doesn't appear to have a purposeat present - should be [0x22, 0x2E] ?
 
 def get_serviceIdFromXmlElement(diagServiceElement, xmlElements):
 
@@ -47,11 +49,11 @@ def createUdsConnection(xmlFile, ecuName):
 
     # create any supported containers
     rdbiContainer = ReadDataByIdentifierContainer()
+    wdbiContainer = WriteDataByIdentifierContainer()
     sessionService_flag = False
     ecuResetService_flag = False
     rdbiService_flag = False
     wdbiService_flag = False
-
     xmlElements = {}
 
     for child in root.iter():
@@ -81,44 +83,60 @@ def createUdsConnection(xmlFile, ecuName):
                 pass
             elif serviceId == 0x22:
                 rdbiService_flag = True
-                requestFunc = ReadDataByIdentifierMethodFactory.create_requestFunction(value,
-                                                                                       xmlElements)
-                rdbiContainer.add_requestFunction(requestFunc,
-                                                  humanName)
 
-                negativeResponseFunction = ReadDataByIdentifierMethodFactory.create_checkNegativeResponseFunction(value,
-                                                                                                                  xmlElements)
-                rdbiContainer.add_negativeResponseFunction(negativeResponseFunction,
-                                                           humanName)
-                checkFunc = ReadDataByIdentifierMethodFactory.create_checkPositiveResponseFunction(value,
-                                                                                                   xmlElements)
+                # The new code extends the range of functions required, in order to handle RDBI working for concatenated lists of DIDs ...
+                requestFunctions = ReadDataByIdentifierMethodFactory.create_requestFunctions(value, xmlElements)
+                rdbiContainer.add_requestSIDFunction(requestFunctions[0], humanName)  # ... note: this will now need to handle replication of this one!!!!
+                rdbiContainer.add_requestDIDFunction(requestFunctions[1], humanName)
 
-                rdbiContainer.add_checkFunction(checkFunc,
-                                                humanName)
 
-                positiveResponseFunction = ReadDataByIdentifierMethodFactory.create_encodePositiveResponseFunction(value,
-                                                                                                                   xmlElements)
-                rdbiContainer.add_positiveResponseFunction(positiveResponseFunction,
-                                                           humanName)
+                negativeResponseFunction = ReadDataByIdentifierMethodFactory.create_checkNegativeResponseFunction(value, xmlElements)
+                rdbiContainer.add_negativeResponseFunction(negativeResponseFunction, humanName)
 
+
+                checkFunctions = ReadDataByIdentifierMethodFactory.create_checkPositiveResponseFunctions(value, xmlElements)
+                rdbiContainer.add_checkSIDResponseFunction(checkFunctions[0], humanName)
+                rdbiContainer.add_checkSIDLengthFunction(checkFunctions[1], humanName)
+                rdbiContainer.add_checkDIDResponseFunction(checkFunctions[2], humanName)
+                rdbiContainer.add_checkDIDLengthFunction(checkFunctions[3], humanName)
+
+
+                positiveResponseFunction = ReadDataByIdentifierMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
+                rdbiContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
             elif serviceId == 0x27:
                 pass
 
             elif serviceId == 0x2E:
-                pass
 
+                wdbiService_flag = True
+                requestFunc = WriteDataByIdentifierMethodFactory.create_requestFunction(value, xmlElements)
+                wdbiContainer.add_requestFunction(requestFunc, humanName)
+
+                negativeResponseFunction = WriteDataByIdentifierMethodFactory.create_checkNegativeResponseFunction(value, xmlElements)
+                wdbiContainer.add_negativeResponseFunction(negativeResponseFunction, humanName)
+
+                checkFunc = WriteDataByIdentifierMethodFactory.create_checkPositiveResponseFunction(value, xmlElements)
+                wdbiContainer.add_checkFunction(checkFunc, humanName)
+
+                positiveResponseFunction = WriteDataByIdentifierMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
+                wdbiContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
             elif serviceId == 0x2F:
                 pass
 
-                # print("\n")
-
     #need to be able to extract the reqId and resId
+
     outputEcu = Uds(reqId=0x600, resId=0x650)
 
-    # check to see if any rdbi services have been found
+    # Bind any rdbi services have been found
+
     if rdbiService_flag:
         setattr(outputEcu, 'readDataByIdentifierContainer', rdbiContainer)
         rdbiContainer.bind_function(outputEcu)
+
+    # Bind any wdbi services have been found
+    if wdbiService_flag:
+        setattr(outputEcu, 'writeDataByIdentifierContainer', wdbiContainer)
+        wdbiContainer.bind_function(outputEcu)
 
     return outputEcu
 
@@ -128,4 +146,5 @@ if __name__ == "__main__":
     a = createUdsConnection('Bootloader.odx', 'bootloader')
 
     a.readDataByIdentifier('ECU Serial Number')
-    pass
+    a.writeDataByIdentifier('ECU Serial Number','ABC0011223344556')
+
