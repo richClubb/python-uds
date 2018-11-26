@@ -51,13 +51,22 @@ def intArrayToUInt8Array(aArray, inputType):
 
 
 def intArrayToIntArray(aArray, inputType, outputType):
-    if (inputType == 'int32'):
+    if (inputType == 'uint32'):
+        inputFunc = lambda x: [extractIntFromPosition(x, 8, 24), extractIntFromPosition(x, 8, 16),
+                          extractIntFromPosition(x, 8, 8), extractIntFromPosition(x, 8, 0)]
+    elif (inputType == 'uint16'):
+        inputFunc = lambda x: [extractIntFromPosition(x, 8, 8), extractIntFromPosition(x, 8, 0)]
+    elif (inputType == 'uint8'):
+        inputFunc = lambda x: [x]
+    elif (inputType == 'int32'):
         inputFunc = lambda x: [extractIntFromPosition(x, 8, 24), extractIntFromPosition(x, 8, 16),
                           extractIntFromPosition(x, 8, 8), extractIntFromPosition(x, 8, 0)]
     elif (inputType == 'int16'):
         inputFunc = lambda x: [extractIntFromPosition(x, 8, 8), extractIntFromPosition(x, 8, 0)]
-    else:
+    elif (inputType == 'int8'):
         inputFunc = lambda x: [x]
+    else:
+        raise TypeError('inputType not currently supported')
 
     result = reduce(lambda x, y: x + y, list(map(inputFunc, aArray)))
 
