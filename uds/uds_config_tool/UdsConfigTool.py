@@ -16,9 +16,7 @@ from uds.uds_communications.Uds.Uds import Uds
 from uds.uds_config_tool.SupportedServices.ReadDataByIdentifierContainer import ReadDataByIdentifierContainer
 from uds.uds_config_tool.FunctionCreation.ReadDataByIdentifierMethodFactory import ReadDataByIdentifierMethodFactory
 
-
 supportedServices = {22, }
-
 
 def get_serviceIdFromXmlElement(diagServiceElement, xmlElements):
 

@@ -43,10 +43,10 @@ def callback_onReceive_multiFrameResponse_noBs(msg):
         bus1.send(outMsg)
         time.sleep(0.01)
     if(N_PCI == 3):
-        outMsg.data = [0x20] + test2Response[6:13]
+        outMsg.data = [0x21] + test2Response[6:13]
         bus1.send(outMsg)
         time.sleep(0.01)
-        outMsg.data = [0x21] + test2Response[13:19] + [0]
+        outMsg.data = [0x22] + test2Response[13:19] + [0]
         bus1.send(outMsg)
         time.sleep(0.01)
 
@@ -175,7 +175,7 @@ def callback_onReceive_multiFrameWith4Wait(msg):
 
 
 if __name__ == "__main__":
-    bus1 = can.interface.Bus('test', bustype="virtual")
+    bus1 = can.interface.Bus('virtualInterface', bustype="virtual")
     listener = can.Listener()
     notifier = can.Notifier(bus1, [listener], 0)
 
