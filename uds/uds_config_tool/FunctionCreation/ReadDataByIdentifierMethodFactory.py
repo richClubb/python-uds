@@ -245,10 +245,9 @@ class ReadDataByIdentifierMethodFactory(IServiceMethodFactory):
                     listLength = int(bitLength/8)
                     end = start + listLength
 
-                    checkString = "if input[{0}:{1}] == {2}: raise Exception(\"Detected negative response: [hex(n) for n in input]\")".format(start,
-                                                                                                                                              end,
-                                                                                                                                              serviceId)
-                    # print(checkString)
+                    checkString = "if input[{0}:{1}] == [{2}]: raise Exception(\"Detected negative response: {{0}}\".format(str([hex(n) for n in input])))".format(start,
+                                                                                                                                                                   end,
+                                                                                                                                                                   serviceId)
                     negativeResponseChecks.append(checkString)
 
                     pass
@@ -258,4 +257,3 @@ class ReadDataByIdentifierMethodFactory(IServiceMethodFactory):
                                                                              "\n....".join(negativeResponseChecks))
         exec(negativeResponseFunctionString)
         return locals()[check_negativeResponseFunctionName]
-

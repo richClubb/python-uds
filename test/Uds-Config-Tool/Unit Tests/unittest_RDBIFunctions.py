@@ -14,7 +14,7 @@ import unittest
 from unittest import mock
 from uds import Uds
 from uds.uds_config_tool.UdsConfigTool import createUdsConnection
-import sys
+import sys, traceback
 
 
 class RDBITestCase(unittest.TestCase):
@@ -113,6 +113,95 @@ class RDBITestCase(unittest.TestCase):
 	
         canTp_send.assert_called_with([0x22, 0xF1, 0x80, 0xF1, 0x8C],False)
         self.assertEqual(({'Boot Software Identification':'SwId12345678901234567890','numberOfModules':[0x01]},{'ECU Serial Number':'ABC0011223344556'}), b)  # ... not set with a real return value yet!!! (returns a dict or a tuple of dicts if multiple DIDs requested)
+
+
+    # patches are inserted in reverse order
+    @mock.patch('uds.CanTp.recv')
+    @mock.patch('uds.CanTp.send')
+    def test_ecuResetNegResponse_0x13(self,
+                     canTp_send,
+                     canTp_recv):
+
+        canTp_send.return_value = False
+        canTp_recv.return_value = [0x7F, 0x13]
+
+        # Parameters: xml file (odx file), ecu name (not currently used) ...
+        a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
+        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __readDataByIdentifier to readDataByIdentifier in the uds object, so can now call below
+
+        try:
+            b = a.readDataByIdentifier('ECU Serial Number')	# ... calls __readDataByIdentifier, which does the Uds.send
+        except:
+            b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
+        canTp_send.assert_called_with([0x22, 0xF1, 0x8C],False)
+        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x13']", b)  # ... wdbi should not return a value
+
+
+    # patches are inserted in reverse order
+    @mock.patch('uds.CanTp.recv')
+    @mock.patch('uds.CanTp.send')
+    def test_ecuResetNegResponse_0x22(self,
+                     canTp_send,
+                     canTp_recv):
+
+        canTp_send.return_value = False
+        canTp_recv.return_value = [0x7F, 0x22]
+
+        # Parameters: xml file (odx file), ecu name (not currently used) ...
+        a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
+        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __readDataByIdentifier to readDataByIdentifier in the uds object, so can now call below
+
+        try:
+            b = a.readDataByIdentifier('ECU Serial Number')	# ... calls __readDataByIdentifier, which does the Uds.send
+        except:
+            b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
+        canTp_send.assert_called_with([0x22, 0xF1, 0x8C],False)
+        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x22']", b)  # ... wdbi should not return a value
+
+
+    # patches are inserted in reverse order
+    @mock.patch('uds.CanTp.recv')
+    @mock.patch('uds.CanTp.send')
+    def test_ecuResetNegResponse_0x31(self,
+                     canTp_send,
+                     canTp_recv):
+
+        canTp_send.return_value = False
+        canTp_recv.return_value = [0x7F, 0x31]
+
+        # Parameters: xml file (odx file), ecu name (not currently used) ...
+        a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
+        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __readDataByIdentifier to readDataByIdentifier in the uds object, so can now call below
+
+        try:
+            b = a.readDataByIdentifier('ECU Serial Number')	# ... calls __readDataByIdentifier, which does the Uds.send
+        except:
+            b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
+        canTp_send.assert_called_with([0x22, 0xF1, 0x8C],False)
+        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x31']", b)  # ... wdbi should not return a value
+
+
+    # patches are inserted in reverse order
+    @mock.patch('uds.CanTp.recv')
+    @mock.patch('uds.CanTp.send')
+    def test_ecuResetNegResponse_0x33(self,
+                     canTp_send,
+                     canTp_recv):
+
+        canTp_send.return_value = False
+        canTp_recv.return_value = [0x7F, 0x33]
+
+        # Parameters: xml file (odx file), ecu name (not currently used) ...
+        a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
+        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __readDataByIdentifier to readDataByIdentifier in the uds object, so can now call below
+
+        try:
+            b = a.readDataByIdentifier('ECU Serial Number')	# ... calls __readDataByIdentifier, which does the Uds.send
+        except:
+            b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
+        canTp_send.assert_called_with([0x22, 0xF1, 0x8C],False)
+        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x33']", b)  # ... wdbi should not return a value
+
 
 
 if __name__ == "__main__":
