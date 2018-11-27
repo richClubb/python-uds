@@ -80,7 +80,18 @@ def createUdsConnection(xmlFile, ecuName):
 
             if serviceId == 0x10:
                 sessionService_flag = True
-                pass
+				
+                requestFunc = ECUResetMethodFactory.create_requestFunction(value, xmlElements)
+                ecuResetContainer.add_requestFunction(requestFunc, humanName)
+
+                negativeResponseFunction = ECUResetMethodFactory.create_checkNegativeResponseFunction(value, xmlElements)
+                ecuResetContainer.add_negativeResponseFunction(negativeResponseFunction, humanName)
+
+                checkFunc = ECUResetMethodFactory.create_checkPositiveResponseFunction(value, xmlElements)
+                ecuResetContainer.add_checkFunction(checkFunc, humanName)
+
+                positiveResponseFunction = ECUResetMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
+                ecuResetContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
             elif serviceId == 0x11:
                 ecuResetService_flag = True
 				
@@ -150,6 +161,11 @@ def createUdsConnection(xmlFile, ecuName):
         setattr(outputEcu, 'writeDataByIdentifierContainer', wdbiContainer)
         wdbiContainer.bind_function(outputEcu)
 		
+    # Bind any ECU Reset services have been found
+    if sessionService_flag:
+        setattr(outputEcu, 'diagnosticSessionControlContainer', diagnosticSessionControlContainer)
+        diagnosticSessionControlContainer.bind_function(outputEcu)
+
     # Bind any ECU Reset services have been found
     if ecuResetService_flag:
         setattr(outputEcu, 'ecuResetContainer', ecuResetContainer)
