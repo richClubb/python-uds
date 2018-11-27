@@ -12,7 +12,6 @@ __status__ = "Development"
 
 from abc import ABCMeta, abstractmethod
 
-
 class iContainer(ABCMeta):
 
     @abstractmethod
@@ -30,5 +29,3 @@ class iContainer(ABCMeta):
     @abstractmethod
     def add_positiveResponseFunction(self, aFunction, dictionaryEntry):
         raise NotImplementedError("add_positiveResponseFunction not implemented")
-
-    pass

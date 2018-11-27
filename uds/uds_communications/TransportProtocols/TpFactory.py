@@ -67,5 +67,4 @@ class TpFactory(object):
 
 if __name__ == "__main__":
 
-    a = TpFactory.create('CAN')
-    print(a)
+    pass

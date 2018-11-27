@@ -15,6 +15,7 @@ from unittest.mock import patch
 
 from uds import CanTp
 
+
 class CanTpTestCase(unittest.TestCase):
 
     def test_canTpRaiseExceptionOnTooLargePayload(self):

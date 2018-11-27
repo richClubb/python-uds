@@ -13,7 +13,9 @@ __status__ = "Development"
 from uds.uds_config_tool.SupportedServices.iContainer import iContainer
 
 
-class DiagnosticSessionControlContainer(iContainer):
+class DiagnosticSessionControlContainer(object):
+
+    __metaclass__ = iContainer
 
     def __init__(self):
         self.requestFunctions = {}
