@@ -17,6 +17,8 @@ from uds.uds_config_tool.SupportedServices.ReadDataByIdentifierContainer import 
 from uds.uds_config_tool.FunctionCreation.ReadDataByIdentifierMethodFactory import ReadDataByIdentifierMethodFactory
 from uds.uds_config_tool.SupportedServices.WriteDataByIdentifierContainer import WriteDataByIdentifierContainer
 from uds.uds_config_tool.FunctionCreation.WriteDataByIdentifierMethodFactory import WriteDataByIdentifierMethodFactory
+from uds.uds_config_tool.SupportedServices.ECUResetContainer import ECUResetContainer
+from uds.uds_config_tool.FunctionCreation.ECUResetMethodFactory import ECUResetMethodFactory
 
 supportedServices = {22, }  # ?????????????? what's this used for? Doesn't appear to have a purposeat present - should be [0x22, 0x2E] ?
 
@@ -50,6 +52,7 @@ def createUdsConnection(xmlFile, ecuName):
     # create any supported containers
     rdbiContainer = ReadDataByIdentifierContainer()
     wdbiContainer = WriteDataByIdentifierContainer()
+    ecuResetContainer = ECUResetContainer()
     sessionService_flag = False
     ecuResetService_flag = False
     rdbiService_flag = False
@@ -80,7 +83,18 @@ def createUdsConnection(xmlFile, ecuName):
                 pass
             elif serviceId == 0x11:
                 ecuResetService_flag = True
-                pass
+				
+                requestFunc = ECUResetMethodFactory.create_requestFunction(value, xmlElements)
+                ecuResetContainer.add_requestFunction(requestFunc, humanName)
+
+                negativeResponseFunction = ECUResetMethodFactory.create_checkNegativeResponseFunction(value, xmlElements)
+                ecuResetContainer.add_negativeResponseFunction(negativeResponseFunction, humanName)
+
+                checkFunc = ECUResetMethodFactory.create_checkPositiveResponseFunction(value, xmlElements)
+                ecuResetContainer.add_checkFunction(checkFunc, humanName)
+
+                positiveResponseFunction = ECUResetMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
+                ecuResetContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
             elif serviceId == 0x22:
                 rdbiService_flag = True
 
@@ -124,11 +138,9 @@ def createUdsConnection(xmlFile, ecuName):
                 pass
 
     #need to be able to extract the reqId and resId
-
     outputEcu = Uds(reqId=0x600, resId=0x650)
 
     # Bind any rdbi services have been found
-
     if rdbiService_flag:
         setattr(outputEcu, 'readDataByIdentifierContainer', rdbiContainer)
         rdbiContainer.bind_function(outputEcu)
@@ -137,6 +149,11 @@ def createUdsConnection(xmlFile, ecuName):
     if wdbiService_flag:
         setattr(outputEcu, 'writeDataByIdentifierContainer', wdbiContainer)
         wdbiContainer.bind_function(outputEcu)
+		
+    # Bind any ECU Reset services have been found
+    if ecuResetService_flag:
+        setattr(outputEcu, 'ecuResetContainer', ecuResetContainer)
+        ecuResetContainer.bind_function(outputEcu)
 
     return outputEcu
 
@@ -147,4 +164,5 @@ if __name__ == "__main__":
 
     a.readDataByIdentifier('ECU Serial Number')
     a.writeDataByIdentifier('ECU Serial Number','ABC0011223344556')
+    a.ecuReset('Hard Reset',suppressResponse=False)
 
