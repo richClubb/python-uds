@@ -9,12 +9,12 @@ It has a parser tool which can parse an ODX file and produce an easy-to-use inte
 .. literalinclude:: ./example/objectSetup.py
     :language: python
     :linenos:
-    
-Contents:
+
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-
-
-
+   installation
+   configuration
+   interface
