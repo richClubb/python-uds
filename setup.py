@@ -10,7 +10,7 @@ __email__ = "richard.clubb@embeduk.com"
 __status__ = "Development"
 
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 with open("README.md", "r") as fh:
@@ -23,11 +23,11 @@ setup(
     author='Richard Clubb',
     author_email='richard.clubb@embeduk.com',
     # Needed to actually package something
-    packages=['uds'],
+    packages=find_packages(exclude=["test", "test.*"]),
     # Needed for dependencies
     install_requires=['python-can'],
     # *strongly* suggested for sharing
-    version='0.1.2b',
+    version='0.1.3b2',
     # The license can be anything you like
     license='MIT',
     description='A library for interfacing with UDS using python',

@@ -45,7 +45,7 @@ def fill_dictionary(xmlElement):
     return temp_dictionary
 
 
-def createUdsConnection(xmlFile, ecuName):
+def createUdsConnection(xmlFile, ecuName, **kwargs):
 
     root = ET.parse(xmlFile)
 
@@ -138,7 +138,7 @@ def createUdsConnection(xmlFile, ecuName):
                 pass
 
     #need to be able to extract the reqId and resId
-    outputEcu = Uds(reqId=0x600, resId=0x650)
+    outputEcu = Uds(**kwargs)
 
     # Bind any rdbi services have been found
     if rdbiService_flag:
