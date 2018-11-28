@@ -6,15 +6,22 @@ Python-uds is a communication protocol agnostic UDS tool.
 It was designed to provide a high-level uds interface which can utilise any communication protocol( e.g. LIN, FlexRay, DoIP)
 It has a parser tool which can parse an ODX file and produce an easy-to-use interface based on the ODX definition.
 
-.. literalinclude:: ../example/objectSetup.py
+.. literalinclude:: ./example/objectSetup.py
     :language: python
     :linenos:
-    
-Contents:
+
+This is an example of how to interface with an ECU using both the raw object and the methods create
+from the Bootloader.odx file.
+
+Currently it supports diagnostics on CAN using a CAN Transport Protocol defined in ISo-15765
+and uses the python-can package to utilise the can device interface.
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-
+   installation
+   configuration
+   interface
 
 
