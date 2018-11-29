@@ -16,6 +16,8 @@ from the Bootloader.odx file.
 Currently it supports diagnostics on CAN using a CAN Transport Protocol defined in ISo-15765
 and uses the python-can package to utilise the can device interface.
 
+The `final report <https://github.com/richClubb/python-uds/blob/master/docs/final%20report/Python%20UDS%20Manager%20-%20Final%20Report.pdf>`_ is available in the repository.
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
@@ -23,5 +25,4 @@ and uses the python-can package to utilise the can device interface.
    installation
    configuration
    interface
-
 
