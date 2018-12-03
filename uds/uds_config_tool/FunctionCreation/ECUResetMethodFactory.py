@@ -77,7 +77,8 @@ class ECUResetMethodFactory(IServiceMethodFactory):
             elif(semantic == 'SUBFUNCTION'):
                 resetType = [int(param.find('CODED-VALUE').text)]
                 if resetType[0] >= SUPPRESS_RESPONSE_BIT:
-                    raise ValueError("ECU Reset:reset type exceeds maximum value (received {0})".format(resetType[0]))
+                    pass
+                    #raise ValueError("ECU Reset:reset type exceeds maximum value (received {0})".format(resetType[0]))
 
         funcString = requestFuncTemplate.format(shortName,
                                                 serviceId,
@@ -159,6 +160,8 @@ class ECUResetMethodFactory(IServiceMethodFactory):
     def create_encodePositiveResponseFunction(diagServiceElement, xmlElements):
         # The values in the response are SID, resetType, and optionally the powerDownTime (only for resetType 0x04). Checking is handled in the check function, 
         # so must be present and ok. This function is only required to return the resetType and powerDownTime (if present).
+
+
         positiveResponseElement = xmlElements[(diagServiceElement.find('POS-RESPONSE-REFS')).find('POS-RESPONSE-REF').attrib['ID-REF']]
 		
         shortName = diagServiceElement.find('SHORT-NAME').text

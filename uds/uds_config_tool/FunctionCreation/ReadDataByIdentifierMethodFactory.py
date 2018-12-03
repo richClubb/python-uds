@@ -200,6 +200,10 @@ class ReadDataByIdentifierMethodFactory(IServiceMethodFactory):
                     if(encodingType) == "A_ASCIISTRING":
                         functionString = "DecodeFunctions.intListToString(input[{0}-offset:{1}-offset], None)".format(bytePosition,
                                                                                                         endPosition)
+                    elif(encodingType == "A_UINT32"):
+                        functionString = "input[{1}-offset:{2}-offset]".format(longName,
+                                                                               bytePosition,
+                                                                               endPosition)
                     else:
                         functionString = "input[{1}-offset:{2}-offset]".format(longName,
                                                                  bytePosition,
