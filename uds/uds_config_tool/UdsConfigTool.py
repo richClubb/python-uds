@@ -45,7 +45,7 @@ def fill_dictionary(xmlElement):
     return temp_dictionary
 
 
-def createUdsConnection(xmlFile, ecuName):
+def createUdsConnection(xmlFile, ecuName, **kwargs):
 
     root = ET.parse(xmlFile)
 
@@ -94,18 +94,30 @@ def createUdsConnection(xmlFile, ecuName):
                 ecuResetContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
             elif serviceId == 0x11:
                 ecuResetService_flag = True
-				
+
                 requestFunc = ECUResetMethodFactory.create_requestFunction(value, xmlElements)
                 ecuResetContainer.add_requestFunction(requestFunc, humanName)
 
                 negativeResponseFunction = ECUResetMethodFactory.create_checkNegativeResponseFunction(value, xmlElements)
                 ecuResetContainer.add_negativeResponseFunction(negativeResponseFunction, humanName)
 
-                checkFunc = ECUResetMethodFactory.create_checkPositiveResponseFunction(value, xmlElements)
-                ecuResetContainer.add_checkFunction(checkFunc, humanName)
+                try:
+                    transmissionMode = value.attrib['TRANSMISSION-MODE']
+                    if transmissionMode == "SEND-ONLY":
+                        sendOnly_flag = True
+                except:
+                    sendOnly_flag = False
 
-                positiveResponseFunction = ECUResetMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
+                if sendOnly_flag:
+                    checkFunc = None
+                    positiveResponseFunction = None
+                else:
+                    checkFunc = ECUResetMethodFactory.create_checkPositiveResponseFunction(value, xmlElements)
+                    positiveResponseFunction = ECUResetMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
+
+                ecuResetContainer.add_checkFunction(checkFunc, humanName)
                 ecuResetContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
+                pass
             elif serviceId == 0x22:
                 rdbiService_flag = True
 
@@ -149,7 +161,7 @@ def createUdsConnection(xmlFile, ecuName):
                 pass
 
     #need to be able to extract the reqId and resId
-    outputEcu = Uds(reqId=0x600, resId=0x650)
+    outputEcu = Uds(**kwargs)
 
     # Bind any rdbi services have been found
     if rdbiService_flag:

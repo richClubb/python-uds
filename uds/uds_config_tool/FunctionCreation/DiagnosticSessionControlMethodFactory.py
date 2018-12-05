@@ -13,7 +13,6 @@ __status__ = "Development"
 from uds.uds_config_tool import DecodeFunctions
 import sys
 from uds.uds_config_tool.FunctionCreation.iServiceMethodFactory import IServiceMethodFactory
-
 SUPPRESS_RESPONSE_BIT = 0x80
 
 # When encode the dataRecord for transmission we have to allow for multiple elements in the data record
@@ -54,6 +53,7 @@ class DiagnosticSessionControlMethodFactory(IServiceMethodFactory)
     # @brief method to create the request function for the service element
     @staticmethod
     def create_requestFunction(diagServiceElement, xmlElements):
+
         serviceId = 0
         diagnosticId = 0
 
@@ -90,6 +90,7 @@ class DiagnosticSessionControlMethodFactory(IServiceMethodFactory)
     # @brief method to create the function to check the positive response for validity
     @staticmethod
     def create_checkPositiveResponseFunction(diagServiceElement, xmlElements):
+
         responseId = 0
         resetType = 0
 
@@ -157,6 +158,7 @@ class DiagnosticSessionControlMethodFactory(IServiceMethodFactory)
     # @brief method to encode the positive response from the raw type to it physical representation
     @staticmethod
     def create_encodePositiveResponseFunction(diagServiceElement, xmlElements):
+
         # The values in the response are SID, diagnosticSessionType, and session parameters. Checking is handled in the check function, 
         # so must be present and ok. This function is only required to return the diagnosticSessionType, and session parameters.
         positiveResponseElement = xmlElements[(diagServiceElement.find('POS-RESPONSE-REFS')).find('POS-RESPONSE-REF').attrib['ID-REF']]
