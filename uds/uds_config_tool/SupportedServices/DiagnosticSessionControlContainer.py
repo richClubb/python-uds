@@ -14,7 +14,7 @@ from uds.uds_config_tool.SupportedServices.iContainer import iContainer
 from types import MethodType
 
 
-class DiagnosticSessionControlContainer(object)
+class DiagnosticSessionControlContainer(object):
     __metaclass__ = iContainer
 
     def __init__(self):
@@ -25,26 +25,35 @@ class DiagnosticSessionControlContainer(object)
 
     ##
     # @brief this method is bound to an external Uds object, referenced by target, so that it can be called
-    # as one of the in-built methods. uds.ecuReset("something","something else") It does not operate
+    # as one of the in-built methods. uds.diagnosticSessionControl("session type") It does not operate
     # on this instance of the container class.
     @staticmethod
     def __diagnosticSessionControl(target, parameter, suppressResponse=False, **kwargs):
 
-        # Note: ecuReset does not show support for multiple DIDs in the spec, so this is handling only a single DID with data record.
+        # Note: diagnosticSessionControl does not show support for multiple DIDs in the spec, so this is handling only a single DID with data record.
         requestFunction = target.diagnosticSessionControlContainer.requestFunctions[parameter]
-        checkFunction = target.diagnosticSessionControlContainer.checkFunctions[parameter]
+        if parameter in target.diagnosticSessionControlContainer.checkFunctions:
+            checkFunction = target.diagnosticSessionControlContainer.checkFunctions[parameter]
+        else:
+            checkFunction = None
         negativeResponseFunction = target.diagnosticSessionControlContainer.negativeResponseFunctions[parameter]
         positiveResponseFunction = target.diagnosticSessionControlContainer.positiveResponseFunctions[parameter]
+        if parameter in target.diagnosticSessionControlContainer.positiveResponseFunctions:
+            positiveResponseFunction = target.diagnosticSessionControlContainer.positiveResponseFunctions[parameter]
+        else:
+            positiveResponseFunction = None
 
-        # Call the sequence of functions to execute the ECU Reset request/response action ...
+        # Call the sequence of functions to execute the Diagnostic Session Control request/response action ...
         # ==============================================================================
+
+        if checkFunction is None or positiveResponseFunction is None:  # ... i.e. we only have a send_only service specified in the ODX
+            suppressResponse = True
 
         # Create the request. Note: we do not have to pre-check the dataRecord as this action is performed by 
         # the recipient (the response codes 0x?? and 0x?? provide the necessary cover of errors in the request) ...
         request = requestFunction(suppressResponse)
 
-        if suppressResponse == False:
-            # Send request and receive the response ...
+        if suppressResponse == False:        # Send request and receive the response ...
             response = target.send(request,responseRequired=True) # ... this returns a single response
             negativeResponseFunction(response)  # ... throws an exception to be handled at a higher level if a negative response is received
 
@@ -60,22 +69,21 @@ class DiagnosticSessionControlContainer(object)
         return
 
     def bind_function(self, bindObject):
-
-        bindObject.diagnosticSessionControl = MethodType(self.__ecuReset, bindObject)
+        bindObject.diagnosticSessionControl = MethodType(self.__diagnosticSessionControl, bindObject)
 
     def add_requestFunction(self, aFunction, dictionaryEntry):
-
-        self.requestFunctions[dictionaryEntry] = aFunction
+        if aFunction is not None: # ... allow for a send only version being processed
+            self.requestFunctions[dictionaryEntry] = aFunction
 
     def add_checkFunction(self, aFunction, dictionaryEntry):
-
-        self.checkFunctions[dictionaryEntry] = aFunction
+        if aFunction is not None: # ... allow for a send only version being processed
+            self.checkFunctions[dictionaryEntry] = aFunction
 
     def add_negativeResponseFunction(self, aFunction, dictionaryEntry):
-
-        self.negativeResponseFunctions[dictionaryEntry] = aFunction
+        if aFunction is not None: # ... allow for a send only version being processed
+            self.negativeResponseFunctions[dictionaryEntry] = aFunction
 
     def add_positiveResponseFunction(self, aFunction, dictionaryEntry):
-
-        self.positiveResponseFunctions[dictionaryEntry] = aFunction
+        if aFunction is not None: # ... allow for a send only version being processed
+            self.positiveResponseFunctions[dictionaryEntry] = aFunction
 

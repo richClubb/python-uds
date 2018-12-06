@@ -25,6 +25,7 @@ requestFuncTemplate = str("def {0}(suppressResponse=False):\n"
                           "    return {1} + resetType")									 
 
 # Note: we do not need to cater for response suppression checking as nothing to check if response is suppressed - always unsuppressed
+# Note: TO FIX - the length adjustement is not required!!! ?????????????? i.e. functions for each reset type will have had correct params specified!!!!!!
 checkFunctionTemplate = str("def {0}(input):\n"
                             "    serviceIdExpected = {1}\n"
                             "    resetTypeExpected = {2}\n"

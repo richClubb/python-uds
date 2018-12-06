@@ -13,12 +13,14 @@ __status__ = "Development"
 import xml.etree.ElementTree as ET
 
 from uds.uds_communications.Uds.Uds import Uds
+from uds.uds_config_tool.SupportedServices.DiagnosticSessionControlContainer import DiagnosticSessionControlContainer
+from uds.uds_config_tool.FunctionCreation.DiagnosticSessionControlMethodFactory import DiagnosticSessionControlMethodFactory
+from uds.uds_config_tool.SupportedServices.ECUResetContainer import ECUResetContainer
+from uds.uds_config_tool.FunctionCreation.ECUResetMethodFactory import ECUResetMethodFactory
 from uds.uds_config_tool.SupportedServices.ReadDataByIdentifierContainer import ReadDataByIdentifierContainer
 from uds.uds_config_tool.FunctionCreation.ReadDataByIdentifierMethodFactory import ReadDataByIdentifierMethodFactory
 from uds.uds_config_tool.SupportedServices.WriteDataByIdentifierContainer import WriteDataByIdentifierContainer
 from uds.uds_config_tool.FunctionCreation.WriteDataByIdentifierMethodFactory import WriteDataByIdentifierMethodFactory
-from uds.uds_config_tool.SupportedServices.ECUResetContainer import ECUResetContainer
-from uds.uds_config_tool.FunctionCreation.ECUResetMethodFactory import ECUResetMethodFactory
 
 supportedServices = {22, }  # ?????????????? what's this used for? Doesn't appear to have a purposeat present - should be [0x22, 0x2E] ?
 
@@ -50,9 +52,10 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
     root = ET.parse(xmlFile)
 
     # create any supported containers
+    diagnosticSessionControlContainer = DiagnosticSessionControlContainer()
+    ecuResetContainer = ECUResetContainer()
     rdbiContainer = ReadDataByIdentifierContainer()
     wdbiContainer = WriteDataByIdentifierContainer()
-    ecuResetContainer = ECUResetContainer()
     sessionService_flag = False
     ecuResetService_flag = False
     rdbiService_flag = False
@@ -81,17 +84,17 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
             if serviceId == 0x10:
                 sessionService_flag = True
 				
-                requestFunc = ECUResetMethodFactory.create_requestFunction(value, xmlElements)
-                ecuResetContainer.add_requestFunction(requestFunc, humanName)
+                requestFunc = DiagnosticSessionControlMethodFactory.create_requestFunction(value, xmlElements)
+                diagnosticSessionControlContainer.add_requestFunction(requestFunc, humanName)
 
-                negativeResponseFunction = ECUResetMethodFactory.create_checkNegativeResponseFunction(value, xmlElements)
-                ecuResetContainer.add_negativeResponseFunction(negativeResponseFunction, humanName)
+                negativeResponseFunction = DiagnosticSessionControlMethodFactory.create_checkNegativeResponseFunction(value, xmlElements)
+                diagnosticSessionControlContainer.add_negativeResponseFunction(negativeResponseFunction, humanName)
 
-                checkFunc = ECUResetMethodFactory.create_checkPositiveResponseFunction(value, xmlElements)
-                ecuResetContainer.add_checkFunction(checkFunc, humanName)
+                checkFunc = DiagnosticSessionControlMethodFactory.create_checkPositiveResponseFunction(value, xmlElements)
+                diagnosticSessionControlContainer.add_checkFunction(checkFunc, humanName)
 
-                positiveResponseFunction = ECUResetMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
-                ecuResetContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
+                positiveResponseFunction = DiagnosticSessionControlMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
+                diagnosticSessionControlContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
             elif serviceId == 0x11:
                 ecuResetService_flag = True
 
@@ -163,16 +166,6 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
     #need to be able to extract the reqId and resId
     outputEcu = Uds(**kwargs)
 
-    # Bind any rdbi services have been found
-    if rdbiService_flag:
-        setattr(outputEcu, 'readDataByIdentifierContainer', rdbiContainer)
-        rdbiContainer.bind_function(outputEcu)
-
-    # Bind any wdbi services have been found
-    if wdbiService_flag:
-        setattr(outputEcu, 'writeDataByIdentifierContainer', wdbiContainer)
-        wdbiContainer.bind_function(outputEcu)
-		
     # Bind any ECU Reset services have been found
     if sessionService_flag:
         setattr(outputEcu, 'diagnosticSessionControlContainer', diagnosticSessionControlContainer)
@@ -183,6 +176,16 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
         setattr(outputEcu, 'ecuResetContainer', ecuResetContainer)
         ecuResetContainer.bind_function(outputEcu)
 
+    # Bind any rdbi services have been found
+    if rdbiService_flag:
+        setattr(outputEcu, 'readDataByIdentifierContainer', rdbiContainer)
+        rdbiContainer.bind_function(outputEcu)
+
+    # Bind any wdbi services have been found
+    if wdbiService_flag:
+        setattr(outputEcu, 'writeDataByIdentifierContainer', wdbiContainer)
+        wdbiContainer.bind_function(outputEcu)
+		
     return outputEcu
 
 
@@ -190,7 +193,8 @@ if __name__ == "__main__":
 
     a = createUdsConnection('Bootloader.odx', 'bootloader')
 
+    a.diagnosticSessionControl('Default Session')
+    a.ecuReset('Hard Reset',suppressResponse=False)
     a.readDataByIdentifier('ECU Serial Number')
     a.writeDataByIdentifier('ECU Serial Number','ABC0011223344556')
-    a.ecuReset('Hard Reset',suppressResponse=False)
 

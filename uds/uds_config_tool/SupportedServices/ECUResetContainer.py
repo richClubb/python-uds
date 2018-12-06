@@ -44,10 +44,7 @@ class ECUResetContainer(object):
         # the recipient (the response codes 0x?? and 0x?? provide the necessary cover of errors in the request) ...
         request = requestFunction(suppressResponse)
 
-        if (
-                (checkFunction is None) or
-                (positiveResponseFunction is None)
-        ):
+        if checkFunction is None or positiveResponseFunction is None:
             suppressResponse = True
 
         if suppressResponse == False:
