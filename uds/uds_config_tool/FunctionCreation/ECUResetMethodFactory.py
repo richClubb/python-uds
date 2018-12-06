@@ -16,8 +16,6 @@ from uds.uds_config_tool.FunctionCreation.iServiceMethodFactory import IServiceM
 
 SUPPRESS_RESPONSE_BIT = 0x80
 
-# When encode the dataRecord for transmission we have to allow for multiple elements in the data record
-# i.e. 'value1' - for a single value, or [('param1','value1'),('param2','value2')]  for more complex data records
 requestFuncTemplate = str("def {0}(suppressResponse=False):\n"
                           "    resetType = {2}\n"
                           "    suppressBit = {3} if suppressResponse else 0x00\n"
@@ -25,19 +23,14 @@ requestFuncTemplate = str("def {0}(suppressResponse=False):\n"
                           "    return {1} + resetType")									 
 
 # Note: we do not need to cater for response suppression checking as nothing to check if response is suppressed - always unsuppressed
-# Note: TO FIX - the length adjustement is not required!!! ?????????????? i.e. functions for each reset type will have had correct params specified!!!!!!
 checkFunctionTemplate = str("def {0}(input):\n"
                             "    serviceIdExpected = {1}\n"
                             "    resetTypeExpected = {2}\n"
                             "    serviceId = DecodeFunctions.buildIntFromList(input[{3}:{4}])\n"
                             "    resetType = DecodeFunctions.buildIntFromList(input[{5}:{6}])\n"
-                            "    totalLength = {7}\n"
-                            "    if resetTypeExpected != [0x04]: # ... if not enableRapidPowerShutdown, then we don't receive powerDownTime, so remove it from the length expected, etc.\n"
-                            "        totalLength -= {8} # ... powerDownTime is one byte according to the spec\n"
-                            "    if(len(input) != totalLength): raise Exception(\"Total length returned not as expected. Expected: {{0}}; Got {{1}}\".format(totalLength,len(input)))\n"
+                            "    if(len(input) != {7}): raise Exception(\"Total length returned not as expected. Expected: {7}; Got {{0}}\".format(len(input)))\n"
                             "    if(serviceId != serviceIdExpected): raise Exception(\"Service Id Received not expected. Expected {{0}}; Got {{1}} \".format(serviceIdExpected, serviceId))\n"
                             "    if(resetType != resetTypeExpected): raise Exception(\"Reset Type Received not as expected. Expected: {{0}}; Got {{1}}\".format(resetTypeExpected, resetType))")
-
 
 negativeResponseFuncTemplate = str("def {0}(input):\n"
                                    "    {1}")
@@ -147,7 +140,7 @@ class ECUResetMethodFactory(IServiceMethodFactory):
                         resetTypeStart = startByte
                         resetTypeEnd = startByte + listLength
                         totalLength += listLength
-                    else: # ... powerDownTime
+                    else: # ... powerDownTime ?????????????????????????????????????THIS will be data rather than subfunction!!!!!
                         bitLength = int((param.find('DIAG-CODED-TYPE')).find('BIT-LENGTH').text)
                         powerDownTimeLen = int(bitLength / 8)
                         totalLength += powerDownTimeLen
@@ -165,8 +158,7 @@ class ECUResetMethodFactory(IServiceMethodFactory):
                                                            responseIdEnd, # 4
                                                            resetTypeStart, # 5
                                                            resetTypeEnd, # 6
-                                                           totalLength, #7
-                                                           powerDownTimeLen) # 8
+                                                           totalLength) # 7
         exec(checkFunctionString)
         return locals()[checkFunctionName]
 
@@ -219,6 +211,7 @@ class ECUResetMethodFactory(IServiceMethodFactory):
                                                                  endPosition)
                     encodeFunctions.append("result['{0}'] = {1}".format(longName,
                                                                         functionString))
+                #???????????????????????????????? need to allow for DATA if power down time is present ????????????????????????????????
             except:
                 pass
 
