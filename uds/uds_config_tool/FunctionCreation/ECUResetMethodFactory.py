@@ -55,6 +55,14 @@ class ECUResetMethodFactory(IServiceMethodFactory):
     # @brief method to create the request function for the service element
     @staticmethod
     def create_requestFunction(diagServiceElement, xmlElements):
+        # Some services are present in the ODX in both response and send only versions (with the same short name, so one will overwrite the other).
+        # Avoiding the overwrite by ignoring the send-only versions, i.e. these are identical other than postivie response details being missing.
+        try:
+            if diagServiceElement.attrib['TRANSMISSION-MODE'] == 'SEND-ONLY':
+                return None
+        except:
+            pass
+
         serviceId = 0
         diagnosticId = 0
 
@@ -92,6 +100,14 @@ class ECUResetMethodFactory(IServiceMethodFactory):
     # @brief method to create the function to check the positive response for validity
     @staticmethod
     def create_checkPositiveResponseFunction(diagServiceElement, xmlElements):
+        # Some services are present in the ODX in both response and send only versions (with the same short name, so one will overwrite the other).
+        # Avoiding the overwrite by ignoring the send-only versions, i.e. these are identical other than postivie response details being missing.
+        try:
+            if diagServiceElement.attrib['TRANSMISSION-MODE'] == 'SEND-ONLY':
+                return None
+        except:
+            pass
+
         responseId = 0
         resetType = 0
 
@@ -159,9 +175,16 @@ class ECUResetMethodFactory(IServiceMethodFactory):
     # @brief method to encode the positive response from the raw type to it physical representation
     @staticmethod
     def create_encodePositiveResponseFunction(diagServiceElement, xmlElements):
+        # Some services are present in the ODX in both response and send only versions (with the same short name, so one will overwrite the other).
+        # Avoiding the overwrite by ignoring the send-only versions, i.e. these are identical other than postivie response details being missing.
+        try:
+            if diagServiceElement.attrib['TRANSMISSION-MODE'] == 'SEND-ONLY':
+                return None
+        except:
+            pass
+
         # The values in the response are SID, resetType, and optionally the powerDownTime (only for resetType 0x04). Checking is handled in the check function, 
         # so must be present and ok. This function is only required to return the resetType and powerDownTime (if present).
-
 
         positiveResponseElement = xmlElements[(diagServiceElement.find('POS-RESPONSE-REFS')).find('POS-RESPONSE-REF').attrib['ID-REF']]
 		
@@ -210,6 +233,14 @@ class ECUResetMethodFactory(IServiceMethodFactory):
     # @brief method to create the negative response function for the service element
     @staticmethod
     def create_checkNegativeResponseFunction(diagServiceElement, xmlElements):
+        # Some services are present in the ODX in both response and send only versions (with the same short name, so one will overwrite the other).
+        # Avoiding the overwrite by ignoring the send-only versions, i.e. these are identical other than postivie response details being missing.
+        try:
+            if diagServiceElement.attrib['TRANSMISSION-MODE'] == 'SEND-ONLY':
+                return None
+        except:
+            pass
+
         shortName = diagServiceElement.find('SHORT-NAME').text
         check_negativeResponseFunctionName = "check_negResponse_{0}".format(shortName)
 
