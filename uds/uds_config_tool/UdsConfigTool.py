@@ -20,8 +20,6 @@ from uds.uds_config_tool.FunctionCreation.WriteDataByIdentifierMethodFactory imp
 from uds.uds_config_tool.SupportedServices.ECUResetContainer import ECUResetContainer
 from uds.uds_config_tool.FunctionCreation.ECUResetMethodFactory import ECUResetMethodFactory
 
-supportedServices = {22, }  # ?????????????? what's this used for? Doesn't appear to have a purposeat present - should be [0x22, 0x2E] ?
-
 def get_serviceIdFromXmlElement(diagServiceElement, xmlElements):
 
     requestKey = diagServiceElement.find('REQUEST-REF').attrib['ID-REF']
@@ -57,6 +55,7 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
     ecuResetService_flag = False
     rdbiService_flag = False
     wdbiService_flag = False
+    securityAccess_flag = False
     xmlElements = {}
 
     for child in root.iter():
@@ -130,7 +129,9 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
                 positiveResponseFunction = ReadDataByIdentifierMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
                 rdbiContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
             elif serviceId == 0x27:
-                pass
+                securityAccess_flag = True
+
+
 
             elif serviceId == 0x2E:
 
@@ -149,23 +150,26 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
             elif serviceId == 0x2F:
                 pass
 
-    #need to be able to extract the reqId and resId
+    # need to be able to extract the reqId and resId
     outputEcu = Uds(**kwargs)
+
+    # Bind any ECU Reset services have been found
+    if ecuResetService_flag:
+        setattr(outputEcu, 'ecuResetContainer', ecuResetContainer)
+        ecuResetContainer.bind_function(outputEcu)
 
     # Bind any rdbi services have been found
     if rdbiService_flag:
         setattr(outputEcu, 'readDataByIdentifierContainer', rdbiContainer)
         rdbiContainer.bind_function(outputEcu)
 
+    if securityAccess_flag:
+        pass
+
     # Bind any wdbi services have been found
     if wdbiService_flag:
         setattr(outputEcu, 'writeDataByIdentifierContainer', wdbiContainer)
         wdbiContainer.bind_function(outputEcu)
-		
-    # Bind any ECU Reset services have been found
-    if ecuResetService_flag:
-        setattr(outputEcu, 'ecuResetContainer', ecuResetContainer)
-        ecuResetContainer.bind_function(outputEcu)
 
     return outputEcu
 
