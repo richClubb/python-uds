@@ -112,7 +112,6 @@ class ECUResetMethodFactory(IServiceMethodFactory):
 
         totalLength = 0
         powerDownTimeLen = 0
-        paramCnt = 0
 
         for param in paramsElement:
             try:
@@ -132,18 +131,22 @@ class ECUResetMethodFactory(IServiceMethodFactory):
                     responseIdEnd = startByte + listLength
                     totalLength += listLength
                 elif(semantic == 'SUBFUNCTION'):
-                    paramCnt += 1
-                    if paramCnt == 1: # ... resetType
-                        resetType = int(param.find('CODED-VALUE').text)
-                        bitLength = int((param.find('DIAG-CODED-TYPE')).find('BIT-LENGTH').text)
-                        listLength = int(bitLength / 8)
-                        resetTypeStart = startByte
-                        resetTypeEnd = startByte + listLength
+                    resetType = int(param.find('CODED-VALUE').text)
+                    bitLength = int((param.find('DIAG-CODED-TYPE')).find('BIT-LENGTH').text)
+                    listLength = int(bitLength / 8)
+                    resetTypeStart = startByte
+                    resetTypeEnd = startByte + listLength
+                    totalLength += listLength
+                elif(semantic == 'DATA'):
+                    # This will be powerDownTime if present (it's the only additional attribute that cna be returned.
+                    dataObjectElement = xmlElements[(param.find('DOP-REF')).attrib['ID-REF']]
+                    if(dataObjectElement.tag == "DATA-OBJECT-PROP"):
+                        start = int(param.find('BYTE-POSITION').text)
+                        bitLength = int(dataObjectElement.find('DIAG-CODED-TYPE').find('BIT-LENGTH').text)
+                        listLength = int(bitLength/8)
                         totalLength += listLength
-                    else: # ... powerDownTime ?????????????????????????????????????THIS will be data rather than subfunction!!!!!
-                        bitLength = int((param.find('DIAG-CODED-TYPE')).find('BIT-LENGTH').text)
-                        powerDownTimeLen = int(bitLength / 8)
-                        totalLength += powerDownTimeLen
+                    else:
+                        pass
                 else:
                     pass
             except:
@@ -211,7 +214,27 @@ class ECUResetMethodFactory(IServiceMethodFactory):
                                                                  endPosition)
                     encodeFunctions.append("result['{0}'] = {1}".format(longName,
                                                                         functionString))
-                #???????????????????????????????? need to allow for DATA if power down time is present ????????????????????????????????
+                if semantic == 'DATA':
+                    dataObjectElement = xmlElements[(param.find('DOP-REF')).attrib['ID-REF']]
+                    longName = param.find('LONG-NAME').text
+                    bytePosition = int(param.find('BYTE-POSITION').text)
+                    bitLength = int(dataObjectElement.find('DIAG-CODED-TYPE').find('BIT-LENGTH').text)
+                    listLength = int(bitLength / 8)
+                    endPosition = bytePosition + listLength
+                    encodingType = dataObjectElement.find('DIAG-CODED-TYPE').attrib['BASE-DATA-TYPE']
+                    if(encodingType) == "A_ASCIISTRING":
+                        functionString = "DecodeFunctions.intListToString(input[{0}:{1}], None)".format(bytePosition,
+                                                                                                        endPosition)
+                    elif(encodingType == "A_UINT32"):
+                        functionString = "input[{1}:{2}]".format(longName,
+                                                                 bytePosition,
+                                                                 endPosition)
+                    else:
+                        functionString = "input[{1}:{2}]".format(longName,
+                                                                 bytePosition,
+                                                                 endPosition)
+                    encodeFunctions.append("result['{0}'] = {1}".format(longName,
+                                                                        functionString))
             except:
                 pass
 

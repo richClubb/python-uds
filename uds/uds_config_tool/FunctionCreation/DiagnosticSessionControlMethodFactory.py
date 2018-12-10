@@ -217,7 +217,8 @@ class DiagnosticSessionControlMethodFactory(IServiceMethodFactory):
                         functionString = "input[{1}:{2}]".format(longName,
                                                                  bytePosition,
                                                                  endPosition)
-
+                    encodeFunctions.append("result['{0}'] = {1}".format(longName,
+                                                                        functionString))
                 if semantic == 'DATA':
                     dataObjectElement = xmlElements[(param.find('DOP-REF')).attrib['ID-REF']]
                     longName = param.find('LONG-NAME').text
@@ -237,7 +238,6 @@ class DiagnosticSessionControlMethodFactory(IServiceMethodFactory):
                         functionString = "input[{1}:{2}]".format(longName,
                                                                  bytePosition,
                                                                  endPosition)
-
                     encodeFunctions.append("result['{0}'] = {1}".format(longName,
                                                                         functionString))
 

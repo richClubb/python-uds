@@ -34,9 +34,8 @@ class DiagnosticSessionControlTestCase(unittest.TestCase):
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __diagnosticSessionControl to diagnosticSessionControl in the uds object, so can now call below
 
         b = a.diagnosticSessionControl('Default Session')	# ... calls __diagnosticSessionControl, which does the Uds.send
-        print(("returning b",b))
         canTp_send.assert_called_with([0x10, 0x01],False)
-        self.assertEqual({'P3':[0x00, 0x05], 'P3Ex':[0x00, 0x0A]}, b)  # ... diagnosticSessionControl should not return a value
+        self.assertEqual({'Type':[0x01], 'P3':[0x00, 0x05], 'P3Ex':[0x00, 0x0A]}, b)  # ... diagnosticSessionControl should not return a value
 
 
     # patches are inserted in reverse order
@@ -54,9 +53,8 @@ class DiagnosticSessionControlTestCase(unittest.TestCase):
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __diagnosticSessionControl to diagnosticSessionControl in the uds object, so can now call below
 
         b = a.diagnosticSessionControl('Default Session',suppressResponse=False)	# ... calls __diagnosticSessionControl, which does the Uds.send
-        print(("returning b",b))
         canTp_send.assert_called_with([0x10, 0x01],False)
-        self.assertEqual({'P3':[0x00, 0x05], 'P3Ex':[0x00, 0x0A]}, b)  # ... diagnosticSessionControl should not return a value
+        self.assertEqual({'Type':[0x01], 'P3':[0x00, 0x05], 'P3Ex':[0x00, 0x0A]}, b)  # ... diagnosticSessionControl should not return a value
 
 
     # patches are inserted in reverse order
@@ -71,7 +69,6 @@ class DiagnosticSessionControlTestCase(unittest.TestCase):
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __diagnosticSessionControl to diagnosticSessionControl in the uds object, so can now call below
 
         b = a.diagnosticSessionControl('Default Session',suppressResponse=True)	# ... calls __diagnosticSessionControl, which does the Uds.send
-        print(("returning b",b))
         canTp_send.assert_called_with([0x10, 0x81],False)
         self.assertEqual(None, b)  # ... diagnosticSessionControl should not return a value
 
@@ -93,9 +90,8 @@ class DiagnosticSessionControlTestCase(unittest.TestCase):
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __diagnosticSessionControl to diagnosticSessionControl in the uds object, so can now call below
 
         b = a.diagnosticSessionControl('Programming Session')	# ... calls __diagnosticSessionControl, which does the Uds.send
-        print(("returning b",b))
         canTp_send.assert_called_with([0x10, 0x02],False)
-        self.assertEqual({'P3':[0x00, 0x06], 'P3Ex':[0x00, 0x09]}, b)  # ... diagnosticSessionControl should not return a value
+        self.assertEqual({'Type':[0x02], 'P3':[0x00, 0x06], 'P3Ex':[0x00, 0x09]}, b)  # ... diagnosticSessionControl should not return a value
 
 
     # patches are inserted in reverse order
@@ -113,9 +109,8 @@ class DiagnosticSessionControlTestCase(unittest.TestCase):
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __diagnosticSessionControl to diagnosticSessionControl in the uds object, so can now call below
 
         b = a.diagnosticSessionControl('Extended Diagnostic Session')	# ... calls __diagnosticSessionControl, which does the Uds.send
-        print(("returning b",b))
         canTp_send.assert_called_with([0x10, 0x03],False)
-        self.assertEqual({'P3':[0x00, 0x07], 'P3Ex':[0x00, 0x08]}, b)  # ... diagnosticSessionControl should not return a value
+        self.assertEqual({'Type':[0x03], 'P3':[0x00, 0x07], 'P3Ex':[0x00, 0x08]}, b)  # ... diagnosticSessionControl should not return a value
 
 
 
