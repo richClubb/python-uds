@@ -73,6 +73,24 @@ def getServiceIdFromDiagService(diagServiceElement, xmlElements):
 
 
 ##
+# param: a diag service element, a list of other xmlElements
+# return: an integer
+def getResponseIdFromDiagService(diagServiceElement, xmlElements):
+
+    requestKey = diagServiceElement.find('REQUEST-REF').attrib['ID-REF']
+    requestElement = xmlElements[requestKey]
+    params = requestElement.find('PARAMS')
+    for i in params:
+        try:
+            if(i.attrib['SEMANTIC'] == 'SERVICE-ID'):
+                return int(i.find('CODED-VALUE').text)
+        except:
+            pass
+
+    return None
+
+
+##
 # params: an xmlElement, the name of a semantic to match
 # return: a single parameter matching the semantic, or a list of parameters which match the semantic
 def getParamWithSemantic(xmlElement, semanticName):
@@ -122,6 +140,24 @@ def getPositiveResponse(diagServiceElement, xmlElements):
     else:
         return positiveResponseList
 
+
+def getDiagObjectProp(paramElement, xmlElements):
+
+    try:
+        dopElement = xmlElements[paramElement.find("DOP-REF").attrib["ID-REF"]]
+    except:
+        dopElement = None
+
+    return dopElement
+
+def getBitLengthFromDop(diagObjectPropElement):
+
+    try:
+        bitLength = int(diagObjectPropElement.find("DIAG-CODED-TYPE").find("BIT-LENGTH").text)
+    except:
+        bitLength = None
+
+    return bitLength
 
 if __name__ == "__main__":
 

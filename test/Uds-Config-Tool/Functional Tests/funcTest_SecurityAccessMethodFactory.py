@@ -29,7 +29,6 @@ if __name__ == "__main__":
                 suppressResponse = getSdgsDataItem(value, "PositiveResponseSuppressed")
                 if suppressResponse == "no":
                     a = SecurityAccessMethodFactory.create_requestFunction(value, xmlElements)
-                    print(a)
-                    c = SecurityAccessMethodFactory.create_checkPositiveResponseFunction(value, xmlElements)
-                    print(c)
+                    b = SecurityAccessMethodFactory.create_checkPositiveResponseFunction(value, xmlElements)
+                    c = SecurityAccessMethodFactory.create_checkNegativeResponseFunction(value, xmlElements)
                 pass

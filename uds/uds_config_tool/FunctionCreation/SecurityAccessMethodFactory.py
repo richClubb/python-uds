@@ -13,9 +13,13 @@ __status__ = "Development"
 from uds.uds_config_tool.FunctionCreation.iServiceMethodFactory import IServiceMethodFactory
 from uds.uds_config_tool.UtilityFunctions import getSdgsDataItem, getSdgsData, getShortName, getLongName, \
                                                  getServiceIdFromDiagService, getParamWithSemantic, \
-                                                 getPositiveResponse
+                                                 getPositiveResponse, getDiagObjectProp, getBitLengthFromDop
+from math import ceil
 
-
+##
+# Inputs
+# Function name
+# expected security response
 requestFuncTemplate_getSeed = str("def {0}(suppressResponse=False):\n"
                                   "    securityRequest = {2}\n"
                                   "    if suppressResponse: securityRequest |= 0x80\n"
@@ -27,6 +31,34 @@ requestFuncTemplate_sendKey = str("def {0}(key):\n"
                                   "    subFunction = {2}\n"
                                   "    return [serviceId, subFunction] + key")
 
+checkSidTemplate = str("def {0}(sid):\n"
+                       "    expectedSid = {1}\n"
+                       "    if expectedSid != sid: raise Exception(\"SID do not match\")"
+                       )
+
+checkSecurityAccessTemplate = str("def {0}(securityAccess):\n"
+                                  "    expectedSecurityAccess = {1}\n"
+                                  "    if expectedSecurityAccess != securityAccess: raise Exception(\"Security Mode does not match\")"
+                                  )
+
+checkReturnedDataTemplate = str("def {0}(data):\n"
+                               "    expectedDataLength = {1}\n"
+                               "    if expectedDataLength != len(data): raise Exception(\"Returned data length not expected\")"
+                               )
+
+checkNegativeResponseTemplate = str("def {0}(data):\n"
+                                    "    if data[0] == 0x7F: raise Exception(\"Found negative response\")"
+                                    )
+
+##
+# inputs:
+# Length
+checkInputDataTemplate = str("def {0}(data):\n"
+                             "    expectedLength = {1}\n"
+                             "    if isinstance(data, list):\n"
+                             "        if len(data) != expectedLength: raise Exception(\"Input data does not match expected length\")\n"
+                             "    else:"
+                             "        pass")
 
 class SecurityAccessMethodFactory(object):
 
@@ -52,11 +84,9 @@ class SecurityAccessMethodFactory(object):
         if accessMode is not None:
             securityRequest = int(getParamWithSemantic(requestElement, "ACCESSMODE").find("CODED-VALUE").text)
             requestFuncString = requestFuncTemplate_getSeed.format(sdgsName, serviceId, securityRequest)
-            print(requestFuncString)
         elif subfunction is not None:
             securityRequest = int(getParamWithSemantic(requestElement, "SUBFUNCTION").find("CODED-VALUE").text)
             requestFuncString = requestFuncTemplate_sendKey.format(sdgsName, serviceId, securityRequest)
-            print(requestFuncString)
         else:
             requestFuncString = None
 
@@ -73,27 +103,94 @@ class SecurityAccessMethodFactory(object):
         responseId = 0
         securityRequest = 0
 
+        responseId = getServiceIdFromDiagService(diagServiceElement, xmlElements) + 0x40
         positiveResponseElement = getPositiveResponse(diagServiceElement, xmlElements)
 
-        responseId = int(getParamWithSemantic(positiveResponseElement, "SERVICE-ID").find("CODED-VALUE").text)
+        diagInstanceQualifier = getSdgsDataItem(diagServiceElement, "DiagInstanceQualifier")
 
-        
+        checkSidFunctionName = "check_{0}_sid".format(diagInstanceQualifier)
+        checkSecurityAccessFunctionName = "check_{0}_securityAccess".format(diagInstanceQualifier)
+        checkReturnedDataFunctionName = "check_{0}_returnedData".format(diagInstanceQualifier)
 
-        pass
+        accessmode = getParamWithSemantic(positiveResponseElement, "ACCESSMODE")
+        subfunction = getParamWithSemantic(positiveResponseElement, "SUBFUNCTION")
 
+        if accessmode is not None:
+            securityRequest = int(accessmode.find("CODED-VALUE").text)
+        elif subfunction is not None:
+            securityRequest = int(subfunction.find("CODED-VALUE").text)
+        else:
+            raise Exception("Format not known")
 
+        dataParams = getParamWithSemantic(positiveResponseElement, "DATA")
+
+        if dataParams is not None:
+            if isinstance(dataParams, list):
+                raise Exception("Currently can not deal with lists of data")
+            else:
+                dop = getDiagObjectProp(dataParams, xmlElements)
+                bitLength = getBitLengthFromDop(dop)
+                payloadLength = int(ceil(bitLength / 8))
+        else:
+            payloadLength = 0
+
+        checkSidFunctionString = checkSidTemplate.format(checkSidFunctionName,
+                                                         responseId
+                                                         )
+
+        checkSecurityAccessFunctionString = checkSecurityAccessTemplate.format(checkSecurityAccessFunctionName,
+                                                                               securityRequest)
+
+        if payloadLength == 0:
+            checkReturnedDataString = None
+        else:
+            checkReturnedDataString = checkReturnedDataTemplate.format(checkReturnedDataFunctionName,
+                                                                       payloadLength)
+            exec(checkReturnedDataString)
+
+        exec(checkSidFunctionString)
+        exec(checkSecurityAccessFunctionString)
+
+        checkSidFunction = locals()[checkSidFunctionName]
+        checkSecurityAccessFunction = locals()[checkSecurityAccessFunctionName]
+
+        checkReturnedDataFunction = None
+        try:
+            checkReturnedDataFunction = locals()[checkReturnedDataFunctionName]
+        except:
+            pass
+
+        return checkSidFunction, checkSecurityAccessFunction, checkReturnedDataFunction
 
     ##
     # @brief method to encode the positive response from the raw type to it physical representation
     @staticmethod
     def create_encodePositiveResponseFunction(diagServiceElement, xmlElements):
-        pass
+
+        raise Exception("Not implemented")
 
     ##
     # @brief method to create the negative response function for the service element
     @staticmethod
     def create_checkNegativeResponseFunction(diagServiceElement, xmlElements):
-        pass
+
+        diagInstanceQualifier = getSdgsDataItem(diagServiceElement, "DiagInstanceQualifier")
+
+        checkNegativeResponseFunctionName = "check_{0}_negResponse".format(diagInstanceQualifier)
+
+        checkNegativeResponseFunctionString = checkNegativeResponseTemplate.format(checkNegativeResponseFunctionName)
+
+        exec(checkNegativeResponseFunctionString)
+
+        return locals()[checkNegativeResponseFunctionName]
+
+    @staticmethod
+    def check_inputDataFunction(diagServiceElement, xmlElements):
+
+        diagInstanceQualifier = getSdgsDataItem(diagServiceElement, "DiagInstanceQualifier")
+
+
+
 
 if __name__ == "__main__":
 
