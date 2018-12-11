@@ -21,6 +21,8 @@ from uds.uds_config_tool.SupportedServices.ReadDataByIdentifierContainer import 
 from uds.uds_config_tool.FunctionCreation.ReadDataByIdentifierMethodFactory import ReadDataByIdentifierMethodFactory
 from uds.uds_config_tool.SupportedServices.WriteDataByIdentifierContainer import WriteDataByIdentifierContainer
 from uds.uds_config_tool.FunctionCreation.WriteDataByIdentifierMethodFactory import WriteDataByIdentifierMethodFactory
+from uds.uds_config_tool.SupportedServices.RoutineControlContainer import RoutineControlContainer
+from uds.uds_config_tool.FunctionCreation.RoutineControlMethodFactory import RoutineControlMethodFactory
 from uds.uds_config_tool.SupportedServices.RequestDownloadContainer import RequestDownloadContainer
 from uds.uds_config_tool.FunctionCreation.RequestDownloadMethodFactory import RequestDownloadMethodFactory
 
@@ -58,6 +60,7 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
     ecuResetContainer = ECUResetContainer()
     rdbiContainer = ReadDataByIdentifierContainer()
     wdbiContainer = WriteDataByIdentifierContainer()
+    routineControlContainer = RoutineControlContainer()
     requestDownloadContainer = RequestDownloadContainer()
     sessionService_flag = False
     ecuResetService_flag = False
@@ -168,8 +171,18 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
             elif serviceId == 0x2F:
                 pass
             elif serviceId == 0x31:
-                #routineCtrlService_flag = True
-                pass
+                routineCtrlService_flag = True
+                requestFunc = RoutineControlMethodFactory.create_requestFunction(value, xmlElements)
+                routineControlContainer.add_requestFunction(requestFunc, humanName)
+
+                negativeResponseFunction = RoutineControlMethodFactory.create_checkNegativeResponseFunction(value, xmlElements)
+                routineControlContainer.add_negativeResponseFunction(negativeResponseFunction, humanName)
+
+                checkFunc = RoutineControlMethodFactory.create_checkPositiveResponseFunction(value, xmlElements)
+                routineControlContainer.add_checkFunction(checkFunc, humanName)
+
+                positiveResponseFunction = RoutineControlMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
+                routineControlContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
             elif serviceId == 0x34:
                 reqDownloadService_flag = True
                 requestFunc = RequestDownloadMethodFactory.create_requestFunction(value, xmlElements)
@@ -209,7 +222,8 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
 
     # Bind any wdbi services have been found
     if routineCtrlService_flag:
-        pass
+        setattr(outputEcu, 'routineControlContainer', routineControlContainer)
+        routineControlContainer.bind_function(outputEcu)
 
     # Bind any wdbi services have been found
     if reqDownloadService_flag:
@@ -227,6 +241,7 @@ if __name__ == "__main__":
     a.ecuReset('Hard Reset',suppressResponse=False)
     a.readDataByIdentifier('ECU Serial Number')
     a.writeDataByIdentifier('ECU Serial Number','ABC0011223344556')
+    #a.routineControl('???????')
     #a.requestDownload('Download Request',[('FormatIdentifier',[0x00]),('AddressAndLengthFormatIdentifier',[0x11]),('MultiplexedData',[0x03])])
     a.requestDownload('Download Request',FormatIdentifier=[0x00],MemoryAddress=[0x40, 0x03, 0xE0, 0x00],MemorySize=[0x00, 0x00, 0x0E, 0x56])
 
