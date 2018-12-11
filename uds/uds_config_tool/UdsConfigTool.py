@@ -21,6 +21,8 @@ from uds.uds_config_tool.SupportedServices.ReadDataByIdentifierContainer import 
 from uds.uds_config_tool.FunctionCreation.ReadDataByIdentifierMethodFactory import ReadDataByIdentifierMethodFactory
 from uds.uds_config_tool.SupportedServices.WriteDataByIdentifierContainer import WriteDataByIdentifierContainer
 from uds.uds_config_tool.FunctionCreation.WriteDataByIdentifierMethodFactory import WriteDataByIdentifierMethodFactory
+from uds.uds_config_tool.SupportedServices.RequestDownloadContainer import RequestDownloadContainer
+from uds.uds_config_tool.FunctionCreation.RequestDownloadMethodFactory import RequestDownloadMethodFactory
 
 supportedServices = {22, }  # ?????????????? what's this used for? Doesn't appear to have a purposeat present - should be [0x22, 0x2E] ?
 
@@ -56,10 +58,13 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
     ecuResetContainer = ECUResetContainer()
     rdbiContainer = ReadDataByIdentifierContainer()
     wdbiContainer = WriteDataByIdentifierContainer()
+    requestDownloadContainer = RequestDownloadContainer()
     sessionService_flag = False
     ecuResetService_flag = False
     rdbiService_flag = False
     wdbiService_flag = False
+    routineCtrlService_flag = False
+    reqDownloadService_flag = False
     xmlElements = {}
 
     for child in root.iter():
@@ -162,6 +167,22 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
                 wdbiContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
             elif serviceId == 0x2F:
                 pass
+            elif serviceId == 0x31:
+                #routineCtrlService_flag = True
+                pass
+            elif serviceId == 0x34:
+                reqDownloadService_flag = True
+                requestFunc = RequestDownloadMethodFactory.create_requestFunction(value, xmlElements)
+                requestDownloadContainer.add_requestFunction(requestFunc, humanName)
+
+                negativeResponseFunction = RequestDownloadMethodFactory.create_checkNegativeResponseFunction(value, xmlElements)
+                requestDownloadContainer.add_negativeResponseFunction(negativeResponseFunction, humanName)
+
+                checkFunc = RequestDownloadMethodFactory.create_checkPositiveResponseFunction(value, xmlElements)
+                requestDownloadContainer.add_checkFunction(checkFunc, humanName)
+
+                positiveResponseFunction = RequestDownloadMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
+                requestDownloadContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
 
     #need to be able to extract the reqId and resId
     outputEcu = Uds(**kwargs)
@@ -185,6 +206,15 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
     if wdbiService_flag:
         setattr(outputEcu, 'writeDataByIdentifierContainer', wdbiContainer)
         wdbiContainer.bind_function(outputEcu)
+
+    # Bind any wdbi services have been found
+    if routineCtrlService_flag:
+        pass
+
+    # Bind any wdbi services have been found
+    if reqDownloadService_flag:
+        setattr(outputEcu, 'requestDownloadContainer', requestDownloadContainer)
+        requestDownloadContainer.bind_function(outputEcu)
 		
     return outputEcu
 
@@ -197,4 +227,6 @@ if __name__ == "__main__":
     a.ecuReset('Hard Reset',suppressResponse=False)
     a.readDataByIdentifier('ECU Serial Number')
     a.writeDataByIdentifier('ECU Serial Number','ABC0011223344556')
+    #a.requestDownload('Download Request',[('FormatIdentifier',[0x00]),('AddressAndLengthFormatIdentifier',[0x11]),('MultiplexedData',[0x03])])
+    a.requestDownload('Download Request',FormatIdentifier=[0x00],MemoryAddress=[0x40, 0x03, 0xE0, 0x00],MemorySize=[0x00, 0x00, 0x0E, 0x56])
 
