@@ -172,17 +172,21 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
                 pass
             elif serviceId == 0x31:
                 routineCtrlService_flag = True
-                requestFunc = RoutineControlMethodFactory.create_requestFunction(value, xmlElements)
-                routineControlContainer.add_requestFunction(requestFunc, humanName)
+                # We need a qualifier, as the humna name for the start stop, and results calls are all the same, so they otherwise overwrite each other
+                requestFunc, qualifier = RoutineControlMethodFactory.create_requestFunction(value, xmlElements)
+                if qualifier != "":
+                    routineControlContainer.add_requestFunction(requestFunc, humanName+qualifier)
+                    #print(("stored in dict under:",humanName+qualifier))
 
-                negativeResponseFunction = RoutineControlMethodFactory.create_checkNegativeResponseFunction(value, xmlElements)
-                routineControlContainer.add_negativeResponseFunction(negativeResponseFunction, humanName)
+                    negativeResponseFunction = RoutineControlMethodFactory.create_checkNegativeResponseFunction(value, xmlElements)
+                    routineControlContainer.add_negativeResponseFunction(negativeResponseFunction, humanName+qualifier)
+                    print(("CREATING CHECK FUNCTION for ",humanName+qualifier))
+                    checkFunc = RoutineControlMethodFactory.create_checkPositiveResponseFunction(value, xmlElements)
+                    print(("STORING!! check func for:",humanName+qualifier,", with value:",checkFunc))
+                    routineControlContainer.add_checkFunction(checkFunc, humanName+qualifier)
 
-                checkFunc = RoutineControlMethodFactory.create_checkPositiveResponseFunction(value, xmlElements)
-                routineControlContainer.add_checkFunction(checkFunc, humanName)
-
-                positiveResponseFunction = RoutineControlMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
-                routineControlContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
+                    positiveResponseFunction = RoutineControlMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
+                    routineControlContainer.add_positiveResponseFunction(positiveResponseFunction, humanName+qualifier)
             elif serviceId == 0x34:
                 reqDownloadService_flag = True
                 requestFunc = RequestDownloadMethodFactory.create_requestFunction(value, xmlElements)
@@ -241,7 +245,7 @@ if __name__ == "__main__":
     a.ecuReset('Hard Reset',suppressResponse=False)
     a.readDataByIdentifier('ECU Serial Number')
     a.writeDataByIdentifier('ECU Serial Number','ABC0011223344556')
-    #a.routineControl('???????')
+    a.routineControl('Erase Memory',[('memoryAddress',[0x00, 0x00, 0x00, 0x01]),('memorySize',[0x00, 0x00, 0xF0, 0x00])])
     #a.requestDownload('Download Request',[('FormatIdentifier',[0x00]),('AddressAndLengthFormatIdentifier',[0x11]),('MultiplexedData',[0x03])])
     a.requestDownload('Download Request',FormatIdentifier=[0x00],MemoryAddress=[0x40, 0x03, 0xE0, 0x00],MemorySize=[0x00, 0x00, 0x0E, 0x56])
 
