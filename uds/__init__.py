@@ -12,6 +12,7 @@ from uds.uds_communications.TransportProtocols.iTp import iTp
 from uds.uds_communications.TransportProtocols.Can.CanConnectionFactory import CanConnectionFactory
 from uds.uds_communications.TransportProtocols.Can import CanTpTypes
 from uds.uds_communications.TransportProtocols.Can.CanTp import CanTp
+from uds.uds_communications.TransportProtocols.Test.TestTp import TestTp
 
 from uds.uds_communications.TransportProtocols.TpFactory import TpFactory
 
