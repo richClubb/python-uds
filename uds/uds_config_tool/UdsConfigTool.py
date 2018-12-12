@@ -147,7 +147,7 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
 
                 positiveResponseFunction = ReadDataByIdentifierMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
                 rdbiContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
-            elif serviceId == IsoServices.SecurityAccessu:
+            elif serviceId == IsoServices.SecurityAccess:
                 pass
 
             elif serviceId == IsoServices.WriteDataByIdentifier:
