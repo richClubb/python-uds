@@ -33,22 +33,25 @@ class ECUResetContainer(object):
 
         # Note: ecuReset does not show support for multiple DIDs in the spec, so this is handling only a single DID with data record.
         requestFunction = target.ecuResetContainer.requestFunctions[parameter]
-        checkFunction = target.ecuResetContainer.checkFunctions[parameter]
+        if parameter in target.ecuResetContainer.checkFunctions:
+            checkFunction = target.ecuResetContainer.checkFunctions[parameter]
+        else:
+            checkFunction = None
         negativeResponseFunction = target.ecuResetContainer.negativeResponseFunctions[parameter]
-        positiveResponseFunction = target.ecuResetContainer.positiveResponseFunctions[parameter]
+        if parameter in target.ecuResetContainer.positiveResponseFunctions:
+            positiveResponseFunction = target.ecuResetContainer.positiveResponseFunctions[parameter]
+        else:
+            positiveResponseFunction = None
 
         # Call the sequence of functions to execute the ECU Reset request/response action ...
         # ==============================================================================
 
+        if checkFunction is None or positiveResponseFunction is None:
+            suppressResponse = True
+
         # Create the request. Note: we do not have to pre-check the dataRecord as this action is performed by 
         # the recipient (the response codes 0x?? and 0x?? provide the necessary cover of errors in the request) ...
         request = requestFunction(suppressResponse)
-
-        if (
-                (checkFunction is None) or
-                (positiveResponseFunction is None)
-        ):
-            suppressResponse = True
 
         if suppressResponse == False:
             # Send request and receive the response ...
@@ -70,13 +73,17 @@ class ECUResetContainer(object):
         bindObject.ecuReset = MethodType(self.__ecuReset, bindObject)
 
     def add_requestFunction(self, aFunction, dictionaryEntry):
-        self.requestFunctions[dictionaryEntry] = aFunction
+        if aFunction is not None: # ... allow for a send only version being processed
+            self.requestFunctions[dictionaryEntry] = aFunction
 
     def add_checkFunction(self, aFunction, dictionaryEntry):
-        self.checkFunctions[dictionaryEntry] = aFunction
+        if aFunction is not None: # ... allow for a send only version being processed
+            self.checkFunctions[dictionaryEntry] = aFunction
 
     def add_negativeResponseFunction(self, aFunction, dictionaryEntry):
-        self.negativeResponseFunctions[dictionaryEntry] = aFunction
+        if aFunction is not None: # ... allow for a send only version being processed
+            self.negativeResponseFunctions[dictionaryEntry] = aFunction
 
     def add_positiveResponseFunction(self, aFunction, dictionaryEntry):
-        self.positiveResponseFunctions[dictionaryEntry] = aFunction
+        if aFunction is not None: # ... allow for a send only version being processed
+            self.positiveResponseFunctions[dictionaryEntry] = aFunction

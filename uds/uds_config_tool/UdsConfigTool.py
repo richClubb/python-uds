@@ -13,12 +13,17 @@ __status__ = "Development"
 import xml.etree.ElementTree as ET
 
 from uds.uds_communications.Uds.Uds import Uds
+from uds.uds_config_tool.SupportedServices.DiagnosticSessionControlContainer import DiagnosticSessionControlContainer
+from uds.uds_config_tool.FunctionCreation.DiagnosticSessionControlMethodFactory import DiagnosticSessionControlMethodFactory
+from uds.uds_config_tool.SupportedServices.ECUResetContainer import ECUResetContainer
+from uds.uds_config_tool.FunctionCreation.ECUResetMethodFactory import ECUResetMethodFactory
 from uds.uds_config_tool.SupportedServices.ReadDataByIdentifierContainer import ReadDataByIdentifierContainer
 from uds.uds_config_tool.FunctionCreation.ReadDataByIdentifierMethodFactory import ReadDataByIdentifierMethodFactory
 from uds.uds_config_tool.SupportedServices.WriteDataByIdentifierContainer import WriteDataByIdentifierContainer
 from uds.uds_config_tool.FunctionCreation.WriteDataByIdentifierMethodFactory import WriteDataByIdentifierMethodFactory
-from uds.uds_config_tool.SupportedServices.ECUResetContainer import ECUResetContainer
-from uds.uds_config_tool.FunctionCreation.ECUResetMethodFactory import ECUResetMethodFactory
+from uds.uds_config_tool.SupportedServices.RequestDownloadContainer import RequestDownloadContainer
+from uds.uds_config_tool.FunctionCreation.RequestDownloadMethodFactory import RequestDownloadMethodFactory
+from uds.uds_config_tool.ISOStandard.ISOStandard import IsoServices
 
 def get_serviceIdFromXmlElement(diagServiceElement, xmlElements):
 
@@ -48,14 +53,18 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
     root = ET.parse(xmlFile)
 
     # create any supported containers
+    diagnosticSessionControlContainer = DiagnosticSessionControlContainer()
+    ecuResetContainer = ECUResetContainer()
     rdbiContainer = ReadDataByIdentifierContainer()
     wdbiContainer = WriteDataByIdentifierContainer()
-    ecuResetContainer = ECUResetContainer()
+    requestDownloadContainer = RequestDownloadContainer()
     sessionService_flag = False
     ecuResetService_flag = False
     rdbiService_flag = False
     wdbiService_flag = False
     securityAccess_flag = False
+    routineCtrlService_flag = False
+    reqDownloadService_flag = False
     xmlElements = {}
 
     for child in root.iter():
@@ -77,10 +86,21 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
                 except KeyError:
                     pass
 
-            if serviceId == 0x10:
+            if serviceId == IsoServices.DiagnosticSessionControl:
                 sessionService_flag = True
-                pass
-            elif serviceId == 0x11:
+				
+                requestFunc = DiagnosticSessionControlMethodFactory.create_requestFunction(value, xmlElements)
+                diagnosticSessionControlContainer.add_requestFunction(requestFunc, humanName)
+
+                negativeResponseFunction = DiagnosticSessionControlMethodFactory.create_checkNegativeResponseFunction(value, xmlElements)
+                diagnosticSessionControlContainer.add_negativeResponseFunction(negativeResponseFunction, humanName)
+
+                checkFunc = DiagnosticSessionControlMethodFactory.create_checkPositiveResponseFunction(value, xmlElements)
+                diagnosticSessionControlContainer.add_checkFunction(checkFunc, humanName)
+
+                positiveResponseFunction = DiagnosticSessionControlMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
+                diagnosticSessionControlContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
+            elif serviceId == IsoServices.EcuReset:
                 ecuResetService_flag = True
 
                 requestFunc = ECUResetMethodFactory.create_requestFunction(value, xmlElements)
@@ -106,7 +126,7 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
                 ecuResetContainer.add_checkFunction(checkFunc, humanName)
                 ecuResetContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
                 pass
-            elif serviceId == 0x22:
+            elif serviceId == IsoServices.ReadDataByIdentifier:
                 rdbiService_flag = True
 
                 # The new code extends the range of functions required, in order to handle RDBI working for concatenated lists of DIDs ...
@@ -128,12 +148,10 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
 
                 positiveResponseFunction = ReadDataByIdentifierMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
                 rdbiContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
-            elif serviceId == 0x27:
+            elif serviceId == IsoServices.SecurityAccess:
                 securityAccess_flag = True
 
-
-
-            elif serviceId == 0x2E:
+            elif serviceId == IsoServices.WriteDataByIdentifier:
 
                 wdbiService_flag = True
                 requestFunc = WriteDataByIdentifierMethodFactory.create_requestFunction(value, xmlElements)
@@ -147,11 +165,32 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
 
                 positiveResponseFunction = WriteDataByIdentifierMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
                 wdbiContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
-            elif serviceId == 0x2F:
+            elif serviceId == IsoServices.InputOutputControlByIdentifier:
                 pass
+            elif serviceId == IsoServices.RoutineControl:
+                #routineCtrlService_flag = True
+                pass
+            elif serviceId == IsoServices.RequestDownload:
+                reqDownloadService_flag = True
+                requestFunc = RequestDownloadMethodFactory.create_requestFunction(value, xmlElements)
+                requestDownloadContainer.add_requestFunction(requestFunc, humanName)
 
-    # need to be able to extract the reqId and resId
+                negativeResponseFunction = RequestDownloadMethodFactory.create_checkNegativeResponseFunction(value, xmlElements)
+                requestDownloadContainer.add_negativeResponseFunction(negativeResponseFunction, humanName)
+
+                checkFunc = RequestDownloadMethodFactory.create_checkPositiveResponseFunction(value, xmlElements)
+                requestDownloadContainer.add_checkFunction(checkFunc, humanName)
+
+                positiveResponseFunction = RequestDownloadMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
+                requestDownloadContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
+
+    #need to be able to extract the reqId and resId
     outputEcu = Uds(**kwargs)
+
+    # Bind any ECU Reset services have been found
+    if sessionService_flag:
+        setattr(outputEcu, 'diagnosticSessionControlContainer', diagnosticSessionControlContainer)
+        diagnosticSessionControlContainer.bind_function(outputEcu)
 
     # Bind any ECU Reset services have been found
     if ecuResetService_flag:
@@ -171,6 +210,15 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
         setattr(outputEcu, 'writeDataByIdentifierContainer', wdbiContainer)
         wdbiContainer.bind_function(outputEcu)
 
+    # Bind any wdbi services have been found
+    if routineCtrlService_flag:
+        pass
+
+    # Bind any wdbi services have been found
+    if reqDownloadService_flag:
+        setattr(outputEcu, 'requestDownloadContainer', requestDownloadContainer)
+        requestDownloadContainer.bind_function(outputEcu)
+
     return outputEcu
 
 
@@ -178,7 +226,10 @@ if __name__ == "__main__":
 
     a = createUdsConnection('Bootloader.odx', 'bootloader')
 
+    a.diagnosticSessionControl('Default Session')
+    a.ecuReset('Hard Reset',suppressResponse=False)
     a.readDataByIdentifier('ECU Serial Number')
     a.writeDataByIdentifier('ECU Serial Number','ABC0011223344556')
-    a.ecuReset('Hard Reset',suppressResponse=False)
+    #a.requestDownload('Download Request',[('FormatIdentifier',[0x00]),('AddressAndLengthFormatIdentifier',[0x11]),('MultiplexedData',[0x03])])
+    a.requestDownload('Download Request',FormatIdentifier=[0x00],MemoryAddress=[0x40, 0x03, 0xE0, 0x00],MemorySize=[0x00, 0x00, 0x0E, 0x56])
 

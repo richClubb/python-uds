@@ -1,3 +1,5 @@
+"""This file is an experiment and should not be used for any serious coding"""
+
 from uds import Uds
 import xml.etree.ElementTree as ET
 from uds import DecodeFunctions

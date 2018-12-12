@@ -18,14 +18,14 @@ from unittest import mock
 class UdsTestCase(unittest.TestCase):
 
     # these are inserted in reverse order to what you'd expect
-    @mock.patch('uds.CanTp.send')
-    @mock.patch('uds.CanTp.recv')
+    @mock.patch('uds.TestTp.send')
+    @mock.patch('uds.TestTp.recv')
     def test_udsSendWithResponse(self,
-                     canTp_recv,
-                     canTp_send):
+                     tp_recv,
+                     tp_send):
 
-        canTp_send.return_value = False
-        canTp_recv.return_value = [0x50, 0x01]
+        tp_send.return_value = False
+        tp_recv.return_value = [0x50, 0x01]
 
         udsConnection = Uds()
 

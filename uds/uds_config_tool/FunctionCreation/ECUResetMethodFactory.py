@@ -16,8 +16,6 @@ from uds.uds_config_tool.FunctionCreation.iServiceMethodFactory import IServiceM
 
 SUPPRESS_RESPONSE_BIT = 0x80
 
-# When encode the dataRecord for transmission we have to allow for multiple elements in the data record
-# i.e. 'value1' - for a single value, or [('param1','value1'),('param2','value2')]  for more complex data records
 requestFuncTemplate = str("def {0}(suppressResponse=False):\n"
                           "    resetType = {2}\n"
                           "    suppressBit = {3} if suppressResponse else 0x00\n"
@@ -30,13 +28,9 @@ checkFunctionTemplate = str("def {0}(input):\n"
                             "    resetTypeExpected = {2}\n"
                             "    serviceId = DecodeFunctions.buildIntFromList(input[{3}:{4}])\n"
                             "    resetType = DecodeFunctions.buildIntFromList(input[{5}:{6}])\n"
-                            "    totalLength = {7}\n"
-                            "    if resetTypeExpected != [0x04]: # ... if not enableRapidPowerShutdown, then we don't receive powerDownTime, so remove it from the length expected, etc.\n"
-                            "        totalLength -= {8} # ... powerDownTime is one byte according to the spec\n"
-                            "    if(len(input) != totalLength): raise Exception(\"Total length returned not as expected. Expected: {{0}}; Got {{1}}\".format(totalLength,len(input)))\n"
+                            "    if(len(input) != {7}): raise Exception(\"Total length returned not as expected. Expected: {7}; Got {{0}}\".format(len(input)))\n"
                             "    if(serviceId != serviceIdExpected): raise Exception(\"Service Id Received not expected. Expected {{0}}; Got {{1}} \".format(serviceIdExpected, serviceId))\n"
                             "    if(resetType != resetTypeExpected): raise Exception(\"Reset Type Received not as expected. Expected: {{0}}; Got {{1}}\".format(resetTypeExpected, resetType))")
-
 
 negativeResponseFuncTemplate = str("def {0}(input):\n"
                                    "    {1}")
@@ -54,6 +48,14 @@ class ECUResetMethodFactory(IServiceMethodFactory):
     # @brief method to create the request function for the service element
     @staticmethod
     def create_requestFunction(diagServiceElement, xmlElements):
+        # Some services are present in the ODX in both response and send only versions (with the same short name, so one will overwrite the other).
+        # Avoiding the overwrite by ignoring the send-only versions, i.e. these are identical other than postivie response details being missing.
+        try:
+            if diagServiceElement.attrib['TRANSMISSION-MODE'] == 'SEND-ONLY':
+                return None
+        except:
+            pass
+
         serviceId = 0
         diagnosticId = 0
 
@@ -91,6 +93,14 @@ class ECUResetMethodFactory(IServiceMethodFactory):
     # @brief method to create the function to check the positive response for validity
     @staticmethod
     def create_checkPositiveResponseFunction(diagServiceElement, xmlElements):
+        # Some services are present in the ODX in both response and send only versions (with the same short name, so one will overwrite the other).
+        # Avoiding the overwrite by ignoring the send-only versions, i.e. these are identical other than postivie response details being missing.
+        try:
+            if diagServiceElement.attrib['TRANSMISSION-MODE'] == 'SEND-ONLY':
+                return None
+        except:
+            pass
+
         responseId = 0
         resetType = 0
 
@@ -102,7 +112,6 @@ class ECUResetMethodFactory(IServiceMethodFactory):
 
         totalLength = 0
         powerDownTimeLen = 0
-        paramCnt = 0
 
         for param in paramsElement:
             try:
@@ -122,18 +131,22 @@ class ECUResetMethodFactory(IServiceMethodFactory):
                     responseIdEnd = startByte + listLength
                     totalLength += listLength
                 elif(semantic == 'SUBFUNCTION'):
-                    paramCnt += 1
-                    if paramCnt == 1: # ... resetType
-                        resetType = int(param.find('CODED-VALUE').text)
-                        bitLength = int((param.find('DIAG-CODED-TYPE')).find('BIT-LENGTH').text)
-                        listLength = int(bitLength / 8)
-                        resetTypeStart = startByte
-                        resetTypeEnd = startByte + listLength
+                    resetType = int(param.find('CODED-VALUE').text)
+                    bitLength = int((param.find('DIAG-CODED-TYPE')).find('BIT-LENGTH').text)
+                    listLength = int(bitLength / 8)
+                    resetTypeStart = startByte
+                    resetTypeEnd = startByte + listLength
+                    totalLength += listLength
+                elif(semantic == 'DATA'):
+                    # This will be powerDownTime if present (it's the only additional attribute that cna be returned.
+                    dataObjectElement = xmlElements[(param.find('DOP-REF')).attrib['ID-REF']]
+                    if(dataObjectElement.tag == "DATA-OBJECT-PROP"):
+                        start = int(param.find('BYTE-POSITION').text)
+                        bitLength = int(dataObjectElement.find('DIAG-CODED-TYPE').find('BIT-LENGTH').text)
+                        listLength = int(bitLength/8)
                         totalLength += listLength
-                    else: # ... powerDownTime
-                        bitLength = int((param.find('DIAG-CODED-TYPE')).find('BIT-LENGTH').text)
-                        powerDownTimeLen = int(bitLength / 8)
-                        totalLength += powerDownTimeLen
+                    else:
+                        pass
                 else:
                     pass
             except:
@@ -148,8 +161,7 @@ class ECUResetMethodFactory(IServiceMethodFactory):
                                                            responseIdEnd, # 4
                                                            resetTypeStart, # 5
                                                            resetTypeEnd, # 6
-                                                           totalLength, #7
-                                                           powerDownTimeLen) # 8
+                                                           totalLength) # 7
         exec(checkFunctionString)
         return locals()[checkFunctionName]
 
@@ -158,9 +170,16 @@ class ECUResetMethodFactory(IServiceMethodFactory):
     # @brief method to encode the positive response from the raw type to it physical representation
     @staticmethod
     def create_encodePositiveResponseFunction(diagServiceElement, xmlElements):
+        # Some services are present in the ODX in both response and send only versions (with the same short name, so one will overwrite the other).
+        # Avoiding the overwrite by ignoring the send-only versions, i.e. these are identical other than postivie response details being missing.
+        try:
+            if diagServiceElement.attrib['TRANSMISSION-MODE'] == 'SEND-ONLY':
+                return None
+        except:
+            pass
+
         # The values in the response are SID, resetType, and optionally the powerDownTime (only for resetType 0x04). Checking is handled in the check function, 
         # so must be present and ok. This function is only required to return the resetType and powerDownTime (if present).
-
 
         positiveResponseElement = xmlElements[(diagServiceElement.find('POS-RESPONSE-REFS')).find('POS-RESPONSE-REF').attrib['ID-REF']]
 		
@@ -195,6 +214,27 @@ class ECUResetMethodFactory(IServiceMethodFactory):
                                                                  endPosition)
                     encodeFunctions.append("result['{0}'] = {1}".format(longName,
                                                                         functionString))
+                if semantic == 'DATA':
+                    dataObjectElement = xmlElements[(param.find('DOP-REF')).attrib['ID-REF']]
+                    longName = param.find('LONG-NAME').text
+                    bytePosition = int(param.find('BYTE-POSITION').text)
+                    bitLength = int(dataObjectElement.find('DIAG-CODED-TYPE').find('BIT-LENGTH').text)
+                    listLength = int(bitLength / 8)
+                    endPosition = bytePosition + listLength
+                    encodingType = dataObjectElement.find('DIAG-CODED-TYPE').attrib['BASE-DATA-TYPE']
+                    if(encodingType) == "A_ASCIISTRING":
+                        functionString = "DecodeFunctions.intListToString(input[{0}:{1}], None)".format(bytePosition,
+                                                                                                        endPosition)
+                    elif(encodingType == "A_UINT32"):
+                        functionString = "input[{1}:{2}]".format(longName,
+                                                                 bytePosition,
+                                                                 endPosition)
+                    else:
+                        functionString = "input[{1}:{2}]".format(longName,
+                                                                 bytePosition,
+                                                                 endPosition)
+                    encodeFunctions.append("result['{0}'] = {1}".format(longName,
+                                                                        functionString))
             except:
                 pass
 
@@ -209,6 +249,14 @@ class ECUResetMethodFactory(IServiceMethodFactory):
     # @brief method to create the negative response function for the service element
     @staticmethod
     def create_checkNegativeResponseFunction(diagServiceElement, xmlElements):
+        # Some services are present in the ODX in both response and send only versions (with the same short name, so one will overwrite the other).
+        # Avoiding the overwrite by ignoring the send-only versions, i.e. these are identical other than postivie response details being missing.
+        try:
+            if diagServiceElement.attrib['TRANSMISSION-MODE'] == 'SEND-ONLY':
+                return None
+        except:
+            pass
+
         shortName = diagServiceElement.find('SHORT-NAME').text
         check_negativeResponseFunctionName = "check_negResponse_{0}".format(shortName)
 

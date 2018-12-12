@@ -15,49 +15,45 @@ from unittest import mock
 
 from uds import Uds
 
-import sys
-
-print("Blah")
-print(sys.path)
 
 class UdsTestCase(unittest.TestCase):
 
     # these are inserted in reverse order to what you'd expect
-    @mock.patch('uds.CanTp.recv')
-    @mock.patch('uds.CanTp.send')
+    @mock.patch('uds.TestTp.recv')
+    @mock.patch('uds.TestTp.send')
     def test_udsSendWithResponse(self,
-                                 canTp_send,
-                                 canTp_recv):
+                                 testTp_send,
+                                 testTp_recv):
 
-        canTp_send.return_value = False
-        canTp_recv.return_value = [0x50, 0x01]
+        testTp_send.return_value = False
+        testTp_recv.return_value = [0x50, 0x01]
 
-        udsConnection = Uds()
+        udsConnection = Uds(transportProtocol="TEST")
 
         a = udsConnection.send([0x10, 0x01])
 
         self.assertEqual([0x50, 0x01], a)
 
     # these are inserted in reverse order to what you'd expect
-    @mock.patch('uds.CanTp.send')  # 2
+    @mock.patch('uds.TestTp.send')  # 2
     def test_udsSendWithoutResponse(self,
-                                    canTp_send):
+                                    testTp_send):
 
-        canTp_send.return_value = False
+        testTp_send.return_value = False
 
-        udsConnection = Uds()
+        udsConnection = Uds(transportProtocol="TEST")
 
         a = udsConnection.send([0x10, 0x01], responseRequired=False)
 
         self.assertEqual(None, None)
 
     # these are inserted in reverse order to what you'd expect
-    @mock.patch('uds.CanTp.send')  # 2
+    @mock.patch('uds.TestTp.send')  # 2
     def test_udsSendFunctionalRequest(self,
-                                      canTp_send):
-        canTp_send.return_value = False
+                                      testTp_send):
+        testTp_send.return_value = False
 
-        udsConnection = Uds()
+        udsConnection = Uds(transportProtocol="TEST")
 
         a = udsConnection.send([0x10, 0x01], functionalReq=True)
 
