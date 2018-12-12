@@ -24,8 +24,6 @@ from uds.uds_config_tool.FunctionCreation.WriteDataByIdentifierMethodFactory imp
 from uds.uds_config_tool.SupportedServices.RequestDownloadContainer import RequestDownloadContainer
 from uds.uds_config_tool.FunctionCreation.RequestDownloadMethodFactory import RequestDownloadMethodFactory
 
-supportedServices = {22, }  # ?????????????? what's this used for? Doesn't appear to have a purposeat present - should be [0x22, 0x2E] ?
-
 def get_serviceIdFromXmlElement(diagServiceElement, xmlElements):
 
     requestKey = diagServiceElement.find('REQUEST-REF').attrib['ID-REF']

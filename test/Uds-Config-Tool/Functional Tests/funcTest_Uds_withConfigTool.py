@@ -15,6 +15,7 @@ import time
 from struct import unpack
 
 from uds import createUdsConnection
+from uds import Uds
 
 payload = []
 test2Response = [0x62, 0xF1, 0x8C, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x39]
@@ -33,8 +34,8 @@ def callback_onReceive_singleFrame(msg):
 
 def callback_onReceive_multiFrameResponse_noBs(msg):
     global payload
-    #print("Received Id: " + str(msg.arbitration_id))
-    #print("Data: " + str(msg.data))
+    # print("Received Id: " + str(msg.arbitration_id))
+    # print("Data: " + str(msg.data))
     N_PCI = ((msg.data[0] & 0xf0) >> 4)
     outMsg = can.Message()
     outMsg.arbitration_id = 0x650
@@ -179,17 +180,16 @@ if __name__ == "__main__":
     listener = can.Listener()
     notifier = can.Notifier(bus1, [listener], 0)
 
-    # uds = Uds.Uds(0x600, 0x650)
-    # udsMsg = UdsMessage.UdsMessage([0x22, 0xF1, 0x8C])
+    uds = Uds(reqId=0x600, resId=0x650, interface="virtual")
 
-    testEcu = createUdsConnection('Bootloader.odx', 'bootloader')
+    testEcu = createUdsConnection('Bootloader.odx', 'bootloader', interface="virtual")
 
-    # print("Test 1")
-    # listener.on_message_received = callback_onReceive_singleFrame
-    # uds.send(udsMsg)
-    # print(udsMsg.response_raw)
-    #
-    # time.sleep(1)
+    print("Test 1")
+    listener.on_message_received = callback_onReceive_singleFrame
+    resp = uds.send([0x22, 0xF1, 0x8C])
+    print(resp)
+
+    time.sleep(1)
 
     print("Test 2")
     listener.on_message_received = callback_onReceive_multiFrameResponse_noBs

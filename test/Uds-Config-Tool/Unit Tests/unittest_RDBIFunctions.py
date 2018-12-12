@@ -57,9 +57,9 @@ class RDBITestCase(unittest.TestCase):
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __readDataByIdentifier to readDataByIdentifier in the uds object, so can now call below
 
         b = a.readDataByIdentifier('Boot Software Identification')	# ... calls __readDataByIdentifier, which does the Uds.send
-	
+
         tp_send.assert_called_with([0x22, 0xF1, 0x80],False)
-        self.assertEqual({'Boot Software Identification':'SwId12345678901234567890','numberOfModules':[0x01]}, b)
+        self.assertEqual({'Boot Software Identification': 'SwId12345678901234567890','numberOfModules': [0x01]}, b)
 
 		
     # patches are inserted in reverse order
