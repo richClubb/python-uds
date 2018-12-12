@@ -23,6 +23,7 @@ from uds.uds_config_tool.SupportedServices.WriteDataByIdentifierContainer import
 from uds.uds_config_tool.FunctionCreation.WriteDataByIdentifierMethodFactory import WriteDataByIdentifierMethodFactory
 from uds.uds_config_tool.SupportedServices.RequestDownloadContainer import RequestDownloadContainer
 from uds.uds_config_tool.FunctionCreation.RequestDownloadMethodFactory import RequestDownloadMethodFactory
+from uds.uds_config_tool.ISOStandard.ISOStandard import IsoServices
 
 def get_serviceIdFromXmlElement(diagServiceElement, xmlElements):
 
@@ -84,7 +85,7 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
                 except KeyError:
                     pass
 
-            if serviceId == 0x10:
+            if serviceId == IsoServices.DiagnosticSessionControl:
                 sessionService_flag = True
 				
                 requestFunc = DiagnosticSessionControlMethodFactory.create_requestFunction(value, xmlElements)
@@ -98,7 +99,7 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
 
                 positiveResponseFunction = DiagnosticSessionControlMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
                 diagnosticSessionControlContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
-            elif serviceId == 0x11:
+            elif serviceId == IsoServices.EcuReset:
                 ecuResetService_flag = True
 
                 requestFunc = ECUResetMethodFactory.create_requestFunction(value, xmlElements)
@@ -124,7 +125,7 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
                 ecuResetContainer.add_checkFunction(checkFunc, humanName)
                 ecuResetContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
                 pass
-            elif serviceId == 0x22:
+            elif serviceId == IsoServices.ReadDataByIdentifier:
                 rdbiService_flag = True
 
                 # The new code extends the range of functions required, in order to handle RDBI working for concatenated lists of DIDs ...
@@ -146,10 +147,10 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
 
                 positiveResponseFunction = ReadDataByIdentifierMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
                 rdbiContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
-            elif serviceId == 0x27:
+            elif serviceId == IsoServices.SecurityAccessu:
                 pass
 
-            elif serviceId == 0x2E:
+            elif serviceId == IsoServices.WriteDataByIdentifier:
 
                 wdbiService_flag = True
                 requestFunc = WriteDataByIdentifierMethodFactory.create_requestFunction(value, xmlElements)
@@ -163,12 +164,12 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
 
                 positiveResponseFunction = WriteDataByIdentifierMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
                 wdbiContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
-            elif serviceId == 0x2F:
+            elif serviceId == IsoServices.InputOutputControlByIdentifier:
                 pass
-            elif serviceId == 0x31:
+            elif serviceId == IsoServices.RoutineControl:
                 #routineCtrlService_flag = True
                 pass
-            elif serviceId == 0x34:
+            elif serviceId == IsoServices.RequestDownload:
                 reqDownloadService_flag = True
                 requestFunc = RequestDownloadMethodFactory.create_requestFunction(value, xmlElements)
                 requestDownloadContainer.add_requestFunction(requestFunc, humanName)

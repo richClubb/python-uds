@@ -20,6 +20,7 @@ from uds.uds_config_tool.UdsConfigTool import createUdsConnection
 from uds.uds_config_tool import DecodeFunctions
 from uds.uds_config_tool import FunctionCreation
 from uds.uds_config_tool import SupportedServices
+from uds.uds_config_tool.ISOStandard.ISOStandard import IsoServices
 
 # main uds import
 from uds.uds_communications.Uds.Uds import Uds
