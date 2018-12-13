@@ -12,6 +12,7 @@ __status__ = "Development"
 
 import xml.etree.ElementTree as ET
 
+from uds.uds_config_tool.UtilityFunctions import isDiagServiceTransmissionOnly
 from uds.uds_communications.Uds.Uds import Uds
 from uds.uds_config_tool.SupportedServices.DiagnosticSessionControlContainer import DiagnosticSessionControlContainer
 from uds.uds_config_tool.FunctionCreation.DiagnosticSessionControlMethodFactory import DiagnosticSessionControlMethodFactory
@@ -23,6 +24,8 @@ from uds.uds_config_tool.SupportedServices.WriteDataByIdentifierContainer import
 from uds.uds_config_tool.FunctionCreation.WriteDataByIdentifierMethodFactory import WriteDataByIdentifierMethodFactory
 from uds.uds_config_tool.SupportedServices.RequestDownloadContainer import RequestDownloadContainer
 from uds.uds_config_tool.FunctionCreation.RequestDownloadMethodFactory import RequestDownloadMethodFactory
+from uds.uds_config_tool.SupportedServices.SecurityAccessContainer import SecurityAccessContainer
+from uds.uds_config_tool.FunctionCreation.SecurityAccessMethodFactory import SecurityAccessMethodFactory
 from uds.uds_config_tool.ISOStandard.ISOStandard import IsoServices
 
 def get_serviceIdFromXmlElement(diagServiceElement, xmlElements):
@@ -58,6 +61,8 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
     rdbiContainer = ReadDataByIdentifierContainer()
     wdbiContainer = WriteDataByIdentifierContainer()
     requestDownloadContainer = RequestDownloadContainer()
+    securityAccessContainer = SecurityAccessContainer()
+
     sessionService_flag = False
     ecuResetService_flag = False
     rdbiService_flag = False
@@ -88,7 +93,7 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
 
             if serviceId == IsoServices.DiagnosticSessionControl:
                 sessionService_flag = True
-				
+
                 requestFunc = DiagnosticSessionControlMethodFactory.create_requestFunction(value, xmlElements)
                 diagnosticSessionControlContainer.add_requestFunction(requestFunc, humanName)
 
@@ -149,7 +154,17 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
                 positiveResponseFunction = ReadDataByIdentifierMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
                 rdbiContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
             elif serviceId == IsoServices.SecurityAccess:
-                securityAccess_flag = True
+                if isDiagServiceTransmissionOnly(value) == False:
+                    requestFunction = SecurityAccessMethodFactory.create_requestFunction(value, xmlElements)
+                    securityAccessContainer.add_requestFunction(requestFunction, humanName)
+
+                    negativeResponseFunction = SecurityAccessMethodFactory.create_checkNegativeResponseFunction(value, xmlElements)
+                    securityAccessContainer.add_negativeResponseFunction(negativeResponseFunction, humanName)
+
+                    checkFunction = SecurityAccessMethodFactory.create_checkPositiveResponseFunction(value, xmlElements)
+                    securityAccessContainer.add_positiveResponseFunction(checkFunction, humanName)
+
+                    securityAccess_flag = True
 
             elif serviceId == IsoServices.WriteDataByIdentifier:
 
@@ -203,7 +218,8 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
         rdbiContainer.bind_function(outputEcu)
 
     if securityAccess_flag:
-        pass
+        setattr(outputEcu, 'securityAccessContainer', securityAccessContainer)
+        securityAccessContainer.bind_function(outputEcu)
 
     # Bind any wdbi services have been found
     if wdbiService_flag:

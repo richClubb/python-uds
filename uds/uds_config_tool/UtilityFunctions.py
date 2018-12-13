@@ -95,7 +95,12 @@ def getResponseIdFromDiagService(diagServiceElement, xmlElements):
 # return: a single parameter matching the semantic, or a list of parameters which match the semantic
 def getParamWithSemantic(xmlElement, semanticName):
 
-    params = xmlElement.find("PARAMS")
+    output = None
+
+    try:
+        params = xmlElement.find("PARAMS")
+    except AttributeError:
+        return output
 
     paramsList = []
 
@@ -158,6 +163,17 @@ def getBitLengthFromDop(diagObjectPropElement):
         bitLength = None
 
     return bitLength
+
+def isDiagServiceTransmissionOnly(diagServiceElement):
+
+    output = getSdgsDataItem(diagServiceElement, "PositiveResponseSuppressed")
+
+    if output is not None:
+        if output == "yes":
+            return True
+
+    return False
+
 
 if __name__ == "__main__":
 

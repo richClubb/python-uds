@@ -26,9 +26,10 @@ requestFuncTemplate_getSeed = str("def {0}(suppressResponse=False):\n"
                                   "    return [{1}, securityRequest]"
                                   )
 
-requestFuncTemplate_sendKey = str("def {0}(key):\n"
+requestFuncTemplate_sendKey = str("def {0}(key, suppressResponse=False):\n"
                                   "    serviceId = {1}\n"
                                   "    subFunction = {2}\n"
+                                  "    if suppressResponse: subFunction |= 0x80\n"
                                   "    return [serviceId, subFunction] + key")
 
 checkSidTemplate = str("def {0}(sid):\n"
@@ -188,8 +189,6 @@ class SecurityAccessMethodFactory(object):
     def check_inputDataFunction(diagServiceElement, xmlElements):
 
         diagInstanceQualifier = getSdgsDataItem(diagServiceElement, "DiagInstanceQualifier")
-
-
 
 
 if __name__ == "__main__":
