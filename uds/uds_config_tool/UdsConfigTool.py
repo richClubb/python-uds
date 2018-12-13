@@ -21,6 +21,8 @@ from uds.uds_config_tool.SupportedServices.ReadDataByIdentifierContainer import 
 from uds.uds_config_tool.FunctionCreation.ReadDataByIdentifierMethodFactory import ReadDataByIdentifierMethodFactory
 from uds.uds_config_tool.SupportedServices.WriteDataByIdentifierContainer import WriteDataByIdentifierContainer
 from uds.uds_config_tool.FunctionCreation.WriteDataByIdentifierMethodFactory import WriteDataByIdentifierMethodFactory
+from uds.uds_config_tool.SupportedServices.InputOutputControlContainer import InputOutputControlContainer
+from uds.uds_config_tool.FunctionCreation.InputOutputControlMethodFactory import InputOutputControlMethodFactory
 from uds.uds_config_tool.SupportedServices.RoutineControlContainer import RoutineControlContainer
 from uds.uds_config_tool.FunctionCreation.RoutineControlMethodFactory import RoutineControlMethodFactory
 from uds.uds_config_tool.SupportedServices.RequestDownloadContainer import RequestDownloadContainer
@@ -66,6 +68,7 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
     ecuResetContainer = ECUResetContainer()
     rdbiContainer = ReadDataByIdentifierContainer()
     wdbiContainer = WriteDataByIdentifierContainer()
+    inputOutputControlContainer = InputOutputControlContainer()
     routineControlContainer = RoutineControlContainer()
     requestDownloadContainer = RequestDownloadContainer()
     requestUploadContainer = RequestUploadContainer()
@@ -75,6 +78,7 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
     ecuResetService_flag = False
     rdbiService_flag = False
     wdbiService_flag = False
+    ioCtrlService_flag = False
     routineCtrlService_flag = False
     reqDownloadService_flag = False
     reqUploadService_flag = False
@@ -187,11 +191,22 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
                 wdbiContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
 
             elif serviceId == IsoServices.InputOutputControlByIdentifier:
-                pass
+                ioCtrlService_flag = True
+                requestFunc = InputOutputControlMethodFactory.create_requestFunction(value, xmlElements)
+                inputOutputControlContainer.add_requestFunction(requestFunc, humanName)
+
+                negativeResponseFunction = InputOutputControlMethodFactory.create_checkNegativeResponseFunction(value, xmlElements)
+                inputOutputControlContainer.add_negativeResponseFunction(negativeResponseFunction, humanName)
+
+                checkFunc = InputOutputControlMethodFactory.create_checkPositiveResponseFunction(value, xmlElements)
+                inputOutputControlContainer.add_checkFunction(checkFunc, humanName)
+
+                positiveResponseFunction = InputOutputControlMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
+                inputOutputControlContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
 
             elif serviceId == IsoServices.RoutineControl:
                 routineCtrlService_flag = True
-                # We need a qualifier, as the humna name for the start stop, and results calls are all the same, so they otherwise overwrite each other
+                # We need a qualifier, as the human name for the start stop, and results calls are all the same, so they otherwise overwrite each other
                 requestFunc, qualifier = RoutineControlMethodFactory.create_requestFunction(value, xmlElements)
                 if qualifier != "":
                     routineControlContainer.add_requestFunction(requestFunc, humanName+qualifier)
@@ -284,6 +299,11 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
         setattr(outputEcu, 'writeDataByIdentifierContainer', wdbiContainer)
         wdbiContainer.bind_function(outputEcu)
 
+    # Bind any input output control services that have been found
+    if ioCtrlService_flag:
+        setattr(outputEcu, 'inputOutputControlContainer', inputOutputControlContainer)
+        inputOutputControlContainer.bind_function(outputEcu)
+
     # Bind any routine control services that have been found
     if routineCtrlService_flag:
         setattr(outputEcu, 'routineControlContainer', routineControlContainer)
@@ -320,6 +340,7 @@ if __name__ == "__main__":
     a.ecuReset('Hard Reset',suppressResponse=False)
     a.readDataByIdentifier('ECU Serial Number')
     a.writeDataByIdentifier('ECU Serial Number','ABC0011223344556')
+    #a.inputOutputControl(????????????????????????)
     a.routineControl('Erase Memory',IsoRoutineControlType.startRoutine,[('memoryAddress',[0x01]),('memorySize',[0xF000])])
     a.requestDownload(FormatIdentifier=[0x00],MemoryAddress=[0x40, 0x03, 0xE0, 0x00],MemorySize=[0x00, 0x00, 0x0E, 0x56])
     a.requestUpload(FormatIdentifier=[0x00],MemoryAddress=[0x40, 0x03, 0xE0, 0x00],MemorySize=[0x00, 0x00, 0x0E, 0x56])
