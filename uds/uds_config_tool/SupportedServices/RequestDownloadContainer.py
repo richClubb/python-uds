@@ -29,14 +29,13 @@ class RequestDownloadContainer(object):
     # as one of the in-built methods. uds.requestDownload("something","data record") It does not operate
     # on this instance of the container class.
     @staticmethod
-    def __requestDownload(target, parameter, FormatIdentifier, MemoryAddress, MemorySize, **kwargs):
+    def __requestDownload(target, FormatIdentifier, MemoryAddress, MemorySize, **kwargs):
 
         # Note: RequestDownload does not show support for multiple DIDs in the spec, so this is handling only a single DID with data record.
-        print(("key in request container:",target.requestDownloadContainer.requestFunctions.keys()))
-        requestFunction = target.requestDownloadContainer.requestFunctions[parameter]
-        checkFunction = target.requestDownloadContainer.checkFunctions[parameter]
-        negativeResponseFunction = target.requestDownloadContainer.negativeResponseFunctions[parameter]
-        positiveResponseFunction = target.requestDownloadContainer.positiveResponseFunctions[parameter]
+        requestFunction = target.requestDownloadContainer.requestFunctions['RequestDownload']
+        checkFunction = target.requestDownloadContainer.checkFunctions['RequestDownload']
+        negativeResponseFunction = target.requestDownloadContainer.negativeResponseFunctions['RequestDownload']
+        positiveResponseFunction = target.requestDownloadContainer.positiveResponseFunctions['RequestDownload']
 
         # Call the sequence of functions to execute the request download request/response action ...
         # ==============================================================================
@@ -62,14 +61,14 @@ class RequestDownloadContainer(object):
     def bind_function(self, bindObject):
         bindObject.requestDownload = MethodType(self.__requestDownload, bindObject)
 
-    def add_requestFunction(self, aFunction, dictionaryEntry):
-        self.requestFunctions[dictionaryEntry] = aFunction
+    def add_requestFunction(self, aFunction, dictionaryEntry):  # ... dictionaryEntry is not used (just there for consistency in UdsConfigTool.py) - i.e. this service is effectively hardcoded
+        self.requestFunctions['RequestDownload'] = aFunction
 
-    def add_checkFunction(self, aFunction, dictionaryEntry):
-        self.checkFunctions[dictionaryEntry] = aFunction
+    def add_checkFunction(self, aFunction, dictionaryEntry):  # ... dictionaryEntry is not used (just there for consistency in UdsConfigTool.py) - i.e. this service is effectively hardcoded
+        self.checkFunctions['RequestDownload'] = aFunction
 
-    def add_negativeResponseFunction(self, aFunction, dictionaryEntry):
-        self.negativeResponseFunctions[dictionaryEntry] = aFunction
+    def add_negativeResponseFunction(self, aFunction, dictionaryEntry):  # ... dictionaryEntry is not used (just there for consistency in UdsConfigTool.py) - i.e. this service is effectively hardcoded
+        self.negativeResponseFunctions['RequestDownload'] = aFunction
 
-    def add_positiveResponseFunction(self, aFunction, dictionaryEntry):
-        self.positiveResponseFunctions[dictionaryEntry] = aFunction
+    def add_positiveResponseFunction(self, aFunction, dictionaryEntry):  # ... dictionaryEntry is not used (just there for consistency in UdsConfigTool.py) - i.e. this service is effectively hardcoded
+        self.positiveResponseFunctions['RequestDownload'] = aFunction

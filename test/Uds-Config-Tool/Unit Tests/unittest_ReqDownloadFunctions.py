@@ -33,7 +33,7 @@ class RequestDownloadTestCase(unittest.TestCase):
         a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __requestDownload to requestDownload in the uds object, so can now call below
 
-        b = a.requestDownload('Download',FormatIdentifier=[0x00],MemoryAddress=[0x40, 0x03, 0xE0, 0x00],MemorySize=[0x00, 0x00, 0x0E, 0x56])	# ... calls __requestDownload, which does the Uds.send
+        b = a.requestDownload(FormatIdentifier=[0x00],MemoryAddress=[0x40, 0x03, 0xE0, 0x00],MemorySize=[0x00, 0x00, 0x0E, 0x56])	# ... calls __requestDownload, which does the Uds.send
 	
         canTp_send.assert_called_with([0x34, 0x00, 0x44, 0x40, 0x03, 0xE0, 0x00, 0x00, 0x00, 0x0E, 0x56],False)
         self.assertEqual({'LengthFormatIdentifier':[0x20],'MaxNumberOfBlockLength':[0x05, 0x00]}, b)  # ... (returns a dict)
@@ -54,7 +54,7 @@ class RequestDownloadTestCase(unittest.TestCase):
         a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __requestDownload to requestDownload in the uds object, so can now call below
 
-        b = a.requestDownload('Download',FormatIdentifier=[0x00],MemoryAddress=[0x01, 0xFF, 0x0A, 0x80],MemorySize=[0x03, 0xFF])	# ... calls __requestDownload, which does the Uds.send
+        b = a.requestDownload(FormatIdentifier=[0x00],MemoryAddress=[0x01, 0xFF, 0x0A, 0x80],MemorySize=[0x03, 0xFF])	# ... calls __requestDownload, which does the Uds.send
 	
         canTp_send.assert_called_with([0x34, 0x00, 0x24, 0x01, 0xFF, 0x0A, 0x80, 0x03, 0xFF,],False)
         self.assertEqual({'LengthFormatIdentifier':[0x40],'MaxNumberOfBlockLength':[0x01, 0x00, 0x05, 0x08]}, b)  # ... (returns a dict)
@@ -76,7 +76,7 @@ class RequestDownloadTestCase(unittest.TestCase):
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __requestDownload to requestDownload in the uds object, so can now call below
 
         try:
-            b = a.requestDownload('Download',FormatIdentifier=[0x00],MemoryAddress=[0x40, 0x03, 0xE0, 0x00],MemorySize=[0x00, 0x00, 0x0E, 0x56])	# ... calls __requestDownload, which does the Uds.send
+            b = a.requestDownload(FormatIdentifier=[0x00],MemoryAddress=[0x40, 0x03, 0xE0, 0x00],MemorySize=[0x00, 0x00, 0x0E, 0x56])	# ... calls __requestDownload, which does the Uds.send
         except:
             b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
         canTp_send.assert_called_with([0x34, 0x00, 0x44, 0x40, 0x03, 0xE0, 0x00, 0x00, 0x00, 0x0E, 0x56],False)
@@ -102,7 +102,7 @@ class RequestDownloadTestCase(unittest.TestCase):
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __readDataByIdentifier to readDataByIdentifier in the uds object, so can now call below
 
         try:
-            b = a.requestDownload('Download',FormatIdentifier=[0x00],MemoryAddress=[0x40, 0x03, 0xE0, 0x00],MemorySize=[0x00, 0x00, 0x0E, 0x56])	# ... calls __requestDownload, which does the Uds.send
+            b = a.requestDownload(FormatIdentifier=[0x00],MemoryAddress=[0x40, 0x03, 0xE0, 0x00],MemorySize=[0x00, 0x00, 0x0E, 0x56])	# ... calls __requestDownload, which does the Uds.send
         except:
             b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
         canTp_send.assert_called_with([0x34, 0x00, 0x44, 0x40, 0x03, 0xE0, 0x00, 0x00, 0x00, 0x0E, 0x56],False)
@@ -125,7 +125,7 @@ class RequestDownloadTestCase(unittest.TestCase):
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __readDataByIdentifier to readDataByIdentifier in the uds object, so can now call below
 
         try:
-            b = a.requestDownload('Download',FormatIdentifier=[0x00],MemoryAddress=[0x40, 0x03, 0xE0, 0x00],MemorySize=[0x00, 0x00, 0x0E, 0x56])	# ... calls __requestDownload, which does the Uds.send
+            b = a.requestDownload(FormatIdentifier=[0x00],MemoryAddress=[0x40, 0x03, 0xE0, 0x00],MemorySize=[0x00, 0x00, 0x0E, 0x56])	# ... calls __requestDownload, which does the Uds.send
         except:
             b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
         canTp_send.assert_called_with([0x34, 0x00, 0x44, 0x40, 0x03, 0xE0, 0x00, 0x00, 0x00, 0x0E, 0x56],False)
@@ -147,7 +147,7 @@ class RequestDownloadTestCase(unittest.TestCase):
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __readDataByIdentifier to readDataByIdentifier in the uds object, so can now call below
 
         try:
-            b = a.requestDownload('Download',FormatIdentifier=[0x00],MemoryAddress=[0x40, 0x03, 0xE0, 0x00],MemorySize=[0x00, 0x00, 0x0E, 0x56])	# ... calls __requestDownload, which does the Uds.send
+            b = a.requestDownload(FormatIdentifier=[0x00],MemoryAddress=[0x40, 0x03, 0xE0, 0x00],MemorySize=[0x00, 0x00, 0x0E, 0x56])	# ... calls __requestDownload, which does the Uds.send
         except:
             b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
         canTp_send.assert_called_with([0x34, 0x00, 0x44, 0x40, 0x03, 0xE0, 0x00, 0x00, 0x00, 0x0E, 0x56],False)
@@ -169,7 +169,7 @@ class RequestDownloadTestCase(unittest.TestCase):
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __readDataByIdentifier to readDataByIdentifier in the uds object, so can now call below
 
         try:
-            b = a.requestDownload('Download',FormatIdentifier=[0x00],MemoryAddress=[0x40, 0x03, 0xE0, 0x00],MemorySize=[0x00, 0x00, 0x0E, 0x56])	# ... calls __requestDownload, which does the Uds.send
+            b = a.requestDownload(FormatIdentifier=[0x00],MemoryAddress=[0x40, 0x03, 0xE0, 0x00],MemorySize=[0x00, 0x00, 0x0E, 0x56])	# ... calls __requestDownload, which does the Uds.send
         except:
             b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
         canTp_send.assert_called_with([0x34, 0x00, 0x44, 0x40, 0x03, 0xE0, 0x00, 0x00, 0x00, 0x0E, 0x56],False)
