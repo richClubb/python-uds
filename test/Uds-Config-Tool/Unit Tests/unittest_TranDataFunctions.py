@@ -31,9 +31,9 @@ class TransferDataTestCase(unittest.TestCase):
 
         # Parameters: xml file (odx file), ecu name (not currently used) ...
         a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
-        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __requestDownload to requestDownload in the uds object, so can now call below
+        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __transferData to transferData in the uds object, so can now call below
 
-        b = a.transferData(0x01,[0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF])	# ... calls __requestDownload, which does the Uds.send - takes blockSequenceCounter and parameterRecord
+        b = a.transferData(0x01,[0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF])	# ... calls __transferData, which does the Uds.send - takes blockSequenceCounter and parameterRecord
 	
         canTp_send.assert_called_with([0x36, 0x01, 0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF],False)
         self.assertEqual({'blockSequenceCounter':[0x01],'transferResponseParameterRecord':[0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF]}, b)  # ... (returns a dict)
@@ -51,9 +51,9 @@ class TransferDataTestCase(unittest.TestCase):
 
         # Parameters: xml file (odx file), ecu name (not currently used) ...
         a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
-        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __requestDownload to requestDownload in the uds object, so can now call below
+        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __transferData to transferData in the uds object, so can now call below
 
-        b = a.transferData(0x02,[0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF])	# ... calls __requestDownload, which does the Uds.send - takes blockSequenceCounter and parameterRecord
+        b = a.transferData(0x02,[0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF])	# ... calls __transferData, which does the Uds.send - takes blockSequenceCounter and parameterRecord
 	
         canTp_send.assert_called_with([0x36, 0x02, 0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF],False)
         self.assertEqual({'blockSequenceCounter':[0x02],'transferResponseParameterRecord':[0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF]}, b)  # ... (returns a dict)
@@ -64,7 +64,7 @@ class TransferDataTestCase(unittest.TestCase):
     # patches are inserted in reverse order
     @mock.patch('uds.CanTp.recv')
     @mock.patch('uds.CanTp.send')
-    def test_reqDownloadNegResponse_0x13(self,
+    def test_transDataNegResponse_0x13(self,
                      canTp_send,
                      canTp_recv):
 
@@ -73,20 +73,20 @@ class TransferDataTestCase(unittest.TestCase):
 
         # Parameters: xml file (odx file), ecu name (not currently used) ...
         a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
-        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __requestDownload to requestDownload in the uds object, so can now call below
+        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __transferData to transferData in the uds object, so can now call below
 
         try:
-            b = a.transferData(0x01,[0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF])	# ... calls __requestDownload, which does the Uds.send
+            b = a.transferData(0x01,[0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF])	# ... calls __transferData, which does the Uds.send
         except:
             b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
         canTp_send.assert_called_with([0x36, 0x01, 0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF],False)
-        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x13']", b)  # ... requestDownload should not return a value
+        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x13']", b)  # ... transferData should not return a value
 
 
     # patches are inserted in reverse order
     @mock.patch('uds.CanTp.recv')
     @mock.patch('uds.CanTp.send')
-    def test_reqDownloadNegResponse_0x24(self,
+    def test_transDataNegResponse_0x24(self,
                      canTp_send,
                      canTp_recv):
 
@@ -95,20 +95,20 @@ class TransferDataTestCase(unittest.TestCase):
 
         # Parameters: xml file (odx file), ecu name (not currently used) ...
         a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
-        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __requestDownload to requestDownload in the uds object, so can now call below
+        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __transferData to transferData in the uds object, so can now call below
 
         try:
-            b = a.transferData(0x01,[0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF])	# ... calls __requestDownload, which does the Uds.send
+            b = a.transferData(0x01,[0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF])	# ... calls __transferData, which does the Uds.send
         except:
             b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
         canTp_send.assert_called_with([0x36, 0x01, 0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF],False)
-        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x24']", b)  # ... requestDownload should not return a value
+        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x24']", b)  # ... transferData should not return a value
 
 
     # patches are inserted in reverse order
     @mock.patch('uds.CanTp.recv')
     @mock.patch('uds.CanTp.send')
-    def test_reqDownloadNegResponse_0x31(self,
+    def test_transDataNegResponse_0x31(self,
                      canTp_send,
                      canTp_recv):
 
@@ -117,20 +117,20 @@ class TransferDataTestCase(unittest.TestCase):
 
         # Parameters: xml file (odx file), ecu name (not currently used) ...
         a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
-        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __requestDownload to requestDownload in the uds object, so can now call below
+        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __transferData to transferData in the uds object, so can now call below
 
         try:
-            b = a.transferData(0x01,[0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF])	# ... calls __requestDownload, which does the Uds.send
+            b = a.transferData(0x01,[0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF])	# ... calls __transferData, which does the Uds.send
         except:
             b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
         canTp_send.assert_called_with([0x36, 0x01, 0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF],False)
-        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x31']", b)  # ... requestDownload should not return a value
+        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x31']", b)  # ... transferData should not return a value
 
 
     # patches are inserted in reverse order
     @mock.patch('uds.CanTp.recv')
     @mock.patch('uds.CanTp.send')
-    def test_reqDownloadNegResponse_0x71(self,
+    def test_transDataNegResponse_0x71(self,
                      canTp_send,
                      canTp_recv):
 
@@ -139,20 +139,20 @@ class TransferDataTestCase(unittest.TestCase):
 
         # Parameters: xml file (odx file), ecu name (not currently used) ...
         a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
-        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __requestDownload to requestDownload in the uds object, so can now call below
+        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __transferData to transferData in the uds object, so can now call below
 
         try:
-            b = a.transferData(0x01,[0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF])	# ... calls __requestDownload, which does the Uds.send
+            b = a.transferData(0x01,[0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF])	# ... calls __transferData, which does the Uds.send
         except:
             b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
         canTp_send.assert_called_with([0x36, 0x01, 0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF],False)
-        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x71']", b)  # ... requestDownload should not return a value
+        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x71']", b)  # ... transferData should not return a value
 
 
     # patches are inserted in reverse order
     @mock.patch('uds.CanTp.recv')
     @mock.patch('uds.CanTp.send')
-    def test_reqDownloadNegResponse_0x72(self,
+    def test_transDataNegResponse_0x72(self,
                      canTp_send,
                      canTp_recv):
 
@@ -161,20 +161,20 @@ class TransferDataTestCase(unittest.TestCase):
 
         # Parameters: xml file (odx file), ecu name (not currently used) ...
         a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
-        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __requestDownload to requestDownload in the uds object, so can now call below
+        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __transferData to transferData in the uds object, so can now call below
 
         try:
-            b = a.transferData(0x01,[0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF])	# ... calls __requestDownload, which does the Uds.send
+            b = a.transferData(0x01,[0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF])	# ... calls __transferData, which does the Uds.send
         except:
             b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
         canTp_send.assert_called_with([0x36, 0x01, 0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF],False)
-        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x72']", b)  # ... requestDownload should not return a value
+        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x72']", b)  # ... transferData should not return a value
 
 
     # patches are inserted in reverse order
     @mock.patch('uds.CanTp.recv')
     @mock.patch('uds.CanTp.send')
-    def test_reqDownloadNegResponse_0x73(self,
+    def test_transDataNegResponse_0x73(self,
                      canTp_send,
                      canTp_recv):
 
@@ -183,20 +183,20 @@ class TransferDataTestCase(unittest.TestCase):
 
         # Parameters: xml file (odx file), ecu name (not currently used) ...
         a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
-        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __requestDownload to requestDownload in the uds object, so can now call below
+        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __transferData to transferData in the uds object, so can now call below
 
         try:
-            b = a.transferData(0x01,[0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF])	# ... calls __requestDownload, which does the Uds.send
+            b = a.transferData(0x01,[0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF])	# ... calls __transferData, which does the Uds.send
         except:
             b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
         canTp_send.assert_called_with([0x36, 0x01, 0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF],False)
-        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x73']", b)  # ... requestDownload should not return a value
+        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x73']", b)  # ... transferData should not return a value
 
 
     # patches are inserted in reverse order
     @mock.patch('uds.CanTp.recv')
     @mock.patch('uds.CanTp.send')
-    def test_reqDownloadNegResponse_0x92(self,
+    def test_transDataNegResponse_0x92(self,
                      canTp_send,
                      canTp_recv):
 
@@ -205,20 +205,20 @@ class TransferDataTestCase(unittest.TestCase):
 
         # Parameters: xml file (odx file), ecu name (not currently used) ...
         a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
-        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __requestDownload to requestDownload in the uds object, so can now call below
+        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __transferData to transferData in the uds object, so can now call below
 
         try:
-            b = a.transferData(0x01,[0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF])	# ... calls __requestDownload, which does the Uds.send
+            b = a.transferData(0x01,[0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF])	# ... calls __transferData, which does the Uds.send
         except:
             b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
         canTp_send.assert_called_with([0x36, 0x01, 0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF],False)
-        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x92']", b)  # ... requestDownload should not return a value
+        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x92']", b)  # ... transferData should not return a value
 
 
     # patches are inserted in reverse order
     @mock.patch('uds.CanTp.recv')
     @mock.patch('uds.CanTp.send')
-    def test_reqDownloadNegResponse_0x93(self,
+    def test_transDataNegResponse_0x93(self,
                      canTp_send,
                      canTp_recv):
 
@@ -227,14 +227,14 @@ class TransferDataTestCase(unittest.TestCase):
 
         # Parameters: xml file (odx file), ecu name (not currently used) ...
         a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
-        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __requestDownload to requestDownload in the uds object, so can now call below
+        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __transferData to transferData in the uds object, so can now call below
 
         try:
-            b = a.transferData(0x01,[0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF])	# ... calls __requestDownload, which does the Uds.send
+            b = a.transferData(0x01,[0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF])	# ... calls __transferData, which does the Uds.send
         except:
             b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
         canTp_send.assert_called_with([0x36, 0x01, 0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF],False)
-        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x93']", b)  # ... requestDownload should not return a value
+        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x93']", b)  # ... transferData should not return a value
 
 
 

@@ -27,8 +27,8 @@ from uds.uds_config_tool.SupportedServices.RequestDownloadContainer import Reque
 from uds.uds_config_tool.FunctionCreation.RequestDownloadMethodFactory import RequestDownloadMethodFactory
 from uds.uds_config_tool.SupportedServices.TransferDataContainer import TransferDataContainer
 from uds.uds_config_tool.FunctionCreation.TransferDataMethodFactory import TransferDataMethodFactory
-#from uds.uds_config_tool.SupportedServices.RequestTransferExitContainer import RequestTransferExitContainer
-#from uds.uds_config_tool.FunctionCreation.RequestTransferExitMethodFactory import RequestTransferExitMethodFactory
+from uds.uds_config_tool.SupportedServices.TransferExitContainer import TransferExitContainer
+from uds.uds_config_tool.FunctionCreation.TransferExitMethodFactory import TransferExitMethodFactory
 from uds.uds_config_tool.ISOStandard.ISOStandard import IsoServices, IsoRoutineControlType
 
 
@@ -67,7 +67,7 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
     routineControlContainer = RoutineControlContainer()
     requestDownloadContainer = RequestDownloadContainer()
     transferDataContainer = TransferDataContainer()
-    #requestTransferExitContainer = RequestTransferExitContainer()
+    transferExitContainer = TransferExitContainer()
     sessionService_flag = False
     ecuResetService_flag = False
     rdbiService_flag = False
@@ -230,8 +230,18 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
                 positiveResponseFunction = TransferDataMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
                 transferDataContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
             elif serviceId == IsoServices.RequestTransferExit:
-                #transExitService_flag = True
-                pass
+                transExitService_flag = True
+                requestFunc = TransferExitMethodFactory.create_requestFunction(value, xmlElements)
+                transferExitContainer.add_requestFunction(requestFunc, humanName)
+
+                negativeResponseFunction = TransferExitMethodFactory.create_checkNegativeResponseFunction(value, xmlElements)
+                transferExitContainer.add_negativeResponseFunction(negativeResponseFunction, humanName)
+
+                checkFunc = TransferExitMethodFactory.create_checkPositiveResponseFunction(value, xmlElements)
+                transferExitContainer.add_checkFunction(checkFunc, humanName)
+
+                positiveResponseFunction = TransferExitMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
+                transferExitContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
 
 
     #need to be able to extract the reqId and resId
@@ -273,8 +283,9 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
         transferDataContainer.bind_function(outputEcu)
 
     # Bind any transfer exit data services that have been found
-    #if transExitService_flag:
-    #   pass
+    if transExitService_flag:
+        setattr(outputEcu, 'transferExitContainer', transferExitContainer)
+        transferExitContainer.bind_function(outputEcu)
 
     return outputEcu
 
@@ -289,4 +300,5 @@ if __name__ == "__main__":
     a.writeDataByIdentifier('ECU Serial Number','ABC0011223344556')
     a.routineControl('Erase Memory',IsoRoutineControlType.startRoutine,[('memoryAddress',[0x01]),('memorySize',[0xF000])])
     a.requestDownload(FormatIdentifier=[0x00],MemoryAddress=[0x40, 0x03, 0xE0, 0x00],MemorySize=[0x00, 0x00, 0x0E, 0x56])
-
+    a.transferData(0x01,[0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF])
+    a.transferExit([0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF])
