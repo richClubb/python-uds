@@ -25,6 +25,8 @@ from uds.uds_config_tool.SupportedServices.RoutineControlContainer import Routin
 from uds.uds_config_tool.FunctionCreation.RoutineControlMethodFactory import RoutineControlMethodFactory
 from uds.uds_config_tool.SupportedServices.RequestDownloadContainer import RequestDownloadContainer
 from uds.uds_config_tool.FunctionCreation.RequestDownloadMethodFactory import RequestDownloadMethodFactory
+from uds.uds_config_tool.SupportedServices.RequestUploadContainer import RequestUploadContainer
+from uds.uds_config_tool.FunctionCreation.RequestUploadMethodFactory import RequestUploadMethodFactory
 from uds.uds_config_tool.SupportedServices.TransferDataContainer import TransferDataContainer
 from uds.uds_config_tool.FunctionCreation.TransferDataMethodFactory import TransferDataMethodFactory
 from uds.uds_config_tool.SupportedServices.TransferExitContainer import TransferExitContainer
@@ -66,6 +68,7 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
     wdbiContainer = WriteDataByIdentifierContainer()
     routineControlContainer = RoutineControlContainer()
     requestDownloadContainer = RequestDownloadContainer()
+    requestUploadContainer = RequestUploadContainer()
     transferDataContainer = TransferDataContainer()
     transferExitContainer = TransferExitContainer()
     sessionService_flag = False
@@ -74,6 +77,7 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
     wdbiService_flag = False
     routineCtrlService_flag = False
     reqDownloadService_flag = False
+    reqUploadService_flag = False
     transDataService_flag = False
     transExitService_flag = False
     xmlElements = {}
@@ -186,7 +190,6 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
                 pass
 
             elif serviceId == IsoServices.RoutineControl:
-
                 routineCtrlService_flag = True
                 # We need a qualifier, as the humna name for the start stop, and results calls are all the same, so they otherwise overwrite each other
                 requestFunc, qualifier = RoutineControlMethodFactory.create_requestFunction(value, xmlElements)
@@ -215,6 +218,20 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
 
                 positiveResponseFunction = RequestDownloadMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
                 requestDownloadContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
+
+            elif serviceId == IsoServices.RequestUpload:
+                reqUploadService_flag = True
+                requestFunc = RequestUploadMethodFactory.create_requestFunction(value, xmlElements)
+                requestUploadContainer.add_requestFunction(requestFunc, humanName)
+
+                negativeResponseFunction = RequestUploadMethodFactory.create_checkNegativeResponseFunction(value, xmlElements)
+                requestUploadContainer.add_negativeResponseFunction(negativeResponseFunction, humanName)
+
+                checkFunc = RequestUploadMethodFactory.create_checkPositiveResponseFunction(value, xmlElements)
+                requestUploadContainer.add_checkFunction(checkFunc, humanName)
+
+                positiveResponseFunction = RequestUploadMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
+                requestUploadContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
 
             elif serviceId == IsoServices.TransferData:
                 transDataService_flag = True
@@ -277,6 +294,11 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
         setattr(outputEcu, 'requestDownloadContainer', requestDownloadContainer)
         requestDownloadContainer.bind_function(outputEcu)
 
+    # Bind any request upload services that have been found
+    if reqUploadService_flag:
+        setattr(outputEcu, 'requestUploadContainer', requestUploadContainer)
+        requestUploadContainer.bind_function(outputEcu)
+
     # Bind any transfer data services that have been found
     if transDataService_flag:
         setattr(outputEcu, 'transferDataContainer', transferDataContainer)
@@ -300,5 +322,6 @@ if __name__ == "__main__":
     a.writeDataByIdentifier('ECU Serial Number','ABC0011223344556')
     a.routineControl('Erase Memory',IsoRoutineControlType.startRoutine,[('memoryAddress',[0x01]),('memorySize',[0xF000])])
     a.requestDownload(FormatIdentifier=[0x00],MemoryAddress=[0x40, 0x03, 0xE0, 0x00],MemorySize=[0x00, 0x00, 0x0E, 0x56])
+    a.requestUpload(FormatIdentifier=[0x00],MemoryAddress=[0x40, 0x03, 0xE0, 0x00],MemorySize=[0x00, 0x00, 0x0E, 0x56])
     a.transferData(0x01,[0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF])
     a.transferExit([0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF])
