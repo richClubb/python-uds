@@ -45,4 +45,10 @@ class IsoServices(IntEnum):
     TransferData = 0x36
     RequestTransferExit = 0x37
 
+	
+class IsoRoutineControlType(IntEnum):
+
+    startRoutine = 0x01
+    stopRoutine = 0x02
+    requestRoutineResults = 0x03
 

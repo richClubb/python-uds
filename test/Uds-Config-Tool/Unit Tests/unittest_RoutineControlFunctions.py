@@ -15,7 +15,7 @@ from unittest import mock
 from uds import Uds
 from uds.uds_config_tool.UdsConfigTool import createUdsConnection
 import sys, traceback
-
+from uds.uds_config_tool.ISOStandard.ISOStandard import IsoRoutineControlType
 
 class ECUResetTestCase(unittest.TestCase):
 
@@ -33,7 +33,7 @@ class ECUResetTestCase(unittest.TestCase):
         a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __routineControl to routineControl in the uds object, so can now call below
 
-        b = a.routineControl('Erase Memory',0x01,[('memoryAddress',[0x01]),('memorySize',[0xF000])])	# ... calls __routineControl, which does the Uds.send
+        b = a.routineControl('Erase Memory',IsoRoutineControlType.startRoutine,[('memoryAddress',[0x01]),('memorySize',[0xF000])])	# ... calls __routineControl, which does the Uds.send
 	
         canTp_send.assert_called_with([0x31, 0x01, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0xF0, 0x00],False)
         self.assertEqual({'Erase Memory Status':[0x30],'RoutineControlType':[0x01],'Identifier':[0xFF, 0x00]}, b) 
@@ -53,7 +53,7 @@ class ECUResetTestCase(unittest.TestCase):
         a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __routineControl to routineControl in the uds object, so can now call below
 
-        b = a.routineControl('Erase Memory',0x01,[('memoryAddress',[0x01]),('memorySize',[0xF000])],suppressResponse=False)	# ... calls __routineControl, which does the Uds.send
+        b = a.routineControl('Erase Memory',IsoRoutineControlType.startRoutine,[('memoryAddress',[0x01]),('memorySize',[0xF000])],suppressResponse=False)	# ... calls __routineControl, which does the Uds.send
 	
         canTp_send.assert_called_with([0x31, 0x01, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0xF0, 0x00],False)
         self.assertEqual({'Erase Memory Status':[0x30],'RoutineControlType':[0x01],'Identifier':[0xFF, 0x00]}, b) 
@@ -70,7 +70,7 @@ class ECUResetTestCase(unittest.TestCase):
         a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __routineControl to routineControl in the uds object, so can now call below
 
-        b = a.routineControl('Erase Memory',0x01,[('memoryAddress',[0x01]),('memorySize',[0xF000])],suppressResponse=True)	# ... calls __routineControl, which does the Uds.send
+        b = a.routineControl('Erase Memory',IsoRoutineControlType.startRoutine,[('memoryAddress',[0x01]),('memorySize',[0xF000])],suppressResponse=True)	# ... calls __routineControl, which does the Uds.send
 	
         canTp_send.assert_called_with([0x31, 0x81, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0xF0, 0x00],False)
         self.assertEqual(None, b)  # ... routineControl should not return a value
@@ -90,7 +90,7 @@ class ECUResetTestCase(unittest.TestCase):
         a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __routineControl to routineControl in the uds object, so can now call below
 
-        b = a.routineControl('Erase Memory',0x02)	# ... calls __routineControl, which does the Uds.send
+        b = a.routineControl('Erase Memory',IsoRoutineControlType.stopRoutine)	# ... calls __routineControl, which does the Uds.send
 	
         canTp_send.assert_called_with([0x31, 0x02, 0xFF, 0x00],False)
         self.assertEqual({'RoutineControlType':[0x02],'Identifier':[0xFF, 0x00]}, b) 
@@ -110,7 +110,7 @@ class ECUResetTestCase(unittest.TestCase):
         a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __routineControl to routineControl in the uds object, so can now call below
 
-        b = a.routineControl('Erase Memory',0x03)	# ... calls __routineControl, which does the Uds.send
+        b = a.routineControl('Erase Memory',IsoRoutineControlType.requestRoutineResults)	# ... calls __routineControl, which does the Uds.send
 	
         canTp_send.assert_called_with([0x31, 0x03, 0xFF, 0x00],False)
         self.assertEqual({'Erase Memory Status':[0x30],'RoutineControlType':[0x03],'Identifier':[0xFF, 0x00]}, b) 
@@ -130,7 +130,7 @@ class ECUResetTestCase(unittest.TestCase):
         a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __routineControl to routineControl in the uds object, so can now call below
 
-        b = a.routineControl('Check Valid Application',0x01)	# ... calls __routineControl, which does the Uds.send
+        b = a.routineControl('Check Valid Application',IsoRoutineControlType.startRoutine)	# ... calls __routineControl, which does the Uds.send
         canTp_send.assert_called_with([0x31, 0x01, 0x03, 0x04],False)
         self.assertEqual({'Valid Application Status':[0x30],'Valid Application Present':[0x02],'RoutineControlType':[0x01],'Identifier':[0x03, 0x04]}, b)
 
@@ -149,7 +149,7 @@ class ECUResetTestCase(unittest.TestCase):
         a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __routineControl to routineControl in the uds object, so can now call below
 
-        b = a.routineControl('Check Valid Application',0x03)	# ... calls __routineControl, which does the Uds.send
+        b = a.routineControl('Check Valid Application',IsoRoutineControlType.requestRoutineResults)	# ... calls __routineControl, which does the Uds.send
 	
         canTp_send.assert_called_with([0x31, 0x03, 0x03, 0x04],False)
         self.assertEqual({'Valid Application Status':[0x30],'Valid Application Present':[0x02],'RoutineControlType':[0x03],'Identifier':[0x03, 0x04]}, b)
@@ -170,7 +170,7 @@ class ECUResetTestCase(unittest.TestCase):
         a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __routineControl to routineControl in the uds object, so can now call below
 
-        b = a.routineControl('Start Secondary Bootloader',0x01,[0xFF])	# ... calls __routineControl, which does the Uds.send
+        b = a.routineControl('Start Secondary Bootloader',IsoRoutineControlType.startRoutine,[0xFF])	# ... calls __routineControl, which does the Uds.send
         canTp_send.assert_called_with([0x31, 0x01, 0x03, 0x01, 0x00, 0x00, 0x00, 0xFF],False)
         self.assertEqual({'strSBLRoutineInfo':[0xA7],'RoutineControlType':[0x01],'Identifier':[0x03, 0x01]}, b)
 
@@ -190,7 +190,7 @@ class ECUResetTestCase(unittest.TestCase):
         a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __routineControl to routineControl in the uds object, so can now call below
 
-        b = a.routineControl('Check Programming Dependencies',0x01,[('memoryAddress',[0x01]),('memorySize',[0xF000])])	# ... calls __routineControl, which does the Uds.send
+        b = a.routineControl('Check Programming Dependencies',IsoRoutineControlType.startRoutine,[('memoryAddress',[0x01]),('memorySize',[0xF000])])	# ... calls __routineControl, which does the Uds.send
         canTp_send.assert_called_with([0x31, 0x01, 0xFF, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0xF0, 0x00],False)
         self.assertEqual({'RoutineStatusInfo':[0x30],'Check Sum Value':[0xB9, 0x2E],'RoutineControlType':[0x01],'Identifier':[0xFF, 0x01]}, b)
 
@@ -209,7 +209,7 @@ class ECUResetTestCase(unittest.TestCase):
         a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __routineControl to routineControl in the uds object, so can now call below
 
-        b = a.routineControl('Check Programming Dependencies',0x03)	# ... calls __routineControl, which does the Uds.send
+        b = a.routineControl('Check Programming Dependencies',IsoRoutineControlType.requestRoutineResults)	# ... calls __routineControl, which does the Uds.send
         canTp_send.assert_called_with([0x31, 0x03, 0xFF, 0x01],False)
         self.assertEqual({'RoutineStatusInfo':[0x30],'Check Sum Value':[0xB9, 0x2E],'RoutineControlType':[0x03],'Identifier':[0xFF, 0x01]}, b)
 
@@ -230,7 +230,7 @@ class ECUResetTestCase(unittest.TestCase):
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __routineControl to routineControl in the uds object, so can now call below
 
         try:
-            b = a.routineControl('Erase Memory',0x01,[('memoryAddress',[0x01]),('memorySize',[0xF000])])	# ... calls __routineControl, which does the Uds.send
+            b = a.routineControl('Erase Memory',IsoRoutineControlType.startRoutine,[('memoryAddress',[0x01]),('memorySize',[0xF000])])	# ... calls __routineControl, which does the Uds.send
         except:
             b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
         canTp_send.assert_called_with([0x31, 0x01, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0xF0, 0x00],False)
@@ -251,7 +251,7 @@ class ECUResetTestCase(unittest.TestCase):
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __routineControl to routineControl in the uds object, so can now call below
 
         try:
-            b = a.routineControl('Erase Memory',0x01,[('memoryAddress',[0x01]),('memorySize',[0xF000])])	# ... calls __routineControl, which does the Uds.send
+            b = a.routineControl('Erase Memory',IsoRoutineControlType.startRoutine,[('memoryAddress',[0x01]),('memorySize',[0xF000])])	# ... calls __routineControl, which does the Uds.send
         except:
             b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
         canTp_send.assert_called_with([0x31, 0x01, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0xF0, 0x00],False)
@@ -273,7 +273,7 @@ class ECUResetTestCase(unittest.TestCase):
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __routineControl to routineControl in the uds object, so can now call below
 
         try:
-            b = a.routineControl('Erase Memory',0x01,[('memoryAddress',[0x01]),('memorySize',[0xF000])])	# ... calls __routineControl, which does the Uds.send
+            b = a.routineControl('Erase Memory',IsoRoutineControlType.startRoutine,[('memoryAddress',[0x01]),('memorySize',[0xF000])])	# ... calls __routineControl, which does the Uds.send
         except:
             b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
         canTp_send.assert_called_with([0x31, 0x01, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0xF0, 0x00],False)
@@ -295,7 +295,7 @@ class ECUResetTestCase(unittest.TestCase):
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __routineControl to routineControl in the uds object, so can now call below
 
         try:
-            b = a.routineControl('Erase Memory',0x01,[('memoryAddress',[0x01]),('memorySize',[0xF000])])	# ... calls __routineControl, which does the Uds.send
+            b = a.routineControl('Erase Memory',IsoRoutineControlType.startRoutine,[('memoryAddress',[0x01]),('memorySize',[0xF000])])	# ... calls __routineControl, which does the Uds.send
         except:
             b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
         canTp_send.assert_called_with([0x31, 0x01, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0xF0, 0x00],False)
@@ -318,7 +318,7 @@ class ECUResetTestCase(unittest.TestCase):
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __routineControl to routineControl in the uds object, so can now call below
 
         try:
-            b = a.routineControl('Erase Memory',0x01,[('memoryAddress',[0x01]),('memorySize',[0xF000])])	# ... calls __routineControl, which does the Uds.send
+            b = a.routineControl('Erase Memory',IsoRoutineControlType.startRoutine,[('memoryAddress',[0x01]),('memorySize',[0xF000])])	# ... calls __routineControl, which does the Uds.send
         except:
             b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
         canTp_send.assert_called_with([0x31, 0x01, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0xF0, 0x00],False)
@@ -340,7 +340,7 @@ class ECUResetTestCase(unittest.TestCase):
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __routineControl to routineControl in the uds object, so can now call below
 
         try:
-            b = a.routineControl('Erase Memory',0x01,[('memoryAddress',[0x01]),('memorySize',[0xF000])])	# ... calls __routineControl, which does the Uds.send
+            b = a.routineControl('Erase Memory',IsoRoutineControlType.startRoutine,[('memoryAddress',[0x01]),('memorySize',[0xF000])])	# ... calls __routineControl, which does the Uds.send
         except:
             b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
         canTp_send.assert_called_with([0x31, 0x01, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0xF0, 0x00],False)
@@ -362,7 +362,7 @@ class ECUResetTestCase(unittest.TestCase):
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __routineControl to routineControl in the uds object, so can now call below
 
         try:
-            b = a.routineControl('Erase Memory',0x01,[('memoryAddress',[0x01]),('memorySize',[0xF000])])	# ... calls __routineControl, which does the Uds.send
+            b = a.routineControl('Erase Memory',IsoRoutineControlType.startRoutine,[('memoryAddress',[0x01]),('memorySize',[0xF000])])	# ... calls __routineControl, which does the Uds.send
         except:
             b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
         canTp_send.assert_called_with([0x31, 0x01, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0xF0, 0x00],False)
