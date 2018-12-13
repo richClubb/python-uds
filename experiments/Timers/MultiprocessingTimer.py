@@ -1,5 +1,7 @@
+"""This file is an experiment and should not be used for any serious coding"""
+
 from multiprocessing import Process, Value
-from iTimer import ITimer
+from .iTimer import ITimer
 from time import perf_counter, sleep
 
 

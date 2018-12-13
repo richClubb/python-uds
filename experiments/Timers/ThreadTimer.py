@@ -1,4 +1,6 @@
-from iTimer import ITimer
+"""This file is an experiment and should not be used for any serious coding"""
+
+from .iTimer import ITimer
 from threading import Timer
 import gc
 from time import perf_counter

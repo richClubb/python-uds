@@ -12,6 +12,7 @@ __status__ = "Development"
 
 from uds import Config
 from uds import CanTp
+from uds import TestTp
 from os import path
 
 
@@ -41,6 +42,8 @@ class TpFactory(object):
             raise NotImplementedError("LIN Transport not currently supported")
         elif(tpType == "FLEXRAY"):
             raise NotImplementedError("FlexRay Transport not currently supported")
+        elif(tpType == "TEST"):
+            return TestTp()
         else:
             raise Exception("Unknown transport type selected")
 
