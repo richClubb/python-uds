@@ -36,7 +36,7 @@ class ECUResetTestCase(unittest.TestCase):
         b = a.routineControl('Erase Memory',0x01,[('memoryAddress',[0x01]),('memorySize',[0xF000])])	# ... calls __routineControl, which does the Uds.send
 	
         canTp_send.assert_called_with([0x31, 0x01, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0xF0, 0x00],False)
-        self.assertEqual({'Erase Memory Status':[0x30],'RoutineControlType':[0x01],'Identifier':[0xFF, 0x00]}, b)  # ... routineControl should not return a value
+        self.assertEqual({'Erase Memory Status':[0x30],'RoutineControlType':[0x01],'Identifier':[0xFF, 0x00]}, b) 
 
 
     # patches are inserted in reverse order
@@ -56,7 +56,7 @@ class ECUResetTestCase(unittest.TestCase):
         b = a.routineControl('Erase Memory',0x01,[('memoryAddress',[0x01]),('memorySize',[0xF000])],suppressResponse=False)	# ... calls __routineControl, which does the Uds.send
 	
         canTp_send.assert_called_with([0x31, 0x01, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0xF0, 0x00],False)
-        self.assertEqual({'Erase Memory Status':[0x30],'RoutineControlType':[0x01],'Identifier':[0xFF, 0x00]}, b)  # ... routineControl should not return a value
+        self.assertEqual({'Erase Memory Status':[0x30],'RoutineControlType':[0x01],'Identifier':[0xFF, 0x00]}, b) 
 
 		
     # patches are inserted in reverse order
@@ -93,7 +93,7 @@ class ECUResetTestCase(unittest.TestCase):
         b = a.routineControl('Erase Memory',0x02)	# ... calls __routineControl, which does the Uds.send
 	
         canTp_send.assert_called_with([0x31, 0x02, 0xFF, 0x00],False)
-        self.assertEqual({'RoutineControlType':[0x02],'Identifier':[0xFF, 0x00]}, b)  # ... routineControl should not return a value
+        self.assertEqual({'RoutineControlType':[0x02],'Identifier':[0xFF, 0x00]}, b) 
 
 
     # patches are inserted in reverse order
@@ -113,7 +113,7 @@ class ECUResetTestCase(unittest.TestCase):
         b = a.routineControl('Erase Memory',0x03)	# ... calls __routineControl, which does the Uds.send
 	
         canTp_send.assert_called_with([0x31, 0x03, 0xFF, 0x00],False)
-        self.assertEqual({'Erase Memory Status':[0x30],'RoutineControlType':[0x03],'Identifier':[0xFF, 0x00]}, b)  # ... routineControl should not return a value
+        self.assertEqual({'Erase Memory Status':[0x30],'RoutineControlType':[0x03],'Identifier':[0xFF, 0x00]}, b) 
 
 
     # patches are inserted in reverse order
@@ -131,9 +131,8 @@ class ECUResetTestCase(unittest.TestCase):
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __routineControl to routineControl in the uds object, so can now call below
 
         b = a.routineControl('Check Valid Application',0x01)	# ... calls __routineControl, which does the Uds.send
-        print(("returns:",b))
         canTp_send.assert_called_with([0x31, 0x01, 0x03, 0x04],False)
-        self.assertEqual({'Valid Application Status':[0x30],'Valid Application Present':[0x02],'RoutineControlType':[0x01],'Identifier':[0x03, 0x04]}, b)  # ... routineControl should not return a value
+        self.assertEqual({'Valid Application Status':[0x30],'Valid Application Present':[0x02],'RoutineControlType':[0x01],'Identifier':[0x03, 0x04]}, b)
 
 
     # patches are inserted in reverse order
@@ -153,8 +152,8 @@ class ECUResetTestCase(unittest.TestCase):
         b = a.routineControl('Check Valid Application',0x03)	# ... calls __routineControl, which does the Uds.send
 	
         canTp_send.assert_called_with([0x31, 0x03, 0x03, 0x04],False)
-        self.assertEqual({'Valid Application Status':[0x30],'Valid Application Present':[0x02],'RoutineControlType':[0x03],'Identifier':[0x03, 0x04]}, b)  # ... routineControl should not return a value
-    """	
+        self.assertEqual({'Valid Application Status':[0x30],'Valid Application Present':[0x02],'RoutineControlType':[0x03],'Identifier':[0x03, 0x04]}, b)
+
 	
 	
     # patches are inserted in reverse order
@@ -171,11 +170,48 @@ class ECUResetTestCase(unittest.TestCase):
         a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __routineControl to routineControl in the uds object, so can now call below
 
-        b = a.routineControl('Start Secondary Bootloader',0x01,('strSBLAddress',[0xFF]))	# ... calls __routineControl, which does the Uds.send
-        print(("returns:",b))
+        b = a.routineControl('Start Secondary Bootloader',0x01,[0xFF])	# ... calls __routineControl, which does the Uds.send
         canTp_send.assert_called_with([0x31, 0x01, 0x03, 0x01, 0x00, 0x00, 0x00, 0xFF],False)
-        self.assertEqual({'Valid Application Present':[0xA7],'RoutineControlType':[0x01],'Identifier':[0x03, 0x01]}, b)  # ... routineControl should not return a value
-    """
+        self.assertEqual({'strSBLRoutineInfo':[0xA7],'RoutineControlType':[0x01],'Identifier':[0x03, 0x01]}, b)
+
+
+
+    # patches are inserted in reverse order
+    @mock.patch('uds.CanTp.recv')
+    @mock.patch('uds.CanTp.send')
+    def test_routineControlRequestProgDepStart(self,
+                     canTp_send,
+                     canTp_recv):
+
+        canTp_send.return_value = False
+        canTp_recv.return_value = [0x71, 0x01, 0xFF, 0x01, 0x30, 0xB9, 0x2E]
+
+        # Parameters: xml file (odx file), ecu name (not currently used) ...
+        a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
+        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __routineControl to routineControl in the uds object, so can now call below
+
+        b = a.routineControl('Check Programming Dependencies',0x01,[('memoryAddress',[0x01]),('memorySize',[0xF000])])	# ... calls __routineControl, which does the Uds.send
+        canTp_send.assert_called_with([0x31, 0x01, 0xFF, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0xF0, 0x00],False)
+        self.assertEqual({'RoutineStatusInfo':[0x30],'Check Sum Value':[0xB9, 0x2E],'RoutineControlType':[0x01],'Identifier':[0xFF, 0x01]}, b)
+
+
+    # patches are inserted in reverse order
+    @mock.patch('uds.CanTp.recv')
+    @mock.patch('uds.CanTp.send')
+    def test_routineControlRequestProgDepResult(self,
+                     canTp_send,
+                     canTp_recv):
+
+        canTp_send.return_value = False
+        canTp_recv.return_value = [0x71, 0x03, 0xFF, 0x01, 0x30, 0xB9, 0x2E]
+
+        # Parameters: xml file (odx file), ecu name (not currently used) ...
+        a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
+        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __routineControl to routineControl in the uds object, so can now call below
+
+        b = a.routineControl('Check Programming Dependencies',0x03)	# ... calls __routineControl, which does the Uds.send
+        canTp_send.assert_called_with([0x31, 0x03, 0xFF, 0x01],False)
+        self.assertEqual({'RoutineStatusInfo':[0x30],'Check Sum Value':[0xB9, 0x2E],'RoutineControlType':[0x03],'Identifier':[0xFF, 0x01]}, b)
 
 
 
@@ -331,7 +367,7 @@ class ECUResetTestCase(unittest.TestCase):
             b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
         canTp_send.assert_called_with([0x31, 0x01, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0xF0, 0x00],False)
         self.assertEqual("Exception: Detected negative response: ['0x7f', '0x72']", b)
- 
+
 
 
 

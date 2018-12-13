@@ -20,11 +20,9 @@ requestFuncTemplate = str("def {0}(optionRecord,suppressResponse=False):\n"
                           "    controlType = {2}\n"
                           "    suppressBit = {6} if suppressResponse else 0x00\n"
                           "    controlType[0] += suppressBit\n"
-                          "    print(('calling with suppressResponse:',suppressResponse))\n"
-                          "    print(('calling with controlType:',controlType))\n"
                           "    encoded = []\n"
                           "    if optionRecord is not None:\n"
-                          "        if type(optionRecord) == list:\n"
+                          "        if type(optionRecord) == list and type(optionRecord[0]) == tuple:\n"
                           "            drDict = dict(optionRecord)\n"
                           "            {4}\n"
                           "{5}\n"
@@ -160,7 +158,6 @@ Also, we will most need to handle scaling at some stage within DecodeFunctions.p
 												"\n            ".join(encodeFunctions),  # ... handles input via list # 4
 												encodeFunction,                      # ... handles input via single value # 5
                                                 SUPPRESS_RESPONSE_BIT) # 6
-        #print(funcString)
         exec(funcString)
         return (locals()[shortName],str(controlType))
 		
@@ -173,7 +170,6 @@ Also, we will most need to handle scaling at some stage within DecodeFunctions.p
         # Avoiding the overwrite by ignoring the send-only versions, i.e. these are identical other than postivie response details being missing.
         try:
             if diagServiceElement.attrib['TRANSMISSION-MODE'] == 'SEND-ONLY':
-                print(("returning None check func for:",diagServiceElement.find('SHORT-NAME').text))
                 return None
         except:
             pass
@@ -182,7 +178,6 @@ Also, we will most need to handle scaling at some stage within DecodeFunctions.p
         resetType = 0
 
         shortName = diagServiceElement.find('SHORT-NAME').text
-        print(("func created for for (not None!):",shortName))
         checkFunctionName = "check_{0}".format(shortName)
         positiveResponseElement = xmlElements[(diagServiceElement.find('POS-RESPONSE-REFS')).find('POS-RESPONSE-REF').attrib['ID-REF']]
 

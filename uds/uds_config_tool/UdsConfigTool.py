@@ -184,13 +184,11 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
                 requestFunc, qualifier = RoutineControlMethodFactory.create_requestFunction(value, xmlElements)
                 if qualifier != "":
                     routineControlContainer.add_requestFunction(requestFunc, humanName+qualifier)
-                    #print(("stored in dict under:",humanName+qualifier))
 
                     negativeResponseFunction = RoutineControlMethodFactory.create_checkNegativeResponseFunction(value, xmlElements)
                     routineControlContainer.add_negativeResponseFunction(negativeResponseFunction, humanName+qualifier)
-                    print(("CREATING CHECK FUNCTION for ",humanName+qualifier))
+
                     checkFunc = RoutineControlMethodFactory.create_checkPositiveResponseFunction(value, xmlElements)
-                    print(("STORING!! check func for:",humanName+qualifier,", with value:",checkFunc))
                     routineControlContainer.add_checkFunction(checkFunc, humanName+qualifier)
 
                     positiveResponseFunction = RoutineControlMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)

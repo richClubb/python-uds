@@ -38,7 +38,6 @@ class RoutineControlContainer(object):
             checkFunction = target.routineControlContainer.checkFunctions["{0}[{1}]".format(parameter,controlType)]
         else:
             checkFunction = None
-        print(("for :","{0}[{1}]".format(parameter,controlType),", check function is:",checkFunction))
         negativeResponseFunction = target.routineControlContainer.negativeResponseFunctions["{0}[{1}]".format(parameter,controlType)]
         if "{0}[{1}]".format(parameter,controlType) in target.routineControlContainer.positiveResponseFunctions:
             positiveResponseFunction = target.routineControlContainer.positiveResponseFunctions["{0}[{1}]".format(parameter,controlType)]
@@ -47,16 +46,8 @@ class RoutineControlContainer(object):
 
         # Call the sequence of functions to execute the ECU Reset request/response action ...
         # ==============================================================================
-        print(("Calling with parameter:",parameter))
-        print(("Calling with controlType:",controlType))
-        print(("Calling with suppressResponse:",suppressResponse))
         if checkFunction is None or positiveResponseFunction is None:
             suppressResponse = True
-            if checkFunction is None:
-                print("check function is none")
-            if positiveResponseFunction is None:
-                print("positive Response Function  is none")
-        print(("Running with suppressResponse:",suppressResponse))
 
         # Create the request. Note: we do not have to pre-check the dataRecord as this action is performed by 
         # the recipient (the response codes 0x?? and 0x?? provide the necessary cover of errors in the request) ...
@@ -87,7 +78,6 @@ class RoutineControlContainer(object):
 
     def add_checkFunction(self, aFunction, dictionaryEntry):
         if aFunction is not None: # ... allow for a send only version being processed
-            print(("INNER (add func): storing check func for:",dictionaryEntry,", with value:",aFunction))
             self.checkFunctions[dictionaryEntry] = aFunction
 
     def add_negativeResponseFunction(self, aFunction, dictionaryEntry):
