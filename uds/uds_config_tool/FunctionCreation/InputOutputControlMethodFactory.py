@@ -19,7 +19,7 @@ from uds.uds_config_tool.FunctionCreation.iServiceMethodFactory import IServiceM
 # i.e. IO Ctrl always has the option and mask records in the request
 requestFuncTemplate = str("def {0}(dataRecord):\n"
                           "    encoded = []\n"
-                          "    if type(dataRecord) == list and type(optionRecord[0]) == tuple:\n"
+                          "    if type(dataRecord) == list and type(dataRecord[0]) == tuple:\n"
                           "        drDict = dict(dataRecord)\n"
                           "        {3}\n"
                           "    return {1} + {2} + encoded")											 
