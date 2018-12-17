@@ -15,17 +15,23 @@ import sys
 from uds.uds_config_tool.FunctionCreation.iServiceMethodFactory import IServiceMethodFactory
 
 
-requestFuncTemplate = str("def {0}():\n"
-                          "    return {1} + {2}")									 
+# When encode the dataRecord for transmission we allow for multiple elements in the data record,
+# i.e. IO Ctrl always has the option and mask records in the request
+requestFuncTemplate = str("def {0}(dataRecord):\n"
+                          "    encoded = []\n"
+                          "    if type(dataRecord) == list and type(optionRecord[0]) == tuple:\n"
+                          "        drDict = dict(dataRecord)\n"
+                          "        {3}\n"
+                          "    return {1} + {2} + encoded")											 
 
 checkFunctionTemplate = str("def {0}(input):\n"
                             "    serviceIdExpected = {1}\n"
-                            "    resetTypeExpected = {2}\n"
+                            "    diagnosticIdExpected = {2}\n"
                             "    serviceId = DecodeFunctions.buildIntFromList(input[{3}:{4}])\n"
-                            "    resetType = DecodeFunctions.buildIntFromList(input[{5}:{6}])\n"
+                            "    diagnosticId = DecodeFunctions.buildIntFromList(input[{5}:{6}])\n"
                             "    if(len(input) != {7}): raise Exception(\"Total length returned not as expected. Expected: {7}; Got {{0}}\".format(len(input)))\n"
                             "    if(serviceId != serviceIdExpected): raise Exception(\"Service Id Received not expected. Expected {{0}}; Got {{1}} \".format(serviceIdExpected, serviceId))\n"
-                            "    if(resetType != resetTypeExpected): raise Exception(\"Reset Type Received not as expected. Expected: {{0}}; Got {{1}}\".format(resetTypeExpected, resetType))")
+                            "    if(diagnosticId != diagnosticIdExpected): raise Exception(\"Diagnostic Id Received not as expected. Expected: {{0}}; Got {{1}}\".format(diagnosticIdExpected, diagnosticId))")
 
 negativeResponseFuncTemplate = str("def {0}(input):\n"
                                    "    {1}")
@@ -42,14 +48,6 @@ class InputOutputControlMethodFactory(IServiceMethodFactory):
     # @brief method to create the request function for the service element
     @staticmethod
     def create_requestFunction(diagServiceElement, xmlElements):
-        # Some services are present in the ODX in both response and send only versions (with the same short name, so one will overwrite the other).
-        # Avoiding the overwrite by ignoring the send-only versions, i.e. these are identical other than postivie response details being missing.
-        try:
-            if diagServiceElement.attrib['TRANSMISSION-MODE'] == 'SEND-ONLY':
-                return None
-        except:
-            pass
-
         serviceId = 0
         diagnosticId = 0
 
@@ -69,18 +67,55 @@ class InputOutputControlMethodFactory(IServiceMethodFactory):
 
             if(semantic == 'SERVICE-ID'):
                 serviceId = [int(param.find('CODED-VALUE').text)]
-				
-            elif(semantic == 'SUBFUNCTION'):
-                resetType = [int(param.find('CODED-VALUE').text)]
-                if resetType[0] >= SUPPRESS_RESPONSE_BIT:
-                    pass
-                    #raise ValueError("ECU Reset:reset type exceeds maximum value (received {0})".format(resetType[0]))
+            elif(semantic == 'ID'):
+                diagnosticId = DecodeFunctions.intArrayToIntArray([int(param.find('CODED-VALUE').text)], 'int16', 'int8')
+            elif semantic == 'DATA':
+                dataObjectElement = xmlElements[(param.find('DOP-REF')).attrib['ID-REF']]
+                longName = param.find('LONG-NAME').text
+                bytePosition = int(param.find('BYTE-POSITION').text)
+                # Catching any exceptions where we don't know the type - these will fail elsewhere, but at least we can test what does work.
+                try:
+                    encodingType = dataObjectElement.find('DIAG-CODED-TYPE').attrib['BASE-DATA-TYPE']
+                except:
+                    encodingType = "unknown"  # ... for now just drop into the "else" catch-all
+                if(encodingType) == "A_ASCIISTRING":
+                    functionStringList = "DecodeFunctions.stringToIntList(drDict['{0}'], None)".format(longName)
+                    functionStringSingle = "DecodeFunctions.stringToIntList(dataRecord, None)"
+                elif(encodingType) == "A_INT8":
+                    functionStringList = "DecodeFunctions.intArrayToIntArray(drDict['{0}'], 'int8', 'int8')".format(longName)
+                    functionStringSingle = "DecodeFunctions.intArrayToIntArray(dataRecord, 'int8', 'int8')"
+                elif(encodingType) == "A_INT16":
+                    functionStringList = "DecodeFunctions.intArrayToIntArray(drDict['{0}'], 'int16', 'int8')".format(longName)
+                    functionStringSingle = "DecodeFunctions.intArrayToIntArray(dataRecord, 'int16', 'int8')"
+                elif(encodingType) == "A_INT32":
+                    functionStringList = "DecodeFunctions.intArrayToIntArray(drDict['{0}'], 'int32', 'int8')".format(longName)
+                    functionStringSingle = "DecodeFunctions.intArrayToIntArray(dataRecord, 'int32', 'int8')"
+                elif(encodingType) == "A_UINT8":
+                    functionStringList = "DecodeFunctions.intArrayToIntArray(drDict['{0}'], 'uint8', 'int8')".format(longName)
+                    functionStringSingle = "DecodeFunctions.intArrayToIntArray(dataRecord, 'uint8', 'int8')"
+                elif(encodingType) == "A_UINT16":
+                    functionStringList = "DecodeFunctions.intArrayToIntArray(drDict['{0}'], 'uint16', 'int8')".format(longName)
+                    functionStringSingle = "DecodeFunctions.intArrayToIntArray(dataRecord, 'uint16', 'int8')"
+                elif(encodingType) == "A_UINT32":
+                    functionStringList = "DecodeFunctions.intArrayToIntArray(drDict['{0}'], 'uint32', 'int8')".format(longName)
+                    functionStringSingle = "DecodeFunctions.intArrayToIntArray(dataRecord, 'uint32', 'int8')"
+                else:
+                    functionStringList = "drDict['{0}']".format(longName)
+                    functionStringSingle = "dataRecord"
+
+                # 
+                encodeFunctions.append("encoded += {1}".format(longName,
+                                                                 functionStringList))
 
         funcString = requestFuncTemplate.format(shortName,
                                                 serviceId,
-                                                resetType)
+                                                diagnosticId,
+												"\n        ".join(encodeFunctions))  # ... handles input via list
+
         exec(funcString)
         return locals()[shortName]
+
+
 
     ##
     # @brief method to create the function to check the positive response for validity
@@ -123,12 +158,12 @@ class InputOutputControlMethodFactory(IServiceMethodFactory):
                     responseIdStart = startByte
                     responseIdEnd = startByte + listLength
                     totalLength += listLength
-                elif(semantic == 'SUBFUNCTION'):
-                    resetType = int(param.find('CODED-VALUE').text)
+                elif(semantic == 'ID'):
+                    diagnosticId = int(param.find('CODED-VALUE').text)
                     bitLength = int((param.find('DIAG-CODED-TYPE')).find('BIT-LENGTH').text)
                     listLength = int(bitLength / 8)
-                    resetTypeStart = startByte
-                    resetTypeEnd = startByte + listLength
+                    diagnosticIdStart = startByte
+                    diagnosticIdEnd = startByte + listLength
                     totalLength += listLength
                 elif(semantic == 'DATA'):
                     # This will be powerDownTime if present (it's the only additional attribute that cna be returned.
@@ -149,11 +184,11 @@ class InputOutputControlMethodFactory(IServiceMethodFactory):
 
         checkFunctionString = checkFunctionTemplate.format(checkFunctionName, # 0
                                                            responseId, # 1
-                                                           resetType, # 2
+                                                           diagnosticId, # 2
                                                            responseIdStart, # 3
                                                            responseIdEnd, # 4
-                                                           resetTypeStart, # 5
-                                                           resetTypeEnd, # 6
+                                                           diagnosticIdStart, # 5
+                                                           diagnosticIdEnd, # 6
                                                            totalLength) # 7
         exec(checkFunctionString)
         return locals()[checkFunctionName]
@@ -171,8 +206,7 @@ class InputOutputControlMethodFactory(IServiceMethodFactory):
         except:
             pass
 
-        # The values in the response are SID, resetType, and optionally the powerDownTime (only for resetType 0x04). Checking is handled in the check function, 
-        # so must be present and ok. This function is only required to return the resetType and powerDownTime (if present).
+        # The values in the response include SID and DID, but these do not need to be returned (and already checked in the check function).
 
         positiveResponseElement = xmlElements[(diagServiceElement.find('POS-RESPONSE-REFS')).find('POS-RESPONSE-REF').attrib['ID-REF']]
 		
@@ -191,22 +225,6 @@ class InputOutputControlMethodFactory(IServiceMethodFactory):
                 except AttributeError:
                     pass
 
-                if semantic == 'SUBFUNCTION':
-                    longName = param.find('LONG-NAME').text
-                    bytePosition = int(param.find('BYTE-POSITION').text)
-                    bitLength = int(param.find('DIAG-CODED-TYPE').find('BIT-LENGTH').text)
-                    listLength = int(bitLength / 8)
-                    endPosition = bytePosition + listLength
-                    encodingType = param.find('DIAG-CODED-TYPE').attrib['BASE-DATA-TYPE']
-                    if(encodingType) == "A_ASCIISTRING":
-                        functionString = "DecodeFunctions.intListToString(input[{0}:{1}], None)".format(bytePosition,
-                                                                                                        endPosition)
-                    else:
-                        functionString = "input[{1}:{2}]".format(longName,
-                                                                 bytePosition,
-                                                                 endPosition)
-                    encodeFunctions.append("result['{0}'] = {1}".format(longName,
-                                                                        functionString))
                 if semantic == 'DATA':
                     dataObjectElement = xmlElements[(param.find('DOP-REF')).attrib['ID-REF']]
                     longName = param.find('LONG-NAME').text
