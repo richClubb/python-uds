@@ -29,13 +29,13 @@ class InputOutputControlContainer(object):
     # as one of the in-built methods. uds.inputOutputControlContainer("something","data record") It does not operate
     # on this instance of the container class.
     @staticmethod
-    def __inputOutputControl(target, parameter, dataRecord, **kwargs):
+    def __inputOutputControl(target, parameter, optionRecord, dataRecord, **kwargs):
 
         # Note: inputOutputControl does not show support for multiple DIDs in the spec, so this is handling only a single DID with data record.
-        requestFunction = target.inputOutputControlContainer.requestFunctions[parameter]
-        checkFunction = target.inputOutputControlContainer.checkFunctions[parameter]
-        negativeResponseFunction = target.inputOutputControlContainer.negativeResponseFunctions[parameter]
-        positiveResponseFunction = target.inputOutputControlContainer.positiveResponseFunctions[parameter]
+        requestFunction = target.inputOutputControlContainer.requestFunctions["{0}[{1}]".format(parameter,optionRecord)]
+        checkFunction = target.inputOutputControlContainer.checkFunctions["{0}[{1}]".format(parameter,optionRecord)]
+        negativeResponseFunction = target.inputOutputControlContainer.negativeResponseFunctions["{0}[{1}]".format(parameter,optionRecord)]
+        positiveResponseFunction = target.inputOutputControlContainer.positiveResponseFunctions["{0}[{1}]".format(parameter,optionRecord)]
 
         # Call the sequence of functions to execute the inputOutputControl request/response action ...
         # ==============================================================================

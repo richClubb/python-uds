@@ -33,7 +33,7 @@ from uds.uds_config_tool.SupportedServices.TransferDataContainer import Transfer
 from uds.uds_config_tool.FunctionCreation.TransferDataMethodFactory import TransferDataMethodFactory
 from uds.uds_config_tool.SupportedServices.TransferExitContainer import TransferExitContainer
 from uds.uds_config_tool.FunctionCreation.TransferExitMethodFactory import TransferExitMethodFactory
-from uds.uds_config_tool.ISOStandard.ISOStandard import IsoServices, IsoRoutineControlType
+from uds.uds_config_tool.ISOStandard.ISOStandard import IsoServices, IsoRoutineControlType, IsoInputOutputControlOptionRecord
 
 
 def get_serviceIdFromXmlElement(diagServiceElement, xmlElements):
@@ -192,17 +192,18 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
 
             elif serviceId == IsoServices.InputOutputControlByIdentifier:
                 ioCtrlService_flag = True
-                requestFunc = InputOutputControlMethodFactory.create_requestFunction(value, xmlElements)
-                inputOutputControlContainer.add_requestFunction(requestFunc, humanName)
+                requestFunc, qualifier  = InputOutputControlMethodFactory.create_requestFunction(value, xmlElements)
+                if qualifier != "":
+                    inputOutputControlContainer.add_requestFunction(requestFunc, humanName+qualifier)
 
-                negativeResponseFunction = InputOutputControlMethodFactory.create_checkNegativeResponseFunction(value, xmlElements)
-                inputOutputControlContainer.add_negativeResponseFunction(negativeResponseFunction, humanName)
+                    negativeResponseFunction = InputOutputControlMethodFactory.create_checkNegativeResponseFunction(value, xmlElements)
+                    inputOutputControlContainer.add_negativeResponseFunction(negativeResponseFunction, humanName+qualifier)
 
-                checkFunc = InputOutputControlMethodFactory.create_checkPositiveResponseFunction(value, xmlElements)
-                inputOutputControlContainer.add_checkFunction(checkFunc, humanName)
+                    checkFunc = InputOutputControlMethodFactory.create_checkPositiveResponseFunction(value, xmlElements)
+                    inputOutputControlContainer.add_checkFunction(checkFunc, humanName+qualifier)
 
-                positiveResponseFunction = InputOutputControlMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
-                inputOutputControlContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
+                    positiveResponseFunction = InputOutputControlMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
+                    inputOutputControlContainer.add_positiveResponseFunction(positiveResponseFunction, humanName+qualifier)
 
             elif serviceId == IsoServices.RoutineControl:
                 routineCtrlService_flag = True
@@ -340,7 +341,7 @@ if __name__ == "__main__":
     a.ecuReset('Hard Reset',suppressResponse=False)
     a.readDataByIdentifier('ECU Serial Number')
     a.writeDataByIdentifier('ECU Serial Number','ABC0011223344556')
-    #a.inputOutputControl('<DID Name>',[('controlOptionRecord',[0x01,0x02,0x03,0x04]),('controlEnableMaskRecord',[0xFF,0x0F,0x0F,0xFF])])  # Not tested or runnable at present
+    a.inputOutputControl('Booster Target Speed',IsoInputOutputControlOptionRecord.adjust,[8000])
     a.routineControl('Erase Memory',IsoRoutineControlType.startRoutine,[('memoryAddress',[0x01]),('memorySize',[0xF000])])
     a.requestDownload(FormatIdentifier=[0x00],MemoryAddress=[0x40, 0x03, 0xE0, 0x00],MemorySize=[0x00, 0x00, 0x0E, 0x56])
     #a.requestUpload(FormatIdentifier=[0x00],MemoryAddress=[0x40, 0x03, 0xE0, 0x00],MemorySize=[0x00, 0x00, 0x0E, 0x56])   # Not tested or runnable at present

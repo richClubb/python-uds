@@ -21,17 +21,21 @@ requestFuncTemplate = str("def {0}(dataRecord):\n"
                           "    encoded = []\n"
                           "    if type(dataRecord) == list and type(dataRecord[0]) == tuple:\n"
                           "        drDict = dict(dataRecord)\n"
-                          "        {3}\n"
-                          "    return {1} + {2} + encoded")											 
+                          "        {4}\n"
+                          "{5}\n"
+                          "    return {1} + {2} + {3} + encoded")											 
 
 checkFunctionTemplate = str("def {0}(input):\n"
                             "    serviceIdExpected = {1}\n"
                             "    diagnosticIdExpected = {2}\n"
-                            "    serviceId = DecodeFunctions.buildIntFromList(input[{3}:{4}])\n"
-                            "    diagnosticId = DecodeFunctions.buildIntFromList(input[{5}:{6}])\n"
-                            "    if(len(input) != {7}): raise Exception(\"Total length returned not as expected. Expected: {7}; Got {{0}}\".format(len(input)))\n"
+                            "    optionRecordExpected = {3}\n"
+                            "    serviceId = DecodeFunctions.buildIntFromList(input[{4}:{5}])\n"
+                            "    diagnosticId = DecodeFunctions.buildIntFromList(input[{6}:{7}])\n"
+                            "    optionRecord = DecodeFunctions.buildIntFromList(input[{8}:{9}])\n"
+                            "    if(len(input) != {10}): raise Exception(\"Total length returned not as expected. Expected: {10}; Got {{0}}\".format(len(input)))\n"
                             "    if(serviceId != serviceIdExpected): raise Exception(\"Service Id Received not expected. Expected {{0}}; Got {{1}} \".format(serviceIdExpected, serviceId))\n"
-                            "    if(diagnosticId != diagnosticIdExpected): raise Exception(\"Diagnostic Id Received not as expected. Expected: {{0}}; Got {{1}}\".format(diagnosticIdExpected, diagnosticId))")
+                            "    if(diagnosticId != diagnosticIdExpected): raise Exception(\"Diagnostic Id Received not as expected. Expected: {{0}}; Got {{1}}\".format(diagnosticIdExpected, diagnosticId))\n"
+                            "    if(optionRecord != optionRecordExpected): raise Exception(\"Option Record Received not as expected. Expected: {{0}}; Got {{1}}\".format(optionRecordExpected, optionRecord))")
 
 negativeResponseFuncTemplate = str("def {0}(input):\n"
                                    "    {1}")
@@ -50,13 +54,14 @@ class InputOutputControlMethodFactory(IServiceMethodFactory):
     def create_requestFunction(diagServiceElement, xmlElements):
         serviceId = 0
         diagnosticId = 0
+        optionRecord = 0
 
         shortName = "request_{0}".format(diagServiceElement.find('SHORT-NAME').text)
         requestElement = xmlElements[diagServiceElement.find('REQUEST-REF').attrib['ID-REF']]
         paramsElement = requestElement.find('PARAMS')
 
         encodeFunctions = []
-        encodeFunction = "None"
+        encodeFunction = ""
 
         for param in paramsElement:
             semantic = None
@@ -69,6 +74,8 @@ class InputOutputControlMethodFactory(IServiceMethodFactory):
                 serviceId = [int(param.find('CODED-VALUE').text)]
             elif(semantic == 'ID'):
                 diagnosticId = DecodeFunctions.intArrayToIntArray([int(param.find('CODED-VALUE').text)], 'int16', 'int8')
+            elif(semantic == 'SUBFUNCTION'):
+                optionRecord = DecodeFunctions.intArrayToIntArray([int(param.find('CODED-VALUE').text)], 'int8', 'int8')
             elif semantic == 'DATA':
                 dataObjectElement = xmlElements[(param.find('DOP-REF')).attrib['ID-REF']]
                 longName = param.find('LONG-NAME').text
@@ -106,14 +113,17 @@ class InputOutputControlMethodFactory(IServiceMethodFactory):
                 # 
                 encodeFunctions.append("encoded += {1}".format(longName,
                                                                  functionStringList))
+                encodeFunction = "    else:\n        encoded = {1}".format(longName,functionStringSingle)
 
         funcString = requestFuncTemplate.format(shortName,
                                                 serviceId,
                                                 diagnosticId,
-												"\n        ".join(encodeFunctions))  # ... handles input via list
+                                                optionRecord,
+												"\n        ".join(encodeFunctions),  # ... handles input via list
+												encodeFunction)                  # ... handles input via single value
 
         exec(funcString)
-        return locals()[shortName]
+        return (locals()[shortName],str(optionRecord))
 
 
 
@@ -165,8 +175,14 @@ class InputOutputControlMethodFactory(IServiceMethodFactory):
                     diagnosticIdStart = startByte
                     diagnosticIdEnd = startByte + listLength
                     totalLength += listLength
+                elif(semantic == 'SUBFUNCTION'):
+                    optionRecord = int(param.find('CODED-VALUE').text)
+                    bitLength = int((param.find('DIAG-CODED-TYPE')).find('BIT-LENGTH').text)
+                    listLength = int(bitLength / 8)
+                    optionRecordStart = startByte
+                    optionRecordEnd = startByte + listLength
+                    totalLength += listLength
                 elif(semantic == 'DATA'):
-                    # This will be powerDownTime if present (it's the only additional attribute that cna be returned.
                     dataObjectElement = xmlElements[(param.find('DOP-REF')).attrib['ID-REF']]
                     if(dataObjectElement.tag == "DATA-OBJECT-PROP"):
                         start = int(param.find('BYTE-POSITION').text)
@@ -185,11 +201,14 @@ class InputOutputControlMethodFactory(IServiceMethodFactory):
         checkFunctionString = checkFunctionTemplate.format(checkFunctionName, # 0
                                                            responseId, # 1
                                                            diagnosticId, # 2
-                                                           responseIdStart, # 3
-                                                           responseIdEnd, # 4
-                                                           diagnosticIdStart, # 5
-                                                           diagnosticIdEnd, # 6
-                                                           totalLength) # 7
+                                                           optionRecord, # 3
+                                                           responseIdStart, # 4
+                                                           responseIdEnd, # 5
+                                                           diagnosticIdStart, # 6
+                                                           diagnosticIdEnd, # 7
+                                                           optionRecordStart, # 8
+                                                           optionRecordEnd, # 9
+                                                           totalLength) # 10
         exec(checkFunctionString)
         return locals()[checkFunctionName]
 
@@ -224,6 +243,39 @@ class InputOutputControlMethodFactory(IServiceMethodFactory):
                     semantic = param.attrib['SEMANTIC']
                 except AttributeError:
                     pass
+
+                if semantic == 'SUBFUNCTION':
+                    longName = param.find('LONG-NAME').text
+                    bytePosition = int(param.find('BYTE-POSITION').text)
+                    bitLength = int(param.find('DIAG-CODED-TYPE').find('BIT-LENGTH').text)
+                    listLength = int(bitLength / 8)
+                    endPosition = bytePosition + listLength
+                    encodingType = param.find('DIAG-CODED-TYPE').attrib['BASE-DATA-TYPE']
+                    if(encodingType) == "A_ASCIISTRING":
+                        functionString = "DecodeFunctions.intListToString(input[{0}:{1}], None)".format(bytePosition,
+                                                                                                        endPosition)
+                    else:
+                        functionString = "input[{1}:{2}]".format(longName,
+                                                                 bytePosition,
+                                                                 endPosition)
+                    encodeFunctions.append("result['{0}'] = {1}".format(longName,
+                                                                        functionString))
+                if semantic == 'ID':
+                    longName = param.find('LONG-NAME').text
+                    bytePosition = int(param.find('BYTE-POSITION').text)
+                    bitLength = int(param.find('DIAG-CODED-TYPE').find('BIT-LENGTH').text)
+                    listLength = int(bitLength / 8)
+                    endPosition = bytePosition + listLength
+                    encodingType = param.find('DIAG-CODED-TYPE').attrib['BASE-DATA-TYPE']
+                    if(encodingType) == "A_ASCIISTRING":
+                        functionString = "DecodeFunctions.intListToString(input[{0}:{1}], None)".format(bytePosition,
+                                                                                                        endPosition)
+                    else:
+                        functionString = "input[{1}:{2}]".format(longName,
+                                                                 bytePosition,
+                                                                 endPosition)
+                    encodeFunctions.append("result['{0}'] = {1}".format(longName,
+                                                                        functionString))
 
                 if semantic == 'DATA':
                     dataObjectElement = xmlElements[(param.find('DOP-REF')).attrib['ID-REF']]

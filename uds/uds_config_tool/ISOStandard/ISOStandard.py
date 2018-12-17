@@ -52,3 +52,10 @@ class IsoRoutineControlType(IntEnum):
     stopRoutine = 0x02
     requestRoutineResults = 0x03
 
+
+class IsoInputOutputControlOptionRecord(IntEnum):
+
+    returnControl = 0x00
+    resetToDefault = 0x01
+    freezeCurrentState = 0x02
+    adjust = 0x03
