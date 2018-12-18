@@ -5,3 +5,5 @@ build/
 *.pyc
 *.cdd~
 test/Uds-Config-Tool/Functional Tests/Load_migration_6.0.130_to_8.5.3102_Bootloader.log
+test/Uds-Config-Tool/Functional Tests/e400_uds_test_app_e400.ihex
+test/Uds-Config-Tool/Functional Tests/TGT-ASSY-1383_v2.1.0_sbl.hex
