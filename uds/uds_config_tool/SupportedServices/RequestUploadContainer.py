@@ -14,7 +14,7 @@ from uds.uds_config_tool.SupportedServices.iContainer import iContainer
 from types import MethodType
 
 
-class RequestDownloadContainer(object):
+class RequestUploadContainer(object):
 
     __metaclass__ = iContainer
 
@@ -26,16 +26,16 @@ class RequestDownloadContainer(object):
 
     ##
     # @brief this method is bound to an external Uds object, referenced by target, so that it can be called
-    # as one of the in-built methods. uds.requestDownload("something","data record") It does not operate
+    # as one of the in-built methods. uds.requestUpload("something","data record") It does not operate
     # on this instance of the container class.
     @staticmethod
-    def __requestDownload(target, FormatIdentifier, MemoryAddress, MemorySize, **kwargs):
+    def __requestUpload(target, FormatIdentifier, MemoryAddress, MemorySize, **kwargs):
 
-        # Note: RequestDownload does not show support for multiple DIDs in the spec, so this is handling only a single DID with data record.
-        requestFunction = target.requestDownloadContainer.requestFunctions['RequestDownload']
-        checkFunction = target.requestDownloadContainer.checkFunctions['RequestDownload']
-        negativeResponseFunction = target.requestDownloadContainer.negativeResponseFunctions['RequestDownload']
-        positiveResponseFunction = target.requestDownloadContainer.positiveResponseFunctions['RequestDownload']
+        # Note: RequestUpload does not show support for multiple DIDs in the spec, so this is handling only a single DID with data record.
+        requestFunction = target.requestUploadContainer.requestFunctions['RequestUpload']
+        checkFunction = target.requestUploadContainer.checkFunctions['RequestUpload']
+        negativeResponseFunction = target.requestUploadContainer.negativeResponseFunctions['RequestUpload']
+        positiveResponseFunction = target.requestUploadContainer.positiveResponseFunctions['RequestUpload']
 
         # Call the sequence of functions to execute the request download request/response action ...
         # ==============================================================================
@@ -59,16 +59,16 @@ class RequestDownloadContainer(object):
 
 
     def bind_function(self, bindObject):
-        bindObject.requestDownload = MethodType(self.__requestDownload, bindObject)
+        bindObject.requestUpload = MethodType(self.__requestUpload, bindObject)
 
     def add_requestFunction(self, aFunction, dictionaryEntry):  # ... dictionaryEntry is not used (just there for consistency in UdsConfigTool.py) - i.e. this service is effectively hardcoded
-        self.requestFunctions['RequestDownload'] = aFunction
+        self.requestFunctions['RequestUpload'] = aFunction
 
     def add_checkFunction(self, aFunction, dictionaryEntry):  # ... dictionaryEntry is not used (just there for consistency in UdsConfigTool.py) - i.e. this service is effectively hardcoded
-        self.checkFunctions['RequestDownload'] = aFunction
+        self.checkFunctions['RequestUpload'] = aFunction
 
     def add_negativeResponseFunction(self, aFunction, dictionaryEntry):  # ... dictionaryEntry is not used (just there for consistency in UdsConfigTool.py) - i.e. this service is effectively hardcoded
-        self.negativeResponseFunctions['RequestDownload'] = aFunction
+        self.negativeResponseFunctions['RequestUpload'] = aFunction
 
     def add_positiveResponseFunction(self, aFunction, dictionaryEntry):  # ... dictionaryEntry is not used (just there for consistency in UdsConfigTool.py) - i.e. this service is effectively hardcoded
-        self.positiveResponseFunctions['RequestDownload'] = aFunction
+        self.positiveResponseFunctions['RequestUpload'] = aFunction

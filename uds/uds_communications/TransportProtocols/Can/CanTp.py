@@ -206,7 +206,8 @@ class CanTp(iTp):
         blockList = []
         currBlock = []
 
-        timeoutTimer = ResettableTimer(100)
+        ## this needs fixing to get the timing from the config
+        timeoutTimer = ResettableTimer(1)
         stMinTimer = ResettableTimer()
 
         self.clearBufferedMessages()
@@ -276,6 +277,7 @@ class CanTp(iTp):
                         else:
                             timeoutTimer.start()
                             state = CanTpState.WAIT_FLOW_CONTROL
+                            #print("waiting for flow control")
 
             txPdu = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
             # timer / exit condition checks

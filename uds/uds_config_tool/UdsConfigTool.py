@@ -22,10 +22,21 @@ from uds.uds_config_tool.SupportedServices.ReadDataByIdentifierContainer import 
 from uds.uds_config_tool.FunctionCreation.ReadDataByIdentifierMethodFactory import ReadDataByIdentifierMethodFactory
 from uds.uds_config_tool.SupportedServices.WriteDataByIdentifierContainer import WriteDataByIdentifierContainer
 from uds.uds_config_tool.FunctionCreation.WriteDataByIdentifierMethodFactory import WriteDataByIdentifierMethodFactory
+from uds.uds_config_tool.SupportedServices.RoutineControlContainer import RoutineControlContainer
+from uds.uds_config_tool.FunctionCreation.RoutineControlMethodFactory import RoutineControlMethodFactory
 from uds.uds_config_tool.SupportedServices.RequestDownloadContainer import RequestDownloadContainer
 from uds.uds_config_tool.FunctionCreation.RequestDownloadMethodFactory import RequestDownloadMethodFactory
+
 from uds.uds_config_tool.SupportedServices.SecurityAccessContainer import SecurityAccessContainer
 from uds.uds_config_tool.FunctionCreation.SecurityAccessMethodFactory import SecurityAccessMethodFactory
+from uds.uds_config_tool.SupportedServices.RequestUploadContainer import RequestUploadContainer
+from uds.uds_config_tool.FunctionCreation.RequestUploadMethodFactory import RequestUploadMethodFactory
+from uds.uds_config_tool.SupportedServices.TransferDataContainer import TransferDataContainer
+from uds.uds_config_tool.FunctionCreation.TransferDataMethodFactory import TransferDataMethodFactory
+from uds.uds_config_tool.SupportedServices.TransferExitContainer import TransferExitContainer
+from uds.uds_config_tool.FunctionCreation.TransferExitMethodFactory import TransferExitMethodFactory
+from uds.uds_config_tool.ISOStandard.ISOStandard import IsoServices, IsoRoutineControlType
+
 from uds.uds_config_tool.ISOStandard.ISOStandard import IsoServices
 
 def get_serviceIdFromXmlElement(diagServiceElement, xmlElements):
@@ -60,9 +71,12 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
     ecuResetContainer = ECUResetContainer()
     rdbiContainer = ReadDataByIdentifierContainer()
     wdbiContainer = WriteDataByIdentifierContainer()
+    routineControlContainer = RoutineControlContainer()
     requestDownloadContainer = RequestDownloadContainer()
     securityAccessContainer = SecurityAccessContainer()
-
+    requestUploadContainer = RequestUploadContainer()
+    transferDataContainer = TransferDataContainer()
+    transferExitContainer = TransferExitContainer()
     sessionService_flag = False
     ecuResetService_flag = False
     rdbiService_flag = False
@@ -70,6 +84,9 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
     securityAccess_flag = False
     routineCtrlService_flag = False
     reqDownloadService_flag = False
+    reqUploadService_flag = False
+    transDataService_flag = False
+    transExitService_flag = False
     xmlElements = {}
 
     for child in root.iter():
@@ -91,6 +108,7 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
                 except KeyError:
                     pass
 
+
             if serviceId == IsoServices.DiagnosticSessionControl:
                 sessionService_flag = True
 
@@ -105,6 +123,7 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
 
                 positiveResponseFunction = DiagnosticSessionControlMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
                 diagnosticSessionControlContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
+
             elif serviceId == IsoServices.EcuReset:
                 ecuResetService_flag = True
 
@@ -131,6 +150,7 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
                 ecuResetContainer.add_checkFunction(checkFunc, humanName)
                 ecuResetContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
                 pass
+
             elif serviceId == IsoServices.ReadDataByIdentifier:
                 rdbiService_flag = True
 
@@ -153,6 +173,7 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
 
                 positiveResponseFunction = ReadDataByIdentifierMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
                 rdbiContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
+
             elif serviceId == IsoServices.SecurityAccess:
                 if isDiagServiceTransmissionOnly(value) == False:
                     requestFunction = SecurityAccessMethodFactory.create_requestFunction(value, xmlElements)
@@ -180,11 +201,26 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
 
                 positiveResponseFunction = WriteDataByIdentifierMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
                 wdbiContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
+
             elif serviceId == IsoServices.InputOutputControlByIdentifier:
                 pass
+
             elif serviceId == IsoServices.RoutineControl:
-                #routineCtrlService_flag = True
-                pass
+                routineCtrlService_flag = True
+                # We need a qualifier, as the humna name for the start stop, and results calls are all the same, so they otherwise overwrite each other
+                requestFunc, qualifier = RoutineControlMethodFactory.create_requestFunction(value, xmlElements)
+                if qualifier != "":
+                    routineControlContainer.add_requestFunction(requestFunc, humanName+qualifier)
+
+                    negativeResponseFunction = RoutineControlMethodFactory.create_checkNegativeResponseFunction(value, xmlElements)
+                    routineControlContainer.add_negativeResponseFunction(negativeResponseFunction, humanName+qualifier)
+
+                    checkFunc = RoutineControlMethodFactory.create_checkPositiveResponseFunction(value, xmlElements)
+                    routineControlContainer.add_checkFunction(checkFunc, humanName+qualifier)
+
+                    positiveResponseFunction = RoutineControlMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
+                    routineControlContainer.add_positiveResponseFunction(positiveResponseFunction, humanName+qualifier)
+
             elif serviceId == IsoServices.RequestDownload:
                 reqDownloadService_flag = True
                 requestFunc = RequestDownloadMethodFactory.create_requestFunction(value, xmlElements)
@@ -199,24 +235,67 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
                 positiveResponseFunction = RequestDownloadMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
                 requestDownloadContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
 
+            elif serviceId == IsoServices.RequestUpload:
+                reqUploadService_flag = True
+                requestFunc = RequestUploadMethodFactory.create_requestFunction(value, xmlElements)
+                requestUploadContainer.add_requestFunction(requestFunc, humanName)
+
+                negativeResponseFunction = RequestUploadMethodFactory.create_checkNegativeResponseFunction(value, xmlElements)
+                requestUploadContainer.add_negativeResponseFunction(negativeResponseFunction, humanName)
+
+                checkFunc = RequestUploadMethodFactory.create_checkPositiveResponseFunction(value, xmlElements)
+                requestUploadContainer.add_checkFunction(checkFunc, humanName)
+
+                positiveResponseFunction = RequestUploadMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
+                requestUploadContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
+
+            elif serviceId == IsoServices.TransferData:
+                transDataService_flag = True
+                requestFunc = TransferDataMethodFactory.create_requestFunction(value, xmlElements)
+                transferDataContainer.add_requestFunction(requestFunc, humanName)
+
+                negativeResponseFunction = TransferDataMethodFactory.create_checkNegativeResponseFunction(value, xmlElements)
+                transferDataContainer.add_negativeResponseFunction(negativeResponseFunction, humanName)
+
+                checkFunc = TransferDataMethodFactory.create_checkPositiveResponseFunction(value, xmlElements)
+                transferDataContainer.add_checkFunction(checkFunc, humanName)
+
+                positiveResponseFunction = TransferDataMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
+                transferDataContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
+            elif serviceId == IsoServices.RequestTransferExit:
+                transExitService_flag = True
+                requestFunc = TransferExitMethodFactory.create_requestFunction(value, xmlElements)
+                transferExitContainer.add_requestFunction(requestFunc, humanName)
+
+                negativeResponseFunction = TransferExitMethodFactory.create_checkNegativeResponseFunction(value, xmlElements)
+                transferExitContainer.add_negativeResponseFunction(negativeResponseFunction, humanName)
+
+                checkFunc = TransferExitMethodFactory.create_checkPositiveResponseFunction(value, xmlElements)
+                transferExitContainer.add_checkFunction(checkFunc, humanName)
+
+                positiveResponseFunction = TransferExitMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
+                transferExitContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
+
+
     #need to be able to extract the reqId and resId
     outputEcu = Uds(**kwargs)
 
-    # Bind any ECU Reset services have been found
+    # Bind any ECU Reset services that have been found
     if sessionService_flag:
         setattr(outputEcu, 'diagnosticSessionControlContainer', diagnosticSessionControlContainer)
         diagnosticSessionControlContainer.bind_function(outputEcu)
 
-    # Bind any ECU Reset services have been found
+    # Bind any ECU Reset services that have been found
     if ecuResetService_flag:
         setattr(outputEcu, 'ecuResetContainer', ecuResetContainer)
         ecuResetContainer.bind_function(outputEcu)
 
-    # Bind any rdbi services have been found
+    # Bind any rdbi services that have been found
     if rdbiService_flag:
         setattr(outputEcu, 'readDataByIdentifierContainer', rdbiContainer)
         rdbiContainer.bind_function(outputEcu)
 
+    # Bind any security access services have been found
     if securityAccess_flag:
         setattr(outputEcu, 'securityAccessContainer', securityAccessContainer)
         securityAccessContainer.bind_function(outputEcu)
@@ -226,14 +305,30 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
         setattr(outputEcu, 'writeDataByIdentifierContainer', wdbiContainer)
         wdbiContainer.bind_function(outputEcu)
 
-    # Bind any wdbi services have been found
+    # Bind any routine control services that have been found
     if routineCtrlService_flag:
-        pass
+        setattr(outputEcu, 'routineControlContainer', routineControlContainer)
+        routineControlContainer.bind_function(outputEcu)
 
-    # Bind any wdbi services have been found
+    # Bind any request download services that have been found
     if reqDownloadService_flag:
         setattr(outputEcu, 'requestDownloadContainer', requestDownloadContainer)
         requestDownloadContainer.bind_function(outputEcu)
+
+    # Bind any request upload services that have been found
+    if reqUploadService_flag:
+        setattr(outputEcu, 'requestUploadContainer', requestUploadContainer)
+        requestUploadContainer.bind_function(outputEcu)
+
+    # Bind any transfer data services that have been found
+    if transDataService_flag:
+        setattr(outputEcu, 'transferDataContainer', transferDataContainer)
+        transferDataContainer.bind_function(outputEcu)
+
+    # Bind any transfer exit data services that have been found
+    if transExitService_flag:
+        setattr(outputEcu, 'transferExitContainer', transferExitContainer)
+        transferExitContainer.bind_function(outputEcu)
 
     return outputEcu
 
@@ -246,6 +341,8 @@ if __name__ == "__main__":
     a.ecuReset('Hard Reset',suppressResponse=False)
     a.readDataByIdentifier('ECU Serial Number')
     a.writeDataByIdentifier('ECU Serial Number','ABC0011223344556')
-    #a.requestDownload('Download Request',[('FormatIdentifier',[0x00]),('AddressAndLengthFormatIdentifier',[0x11]),('MultiplexedData',[0x03])])
-    a.requestDownload('Download Request',FormatIdentifier=[0x00],MemoryAddress=[0x40, 0x03, 0xE0, 0x00],MemorySize=[0x00, 0x00, 0x0E, 0x56])
-
+    a.routineControl('Erase Memory',IsoRoutineControlType.startRoutine,[('memoryAddress',[0x01]),('memorySize',[0xF000])])
+    a.requestDownload(FormatIdentifier=[0x00],MemoryAddress=[0x40, 0x03, 0xE0, 0x00],MemorySize=[0x00, 0x00, 0x0E, 0x56])
+    a.requestUpload(FormatIdentifier=[0x00],MemoryAddress=[0x40, 0x03, 0xE0, 0x00],MemorySize=[0x00, 0x00, 0x0E, 0x56])
+    a.transferData(0x01,[0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF])
+    a.transferExit([0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF])

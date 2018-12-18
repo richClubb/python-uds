@@ -144,7 +144,7 @@ class ReadDataByIdentifierMethodFactory(IServiceMethodFactory):
                 else:
                     pass
             except:
-                print(sys.exc_info())
+                #print(sys.exc_info())
                 pass
 
         checkSIDRespFuncString = checkSIDRespFuncTemplate.format(checkSIDRespFuncName, # 0

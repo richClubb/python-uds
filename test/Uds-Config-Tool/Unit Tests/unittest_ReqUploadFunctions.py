@@ -16,13 +16,18 @@ from uds import Uds
 from uds.uds_config_tool.UdsConfigTool import createUdsConnection
 import sys, traceback
 
-
-class RequestDownloadTestCase(unittest.TestCase):
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# NOTE: these tests cannot currently be run with the exsiting ODX, as it does not contain an upload service
+# For now, I've simply run a regression of the download and transfer tests to ensure I've not broken anything.
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+class RequestUploadTestCase(unittest.TestCase):
 	
     # patches are inserted in reverse order
     @mock.patch('uds.CanTp.recv')
     @mock.patch('uds.CanTp.send')
-    def test_reqDownloadRequest(self,
+    def test_reqUploadRequest(self,
                      canTp_send,
                      canTp_recv):
 
@@ -31,9 +36,9 @@ class RequestDownloadTestCase(unittest.TestCase):
 
         # Parameters: xml file (odx file), ecu name (not currently used) ...
         a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
-        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __requestDownload to requestDownload in the uds object, so can now call below
+        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __requestUpload to requestUpload in the uds object, so can now call below
 
-        b = a.requestDownload(FormatIdentifier=[0x00],MemoryAddress=[0x40, 0x03, 0xE0, 0x00],MemorySize=[0x00, 0x00, 0x0E, 0x56])	# ... calls __requestDownload, which does the Uds.send
+        b = a.requestUpload(FormatIdentifier=[0x00],MemoryAddress=[0x40, 0x03, 0xE0, 0x00],MemorySize=[0x00, 0x00, 0x0E, 0x56])	# ... calls __requestUpload, which does the Uds.send
 	
         canTp_send.assert_called_with([0x34, 0x00, 0x44, 0x40, 0x03, 0xE0, 0x00, 0x00, 0x00, 0x0E, 0x56],False)
         self.assertEqual({'LengthFormatIdentifier':[0x20],'MaxNumberOfBlockLength':[0x05, 0x00]}, b)  # ... (returns a dict)
@@ -43,7 +48,7 @@ class RequestDownloadTestCase(unittest.TestCase):
     # patches are inserted in reverse order
     @mock.patch('uds.CanTp.recv')
     @mock.patch('uds.CanTp.send')
-    def test_reqDownloadRequest02(self,
+    def test_reqUploadRequest02(self,
                      canTp_send,
                      canTp_recv):
 
@@ -52,9 +57,9 @@ class RequestDownloadTestCase(unittest.TestCase):
 
         # Parameters: xml file (odx file), ecu name (not currently used) ...
         a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
-        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __requestDownload to requestDownload in the uds object, so can now call below
+        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __requestUpload to requestUpload in the uds object, so can now call below
 
-        b = a.requestDownload(FormatIdentifier=[0x00],MemoryAddress=[0x01, 0xFF, 0x0A, 0x80],MemorySize=[0x03, 0xFF])	# ... calls __requestDownload, which does the Uds.send
+        b = a.requestUpload(FormatIdentifier=[0x00],MemoryAddress=[0x01, 0xFF, 0x0A, 0x80],MemorySize=[0x03, 0xFF])	# ... calls __requestUpload, which does the Uds.send
 	
         canTp_send.assert_called_with([0x34, 0x00, 0x24, 0x01, 0xFF, 0x0A, 0x80, 0x03, 0xFF,],False)
         self.assertEqual({'LengthFormatIdentifier':[0x40],'MaxNumberOfBlockLength':[0x01, 0x00, 0x05, 0x08]}, b)  # ... (returns a dict)
@@ -64,7 +69,7 @@ class RequestDownloadTestCase(unittest.TestCase):
     # patches are inserted in reverse order
     @mock.patch('uds.CanTp.recv')
     @mock.patch('uds.CanTp.send')
-    def test_reqDownloadNegResponse_0x13(self,
+    def test_reqUploadNegResponse_0x13(self,
                      canTp_send,
                      canTp_recv):
 
@@ -73,40 +78,14 @@ class RequestDownloadTestCase(unittest.TestCase):
 
         # Parameters: xml file (odx file), ecu name (not currently used) ...
         a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
-        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __requestDownload to requestDownload in the uds object, so can now call below
+        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __requestUpload to requestUpload in the uds object, so can now call below
 
         try:
-            b = a.requestDownload(FormatIdentifier=[0x00],MemoryAddress=[0x40, 0x03, 0xE0, 0x00],MemorySize=[0x00, 0x00, 0x0E, 0x56])	# ... calls __requestDownload, which does the Uds.send
+            b = a.requestUpload(FormatIdentifier=[0x00],MemoryAddress=[0x40, 0x03, 0xE0, 0x00],MemorySize=[0x00, 0x00, 0x0E, 0x56])	# ... calls __requestUpload, which does the Uds.send
         except:
             b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
         canTp_send.assert_called_with([0x34, 0x00, 0x44, 0x40, 0x03, 0xE0, 0x00, 0x00, 0x00, 0x0E, 0x56],False)
-        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x13']", b)  # ... requestDownload should not return a value
-
-
-
-
-
-
-    # patches are inserted in reverse order
-    @mock.patch('uds.CanTp.recv')
-    @mock.patch('uds.CanTp.send')
-    def test_wdbiNegResponse_0x22(self,
-                     canTp_send,
-                     canTp_recv):
-
-        canTp_send.return_value = False
-        canTp_recv.return_value = [0x7F, 0x22]
-
-        # Parameters: xml file (odx file), ecu name (not currently used) ...
-        a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
-        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __readDataByIdentifier to readDataByIdentifier in the uds object, so can now call below
-
-        try:
-            b = a.requestDownload(FormatIdentifier=[0x00],MemoryAddress=[0x40, 0x03, 0xE0, 0x00],MemorySize=[0x00, 0x00, 0x0E, 0x56])	# ... calls __requestDownload, which does the Uds.send
-        except:
-            b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
-        canTp_send.assert_called_with([0x34, 0x00, 0x44, 0x40, 0x03, 0xE0, 0x00, 0x00, 0x00, 0x0E, 0x56],False)
-        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x22']", b)  # ... wdbi should not return a value
+        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x13']", b)  # ... requestUpload should not return a value
 
 
 
@@ -125,7 +104,7 @@ class RequestDownloadTestCase(unittest.TestCase):
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __readDataByIdentifier to readDataByIdentifier in the uds object, so can now call below
 
         try:
-            b = a.requestDownload(FormatIdentifier=[0x00],MemoryAddress=[0x40, 0x03, 0xE0, 0x00],MemorySize=[0x00, 0x00, 0x0E, 0x56])	# ... calls __requestDownload, which does the Uds.send
+            b = a.requestUpload(FormatIdentifier=[0x00],MemoryAddress=[0x40, 0x03, 0xE0, 0x00],MemorySize=[0x00, 0x00, 0x0E, 0x56])	# ... calls __requestUpload, which does the Uds.send
         except:
             b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
         canTp_send.assert_called_with([0x34, 0x00, 0x44, 0x40, 0x03, 0xE0, 0x00, 0x00, 0x00, 0x0E, 0x56],False)
@@ -147,7 +126,7 @@ class RequestDownloadTestCase(unittest.TestCase):
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __readDataByIdentifier to readDataByIdentifier in the uds object, so can now call below
 
         try:
-            b = a.requestDownload(FormatIdentifier=[0x00],MemoryAddress=[0x40, 0x03, 0xE0, 0x00],MemorySize=[0x00, 0x00, 0x0E, 0x56])	# ... calls __requestDownload, which does the Uds.send
+            b = a.requestUpload(FormatIdentifier=[0x00],MemoryAddress=[0x40, 0x03, 0xE0, 0x00],MemorySize=[0x00, 0x00, 0x0E, 0x56])	# ... calls __requestUpload, which does the Uds.send
         except:
             b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
         canTp_send.assert_called_with([0x34, 0x00, 0x44, 0x40, 0x03, 0xE0, 0x00, 0x00, 0x00, 0x0E, 0x56],False)
@@ -157,23 +136,23 @@ class RequestDownloadTestCase(unittest.TestCase):
     # patches are inserted in reverse order
     @mock.patch('uds.CanTp.recv')
     @mock.patch('uds.CanTp.send')
-    def test_wdbiNegResponse_0x72(self,
+    def test_wdbiNegResponse_0x70(self,
                      canTp_send,
                      canTp_recv):
 
         canTp_send.return_value = False
-        canTp_recv.return_value = [0x7F, 0x72]
+        canTp_recv.return_value = [0x7F, 0x70]
 
         # Parameters: xml file (odx file), ecu name (not currently used) ...
         a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __readDataByIdentifier to readDataByIdentifier in the uds object, so can now call below
 
         try:
-            b = a.requestDownload(FormatIdentifier=[0x00],MemoryAddress=[0x40, 0x03, 0xE0, 0x00],MemorySize=[0x00, 0x00, 0x0E, 0x56])	# ... calls __requestDownload, which does the Uds.send
+            b = a.requestUpload(FormatIdentifier=[0x00],MemoryAddress=[0x40, 0x03, 0xE0, 0x00],MemorySize=[0x00, 0x00, 0x0E, 0x56])	# ... calls __requestUpload, which does the Uds.send
         except:
             b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
         canTp_send.assert_called_with([0x34, 0x00, 0x44, 0x40, 0x03, 0xE0, 0x00, 0x00, 0x00, 0x0E, 0x56],False)
-        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x72']", b)  # ... wdbi should not return a value
+        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x70']", b)  # ... wdbi should not return a value
 
 
 

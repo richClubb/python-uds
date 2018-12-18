@@ -19,7 +19,7 @@ from uds.uds_config_tool.FunctionCreation.iServiceMethodFactory import IServiceM
 # i.e. 'value1' - for a single value, or [('param1','value1'),('param2','value2')]  for more complex data records
 requestFuncTemplate = str("def {0}(dataRecord):\n"
                           "    encoded = []\n"
-                          "    if type(dataRecord) == list:\n"
+                          "    if type(dataRecord) == list and type(optionRecord[0]) == tuple:\n"
                           "        drDict = dict(dataRecord)\n"
                           "        {3}\n"
                           "{4}\n"

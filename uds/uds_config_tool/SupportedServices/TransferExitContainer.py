@@ -14,7 +14,7 @@ from uds.uds_config_tool.SupportedServices.iContainer import iContainer
 from types import MethodType
 
 
-class RequestDownloadContainer(object):
+class TransferExitContainer(object):
 
     __metaclass__ = iContainer
 
@@ -23,29 +23,28 @@ class RequestDownloadContainer(object):
         self.checkFunctions = {}
         self.negativeResponseFunctions = {}
         self.positiveResponseFunctions = {}
+ 
 
     ##
     # @brief this method is bound to an external Uds object, referenced by target, so that it can be called
-    # as one of the in-built methods. uds.requestDownload("something","data record") It does not operate
+    # as one of the in-built methods. uds.transferExit("something") It does not operate
     # on this instance of the container class.
     @staticmethod
-    def __requestDownload(target, FormatIdentifier, MemoryAddress, MemorySize, **kwargs):
+    def __transferExit(target, transferRequestParameterRecord=None, **kwargs):
 
-        # Note: RequestDownload does not show support for multiple DIDs in the spec, so this is handling only a single DID with data record.
-        requestFunction = target.requestDownloadContainer.requestFunctions['RequestDownload']
-        checkFunction = target.requestDownloadContainer.checkFunctions['RequestDownload']
-        negativeResponseFunction = target.requestDownloadContainer.negativeResponseFunctions['RequestDownload']
-        positiveResponseFunction = target.requestDownloadContainer.positiveResponseFunctions['RequestDownload']
+        # Note: TransferExit does not show support for multiple DIDs in the spec, so this is handling only a single DID with data record.
+        requestFunction = target.transferExitContainer.requestFunctions['TransferExit']
+        checkFunction = target.transferExitContainer.checkFunctions['TransferExit']
+        negativeResponseFunction = target.transferExitContainer.negativeResponseFunctions['TransferExit']
+        positiveResponseFunction = target.transferExitContainer.positiveResponseFunctions['TransferExit']
 
-        # Call the sequence of functions to execute the request download request/response action ...
+        # Call the sequence of functions to execute the ECU Reset request/response action ...
         # ==============================================================================
 
-        if checkFunction is None or positiveResponseFunction is None:
-            suppressResponse = True
-
         # Create the request. Note: we do not have to pre-check the dataRecord as this action is performed by 
-        # the recipient (the response codes 0x13 and 0x31 provide the necessary cover of errors in the request) ...
-        request = requestFunction(FormatIdentifier, MemoryAddress, MemorySize)
+        # the recipient (the response codes 0x?? and 0x?? provide the necessary cover of errors in the request) ...
+        request = requestFunction(transferRequestParameterRecord)
+
 
         # Send request and receive the response ...
         response = target.send(request,responseRequired=True) # ... this returns a single response
@@ -59,16 +58,16 @@ class RequestDownloadContainer(object):
 
 
     def bind_function(self, bindObject):
-        bindObject.requestDownload = MethodType(self.__requestDownload, bindObject)
+        bindObject.transferExit = MethodType(self.__transferExit, bindObject)
 
     def add_requestFunction(self, aFunction, dictionaryEntry):  # ... dictionaryEntry is not used (just there for consistency in UdsConfigTool.py) - i.e. this service is effectively hardcoded
-        self.requestFunctions['RequestDownload'] = aFunction
+        self.requestFunctions['TransferExit'] = aFunction
 
     def add_checkFunction(self, aFunction, dictionaryEntry):  # ... dictionaryEntry is not used (just there for consistency in UdsConfigTool.py) - i.e. this service is effectively hardcoded
-        self.checkFunctions['RequestDownload'] = aFunction
+        self.checkFunctions['TransferExit'] = aFunction
 
     def add_negativeResponseFunction(self, aFunction, dictionaryEntry):  # ... dictionaryEntry is not used (just there for consistency in UdsConfigTool.py) - i.e. this service is effectively hardcoded
-        self.negativeResponseFunctions['RequestDownload'] = aFunction
+        self.negativeResponseFunctions['TransferExit'] = aFunction
 
     def add_positiveResponseFunction(self, aFunction, dictionaryEntry):  # ... dictionaryEntry is not used (just there for consistency in UdsConfigTool.py) - i.e. this service is effectively hardcoded
-        self.positiveResponseFunctions['RequestDownload'] = aFunction
+        self.positiveResponseFunctions['TransferExit'] = aFunction
