@@ -59,3 +59,26 @@ class IsoInputOutputControlOptionRecord(IntEnum):
     resetToDefault = 0x01
     freezeCurrentState = 0x02
     adjust = 0x03
+
+
+class IsoReadDTCSubfunction(IntEnum):
+
+    reportNumberOfDTCByStatusMask = 0x01
+    reportDTCByStatusMask = 0x02
+    reportDTCSnapshotIdentification = 0x03
+    reportDTCSnapshotRecordByDTCNumber = 0x04
+    reportDTCSnapshotRecordByRecordNumber = 0x05
+    reportDTCExtendedDataRecordByDTCNumber = 0x06
+    reportNumberOfDTCBySeverityMaskRecord = 0x07
+    reportDTCBySeverityMaskRecord = 0x08
+    reportSeverityInformationOfDTC = 0x09
+    reportSupportedDTC = 0x0A
+    reportFirstTestFailedDTC = 0x0B
+    reportFirstConfirmedDTC = 0x0C
+    reportMostRecentTestFailedDTC = 0x0D
+    reportMostRecentConfirmedDTC = 0x0E
+    reportMirrorMemoryDTCByStatusMask = 0x0F
+    reportMirrorMemoryDTCExtendedDataRecordByDTCNumber = 0x10
+    reportNumberOfMirrorMemoryDTCByStatusMask = 0x11
+    reportNumberOfEmissionsRelatedOBDDTCByStatusMask = 0x12
+    reportEmissionsRelatedOBDDTCByStatusMask = 0x12

@@ -23,6 +23,8 @@ from uds.uds_config_tool.SupportedServices.WriteDataByIdentifierContainer import
 from uds.uds_config_tool.FunctionCreation.WriteDataByIdentifierMethodFactory import WriteDataByIdentifierMethodFactory
 from uds.uds_config_tool.SupportedServices.ClearDTCContainer import ClearDTCContainer
 from uds.uds_config_tool.FunctionCreation.ClearDTCMethodFactory import ClearDTCMethodFactory
+from uds.uds_config_tool.SupportedServices.ReadDTCContainer import ReadDTCContainer
+from uds.uds_config_tool.FunctionCreation.ReadDTCMethodFactory import ReadDTCMethodFactory
 from uds.uds_config_tool.SupportedServices.InputOutputControlContainer import InputOutputControlContainer
 from uds.uds_config_tool.FunctionCreation.InputOutputControlMethodFactory import InputOutputControlMethodFactory
 from uds.uds_config_tool.SupportedServices.RoutineControlContainer import RoutineControlContainer
@@ -71,6 +73,7 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
     rdbiContainer = ReadDataByIdentifierContainer()
     wdbiContainer = WriteDataByIdentifierContainer()
     clearDTCContainer = ClearDTCContainer()
+    readDTCContainer = ReadDTCContainer()
     inputOutputControlContainer = InputOutputControlContainer()
     routineControlContainer = RoutineControlContainer()
     requestDownloadContainer = RequestDownloadContainer()
@@ -82,6 +85,7 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
     rdbiService_flag = False
     wdbiService_flag = False
     clearDTCService_flag = False
+    readDTCService_flag = False
     ioCtrlService_flag = False
     routineCtrlService_flag = False
     reqDownloadService_flag = False
@@ -194,7 +198,6 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
                 wdbiContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
 
             elif serviceId == IsoServices.ClearDiagnosticInformation:
-
                 clearDTCService_flag = True
                 requestFunc = ClearDTCMethodFactory.create_requestFunction(value, xmlElements)
                 clearDTCContainer.add_requestFunction(requestFunc, humanName)
@@ -207,6 +210,27 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
 
                 positiveResponseFunction = ClearDTCMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
                 clearDTCContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
+
+            elif serviceId == IsoServices.ReadDTCInformation:
+                readDTCService_flag = True
+                # The new code extends the range of functions required, in order to handle read DTC working for concatenated lists of subfunctions ...
+                requestFunctions, qualifier = ReadDTCMethodFactory.create_requestFunctions(value, xmlElements)
+                if qualifier != "":
+                    readDTCContainer.add_requestSIDFunction(requestFunctions[0], "FaultMemoryRead"+qualifier)  # ... note: this will now need to handle replication of this one!!!!
+                    readDTCContainer.add_requestSubfuncFunction(requestFunctions[1], "FaultMemoryRead"+qualifier)
+                    readDTCContainer.add_requestParamFunction(requestFunctions[2], "FaultMemoryRead"+qualifier)
+
+                    negativeResponseFunction = ReadDTCMethodFactory.create_checkNegativeResponseFunction(value, xmlElements)
+                    readDTCContainer.add_negativeResponseFunction(negativeResponseFunction, "FaultMemoryRead"+qualifier)
+
+                    checkFunctions = ReadDTCMethodFactory.create_checkPositiveResponseFunctions(value, xmlElements)
+                    readDTCContainer.add_checkSIDResponseFunction(checkFunctions[0], "FaultMemoryRead"+qualifier)
+                    readDTCContainer.add_checkSIDLengthFunction(checkFunctions[1], "FaultMemoryRead"+qualifier)
+                    readDTCContainer.add_checkSubfuncResponseFunction(checkFunctions[2], "FaultMemoryRead"+qualifier)
+                    readDTCContainer.add_checkSubfuncLengthFunction(checkFunctions[3], "FaultMemoryRead"+qualifier)
+
+                    positiveResponseFunction = ReadDTCMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
+                    readDTCContainer.add_positiveResponseFunction(positiveResponseFunction, "FaultMemoryRead"+qualifier)
 
             elif serviceId == IsoServices.InputOutputControlByIdentifier:
                 ioCtrlService_flag = True
@@ -323,6 +347,11 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
         setattr(outputEcu, 'clearDTCContainer', clearDTCContainer)
         clearDTCContainer.bind_function(outputEcu)
 
+    # Bind any read DTC services that have been found
+    if readDTCService_flag:
+        setattr(outputEcu, 'readDTCContainer', readDTCContainer)
+        readDTCContainer.bind_function(outputEcu)
+
     # Bind any input output control services that have been found
     if ioCtrlService_flag:
         setattr(outputEcu, 'inputOutputControlContainer', inputOutputControlContainer)
@@ -365,6 +394,7 @@ if __name__ == "__main__":
     a.readDataByIdentifier('ECU Serial Number')
     a.writeDataByIdentifier('ECU Serial Number','ABC0011223344556')
     a.clearDTC([0xF1, 0xC8, 0x55])
+    #a.readDTC([0xF1, 0xC8, 0x55])
     a.inputOutputControl('Booster Target Speed',IsoInputOutputControlOptionRecord.adjust,[8000])
     a.routineControl('Erase Memory',IsoRoutineControlType.startRoutine,[('memoryAddress',[0x01]),('memorySize',[0xF000])])
     a.requestDownload(FormatIdentifier=[0x00],MemoryAddress=[0x40, 0x03, 0xE0, 0x00],MemorySize=[0x00, 0x00, 0x0E, 0x56])
