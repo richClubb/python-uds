@@ -21,6 +21,8 @@ from uds.uds_config_tool.SupportedServices.ReadDataByIdentifierContainer import 
 from uds.uds_config_tool.FunctionCreation.ReadDataByIdentifierMethodFactory import ReadDataByIdentifierMethodFactory
 from uds.uds_config_tool.SupportedServices.WriteDataByIdentifierContainer import WriteDataByIdentifierContainer
 from uds.uds_config_tool.FunctionCreation.WriteDataByIdentifierMethodFactory import WriteDataByIdentifierMethodFactory
+from uds.uds_config_tool.SupportedServices.ClearDTCContainer import ClearDTCContainer
+from uds.uds_config_tool.FunctionCreation.ClearDTCMethodFactory import ClearDTCMethodFactory
 from uds.uds_config_tool.SupportedServices.InputOutputControlContainer import InputOutputControlContainer
 from uds.uds_config_tool.FunctionCreation.InputOutputControlMethodFactory import InputOutputControlMethodFactory
 from uds.uds_config_tool.SupportedServices.RoutineControlContainer import RoutineControlContainer
@@ -68,6 +70,7 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
     ecuResetContainer = ECUResetContainer()
     rdbiContainer = ReadDataByIdentifierContainer()
     wdbiContainer = WriteDataByIdentifierContainer()
+    clearDTCContainer = ClearDTCContainer()
     inputOutputControlContainer = InputOutputControlContainer()
     routineControlContainer = RoutineControlContainer()
     requestDownloadContainer = RequestDownloadContainer()
@@ -78,6 +81,7 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
     ecuResetService_flag = False
     rdbiService_flag = False
     wdbiService_flag = False
+    clearDTCService_flag = False
     ioCtrlService_flag = False
     routineCtrlService_flag = False
     reqDownloadService_flag = False
@@ -174,7 +178,6 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
             elif serviceId == IsoServices.SecurityAccess:
                 pass
 
-
             elif serviceId == IsoServices.WriteDataByIdentifier:
 
                 wdbiService_flag = True
@@ -189,6 +192,21 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
 
                 positiveResponseFunction = WriteDataByIdentifierMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
                 wdbiContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
+
+            elif serviceId == IsoServices.ClearDiagnosticInformation:
+
+                clearDTCService_flag = True
+                requestFunc = ClearDTCMethodFactory.create_requestFunction(value, xmlElements)
+                clearDTCContainer.add_requestFunction(requestFunc, humanName)
+
+                negativeResponseFunction = ClearDTCMethodFactory.create_checkNegativeResponseFunction(value, xmlElements)
+                clearDTCContainer.add_negativeResponseFunction(negativeResponseFunction, humanName)
+
+                checkFunc = ClearDTCMethodFactory.create_checkPositiveResponseFunction(value, xmlElements)
+                clearDTCContainer.add_checkFunction(checkFunc, humanName)
+
+                positiveResponseFunction = ClearDTCMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
+                clearDTCContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
 
             elif serviceId == IsoServices.InputOutputControlByIdentifier:
                 ioCtrlService_flag = True
@@ -300,6 +318,11 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
         setattr(outputEcu, 'writeDataByIdentifierContainer', wdbiContainer)
         wdbiContainer.bind_function(outputEcu)
 
+    # Bind any clear DTC services that have been found
+    if clearDTCService_flag:
+        setattr(outputEcu, 'clearDTCContainer', clearDTCContainer)
+        clearDTCContainer.bind_function(outputEcu)
+
     # Bind any input output control services that have been found
     if ioCtrlService_flag:
         setattr(outputEcu, 'inputOutputControlContainer', inputOutputControlContainer)
@@ -341,6 +364,7 @@ if __name__ == "__main__":
     a.ecuReset('Hard Reset',suppressResponse=False)
     a.readDataByIdentifier('ECU Serial Number')
     a.writeDataByIdentifier('ECU Serial Number','ABC0011223344556')
+    a.clearDTC([0xF1, 0xC8, 0x55])
     a.inputOutputControl('Booster Target Speed',IsoInputOutputControlOptionRecord.adjust,[8000])
     a.routineControl('Erase Memory',IsoRoutineControlType.startRoutine,[('memoryAddress',[0x01]),('memorySize',[0xF000])])
     a.requestDownload(FormatIdentifier=[0x00],MemoryAddress=[0x40, 0x03, 0xE0, 0x00],MemorySize=[0x00, 0x00, 0x0E, 0x56])
