@@ -29,8 +29,15 @@ class CanConnectionFactory(object):
             channel = CanConnectionFactory.config['peak']['device']
             if channel not in CanConnectionFactory.connections:
                 baudrate = CanConnectionFactory.config['can']['baudrate']
-                CanConnectionFactory.connections[channel] = pcan.PcanBus(channel,
-                                                                         bitrate=baudrate)
+                try:
+                    CanConnectionFactory.connections[channel] = pcan.PcanBus(channel,
+                                                                             bitrate=baudrate)
+                except:
+                    pass
+                finally:
+                    CanConnectionFactory.connections[channel] = pcan.PcanBus(channel,
+                                                                             bitrate=baudrate)
+
             return CanConnectionFactory.connections[channel]
 
         elif connectionType == 'vector':

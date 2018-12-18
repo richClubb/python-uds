@@ -3,3 +3,5 @@ dist/
 build/
 .idea/
 *.pyc
+*.cdd~
+test/Uds-Config-Tool/Functional Tests/Load_migration_6.0.130_to_8.5.3102_Bootloader.log

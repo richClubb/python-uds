@@ -158,6 +158,7 @@ Also, we will most need to handle scaling at some stage within DecodeFunctions.p
 												"\n            ".join(encodeFunctions),  # ... handles input via list # 4
 												encodeFunction,                      # ... handles input via single value # 5
                                                 SUPPRESS_RESPONSE_BIT) # 6
+        print(funcString)
         exec(funcString)
         return (locals()[shortName],str(controlType))
 		

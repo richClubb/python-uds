@@ -10,9 +10,9 @@ __email__ = "richard.clubb@embeduk.com"
 __status__ = "Development"
 
 
-from uds.uds_config_tool import DecodeFunctions
 import sys
 from uds.uds_config_tool.FunctionCreation.iServiceMethodFactory import IServiceMethodFactory
+
 
 SUPPRESS_RESPONSE_BIT = 0x80
 
@@ -20,7 +20,7 @@ requestFuncTemplate = str("def {0}(suppressResponse=False):\n"
                           "    resetType = {2}\n"
                           "    suppressBit = {3} if suppressResponse else 0x00\n"
                           "    resetType[0] += suppressBit\n"
-                          "    return {1} + resetType")									 
+                          "    return {1} + resetType")
 
 # Note: we do not need to cater for response suppression checking as nothing to check if response is suppressed - always unsuppressed
 checkFunctionTemplate = str("def {0}(input):\n"
