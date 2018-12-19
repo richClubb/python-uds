@@ -29,57 +29,32 @@ class ReadDTCContainer(object):
     # as one of the in-built methods. uds.readDTC("something") It does not operate
     # on this instance of the container class.
     @staticmethod
-    def __readDTC(target, subfunctions, dataRecord=[], **kwargs):
-	
-        # Some local functions to deal with use concatenation of a number of DIDs in RDBI operation ...
-
-        # After an array of lengths has been constructed for the individual response elements, we need a simple function to check it against the response
-        def checkTotalResponseLength(input,expectedLengthsList):
-            lengthExpected = sum(expectedLengthsList)
-            if(len(input) != lengthExpected): raise Exception("Total length returned not as expected. Expected: {0}; Got {1}".format(lengthExpected,len(input)))
-
-        # The check functions just want to know about the next bit of the response, so this just pops it of the front of the response
-        def popResponseElement(input,expectedList):
-            if expectedList == []: raise Exception("Total length returned not as expected. Missing elements.")
-            return (input[0:expectedList[0]], input[expectedList[0]:], expectedList[1:])
-
-        if type(subfunctions) is not list:
-            subfunctions = [subfunctions]
-        subfunctions = sorted(subfunctions) # ... the spec always shows them sorted, so sticking to that - the return values are labelled, so order doesn't matter
-
-        # Adding acceptance of lists at this point, as the spec allows for multiple subfunctions in the request to be concatenated ...
-        requestSIDFunction = target.readDTCContainer.requestSIDFunctions["FaultMemoryRead[{0}]".format(subfunctions[0])]  # ... the SID should be the same for all DIDs, so just use the first
-        requestSubfuncFunctions = [target.readDTCContainer.requestSubfuncFunctions["FaultMemoryRead[{0}]".format(subfunctions)] for subfunction in subfunctions]
-        requestParamFunctions = [target.readDTCContainer.requestParamFunctions["FaultMemoryRead[{0}]".format(subfunctions)] for subfunction in subfunctions]
-
-        # Adding acceptance of lists at this point, as the spec allows for multiple rdbi request to be concatenated ...
-        checkSIDResponseFunction = target.readDTCContainer.checkSIDResponseFunctions["FaultMemoryRead[{0}]".format(subfunctions[0])]
-        checkSIDLengthFunction = target.readDTCContainer.checkSIDLengthFunctions["FaultMemoryRead[{0}]".format(subfunctions[0])]
-        checkSubfuncResponseFunctions = [target.readDTCContainer.checkDIDResponseFunctions["FaultMemoryRead[{0}]".format(subfunctions)] for subfunction in subfunctions]
-        checkSubfuncLengthFunctions = [target.readDTCContainer.checkDIDLengthFunctions["FaultMemoryRead[{0}]".format(subfunctions)] for subfunction in subfunctions]
-
-        # This is the same for all RDBI responses, irrespective of list or single input
-        negativeResponseFunction = target.readDTCContainer.negativeResponseFunctions["FaultMemoryRead[{0}]".format(subfunctions[0])] # ... single code irrespective of list use, so just use the first
-
-        # Adding acceptance of lists at this point, as the spec allows for multiple rdbi request to be concatenated ...
-        positiveResponseFunctions = [target.readDTCContainer.positiveResponseFunctions["FaultMemoryRead[{0}]".format(subfunctions)] for subfunction in subfunctions]
+    def __readDTC(target, subfunction, DTCStatusMask=None, DTCMaskRecord=None, DTCSnapshotRecordNumber=None, DTCExtendedRecordNumber=None, DTCSeverityMask=None, **kwargs):
+        # Note: readDTC does not show support for DIDs or multiple subfunctions in the spec, so this is handling only a single subfunction with data record.
+        requestFunction = target.readDTCContainer.requestFunctions["FaultMemoryRead[{0}]".format(subfunction)]
+        checkResponseFunction = target.readDTCContainer.checkResponseFunctions["FaultMemoryRead[{0}]".format(subfunction)]
+        negativeResponseFunction = target.readDTCContainer.negativeResponseFunctions["FaultMemoryRead[{0}]".format(subfunctions[0])]
+        positiveResponseFunction = target.readDTCContainer.positiveResponseFunctions["FaultMemoryRead[{0}]".format(subfunction)]
 
         # Call the sequence of functions to execute the RDBI request/response action ...
         # ==============================================================================
 
         # Create the request ...
-        request = requestSIDFunction()
-        for subfuncFunc in requestSubfuncFunctions:
-            request += subfuncFunc()                # ... creates an array of integers
-        for requestParamFunc in requestParamFunctions:
-            request += requestParamFunc(dataRecord) # ... extends array of integers if any params are present (dependent on the sub-functions present)
+        DTCStatusMask = [DTCStatusMask] if DTCStatusMask is not None else []
+		DTCMaskRecord = DTCMaskRecord if DTCMaskRecord is not None else []
+		DTCSnapshotRecordNumber = [DTCSnapshotRecordNumber] if DTCSnapshotRecordNumber is not None else []
+		DTCExtendedRecordNumber = [DTCExtendedRecordNumber] if DTCExtendedRecordNumber is not None else []
+		DTCSeverityMask = [DTCSeverityMask] if DTCSeverityMask is not None else []
+        request = requestFunction(DTCStatusMask=DTCStatusMask,DTCMaskRecord=DTCMaskRecord,DTCSnapshotRecordNumber=[],DTCExtendedRecordNumber=[],DTCSeverityMask=[])
+
 
         # Send request and receive the response ...
         response = target.send(request) # ... this returns a single response
         negativeResponseFunction(response)  # ... throws an exception to be handled at a higher level if a negative response is received
 
-
         # We have a positive response so check that it makes sense to us ...
+		
+???????????????we have to work with lists here, so the return length is variable >???????????????????? looking at the rdbi code for ideas ???????????
         SIDLength = checkSIDLengthFunction()
         expectedLengths = [SIDLength] ???????????need to check mutiples of data in some cases!!!! not an easy one to check!
 ????????????may need to seperate subfunc and response data return lengths? ?????????????????

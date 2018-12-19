@@ -16,71 +16,96 @@ from uds.uds_config_tool.FunctionCreation.iServiceMethodFactory import IServiceM
 
 
 # When encode the dataRecord for transmission we have to allow for multiple elements in the data record
-# i.e. 'value1' - for a single value, or [('param1','value1'),('param2','value2')]  for more complex data records
-"""
-requestFuncTemplate = str("def {0}(dataRecord):\n"
+# Note: the request is not the simplest to parse from the ODX, so paritally hardcoding this one again (for now at least)
+requestFuncTemplate = str("def {0}(DTCStatusMask=[],DTCMaskRecord=[],DTCSnapshotRecordNumber=[],DTCExtendedRecordNumber=[],DTCSeverityMask=[]):\n"
                           "    encoded = []\n"
-                          "    if type(dataRecord) == list and type(dataRecord[0]) == tuple:\n"
-                          "        drDict = dict(dataRecord)\n"
-                          "        {3}\n"
-                          "{4}\n"
-                          "    return {1} + {2} + encoded")
-"""
-????????????????????????
-requestSIDFuncTemplate = str("def {0}():\n"
-                             "    return {1}")
-requestSubfuncFuncTemplate = str("def {0}():\n"
-                                 "    return {1}")						  
-requestParamFuncTemplate = str("def {0}():\n"
-                               "    encoded = []\n"
-                               "    if type(dataRecord) == list and type(dataRecord[0]) == tuple:\n"
-                               "        drDict = dict(dataRecord)\n"
-                               "        {3}\n"
-                               "{4}\n"
-                               "    return encoded")						  
+                          "    if {2} in [0x01,0x02, 0x0F, 0x11, 0x12, 0x13]: # ... DTCStatusMask required for these subfunctions\n"
+                          "        encode += DTCStatusMask\n"
+                          "    if {2} in [0x03,0x04, 0x06, 0x09, 0x10]: # ... DTCMaskRecord required for these subfunctions\n"
+                          "        encode += DTCMaskRecord # ... format is [0xNN,0xNN,0xNN]\n"
+                          "    if {2} in [0x03,0x04, 0x05]: # ... DTCSnapshotRecordNumber required for these subfunctions\n"
+                          "        encode += DTCSnapshotRecordNumber\n"
+                          "    if {2} in [0x06,0x10]: # ... DTCExtendedRecordNumber required for these subfunctions\n"
+                          "        encode += DTCExtendedRecordNumber\n"
+                          "    if {2} in [0x07,0x08]: # ... DTCSeverityMaskRecord required for these subfunctions\n"
+                          "        encode += DTCSeverityMask+DTCStatusMask\n"
+                          "    return {1} + {2} + encoded # ... SID, sub-func, and params")
 
-"""
+						  
+
+
 checkFunctionTemplate = str("def {0}(input):\n"
                             "    serviceIdExpected = {1}\n"
-                            "    diagnosticIdExpected = {2}\n"
-                            "    serviceId = DecodeFunctions.buildIntFromList(input[{3}:{4}])\n"
-                            "    diagnosticId = DecodeFunctions.buildIntFromList(input[{5}:{6}])\n"
-                            "    if(len(input) != {7}): raise Exception(\"Total length returned not as expected. Expected: {7}; Got {{0}}\".format(len(input)))\n"
-                            "    if(serviceId != serviceIdExpected): raise Exception(\"Service Id Received not expected. Expected {{0}}; Got {{1}} \".format(serviceIdExpected, serviceId))\n"
-                            "    if(diagnosticId != diagnosticIdExpected): raise Exception(\"Diagnostic Id Received not as expected. Expected: {{0}}; Got {{1}}\".format(diagnosticIdExpected, diagnosticId))")
-"""
-?????????????????????????????
-checkSIDRespFuncTemplate = str("def {0}(input):\n"
-                            "    serviceIdExpected = {1}\n"
-                            "    serviceId = DecodeFunctions.buildIntFromList(input[{2}:{3}])\n"
-                            "    if(serviceId != serviceIdExpected): raise Exception(\"Service Id Received not expected. Expected {{0}}; Got {{1}} \".format(serviceIdExpected, serviceId))")
-
-checkSIDLenFuncTemplate = str("def {0}():\n"
-                            "    return {1}")
-
-checkSubfuncRespFuncTemplate = str("def {0}(input):\n"
-                            "    diagnosticIdExpected = {1}\n"
-                            "    diagnosticId = DecodeFunctions.buildIntFromList(input[{2}:{3}])\n"
-                            "    if(diagnosticId != diagnosticIdExpected): raise Exception(\"Diagnostic Id Received not as expected. Expected: {{0}}; Got {{1}}\".format(diagnosticIdExpected, diagnosticId))")
-
-checkSubfuncLenFuncTemplate = str("def {0}():\n"
-                            "    return {1}")
-??????????????????????????????
+                            "    subFunctionExpected = {2}\n"
+							
+def {0}(input):
+    serviceIdExpected = {1}
+    subFunctionExpected = {2}
+    if {2} in [0x01,0x02, 0x0F, 0x11, 0x12, 0x13]: # ... DTCStatusMask required for these subfunctions
+        ??? check ???
+	elif {2} in [0x01,0x02, 0x0F, 0x11, 0x12, 0x13]: # ... DTCStatusMask required for these subfunctions
+        ??? check ???
+												
+???????????????????????							
+  
 
 negativeResponseFuncTemplate = str("def {0}(input):\n"
                                    "    {1}")
 
 encodePositiveResponseFuncTemplate = str("def {0}(input):\n"
-                                         "    return")
-
+                                         "    encoded = []\n"
+                                         "    retval = None\n"
+                                         "    if {2} in [0x02, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x13]: # ... these subfunctions have details extracted as follows:\n"
+                                         "        retval = {'DTCStatusAvailabilityMask':input[2:3], 'DTCAndStatusRecord':[]}\n"
+                                         "        records = input[3:]\n"
+                                         "        for i in range(len(records)/4):\n"
+                                         "            recStart = i*4\n"
+                                         "            retval['DTCAndStatusRecord'].append({'DTC':records[recStart:recStart+3],'statusOfDTC':records[recStart+3:recStart+4]})\n"
+                                         "\n"
+                                         "    if {2} in [0x01, 0x07, 0x11, 0x12]: # ... these subfunctions have details extracted as follows:\n"
+                                         "        retval = {'DTCStatusAvailabilityMask':input[2:3], 'DTCFormatIdentifier':input[3:4], 'DTCCount':input[4:6]}  # ... DTCCount probably needs decoding\n"
+                                         "		\n"
+                                         "    if {2} in [0x03]: # ... these subfunctions have details extracted as follows:\n"
+                                         "        retval = []\n"
+                                         "        records = input[3:]\n"
+                                         "        for i in range(len(records)/4):\n"
+                                         "            recStart = i*4\n"
+                                         "            retval.append({'DTC':records[recStart:recStart+3],'DTCSnapshotRecordNumber':records[recStart+3:recStart+4]})\n"
+                                         "\n"
+                                         "    if {2} in [0x04]: # ... these subfunctions have details extracted as follows:\n"
+                                         "        pass # ?????????????????????????????????????????\n"
+                                         "	# ... the  length needs to be derived from the ODX\n"
+                                         "\n"
+                                         "    if {2} in [0x05]: # ... these subfunctions have details extracted as follows:\n"
+                                         "        pass # ?????????????????????????????????????????\n"
+                                         "	# ... the  length needs to be derived from the ODX\n"
+                                         "\n"
+                                         "    if {2} in [0x06, 0x10]: # ... these subfunctions have details extracted as follows:\n"
+                                         "        pass\n"
+                                         "    #    retval = {'DTCAndStatusRecord':{'DTC':records[2:5],'statusOfDTC':records[5:6]},'DTCExtendedData':[]}\n"
+                                         "    #    records = input[6:]\n"
+                                         "    #    for i in range(len(records)/4):\n"
+                                         "    #        recStart = i*4\n"
+                                         "    #        retval['DTCExtendedData'].append({'DTCExtendedDataRecordNumber':records[recStart:recStart+1],'DTCExtendedDataRecord':records[recStart+1:recStart+?????]})\n"
+                                         "	# ... the extended data length needs to be derived from the ODX\n"
+                                         "\n"
+                                         "    if {2} in [0x08, 0x09]: # ... these subfunctions have details extracted as follows:\n"
+                                         "        retval = {'DTCStatusAvailabilityMask':input[2:3], 'DTCAndSeverityRecord':[]}\n"
+                                         "        records = input[3:]\n"
+                                         "        for i in range(len(records)/6):\n"
+                                         "            recStart = i*6\n"
+                                         "            retval['DTCAndSeverityRecord'].append({'DTCSeverity':records[recStart:recStart+1],'DTCFunctionalUnit':records[recStart+1:recStart+2],'DTC':records[recStart+2:recStart+5],'statusOfDTC':records[recStart+5:recStart+6]})\n"
+                                         "\n"
+                                         "    return retval")
+							
+							
 class ReadDTCMethodFactory(IServiceMethodFactory):
 
     ##
     # @brief method to create the request function for the service element
     @staticmethod
     def create_requestFunction(diagServiceElement, xmlElements):
-	?????????????????????????????????Needs to be able to handle multiple sub-functions, so we build up: sid, sub-function list, params list for each sub-function - c.f. readbyid coding ??
-extract each part and concatenate in the container method!!!!
+        # Note: due to the compleixty of the call, this one is partially hardcoded - we do at least check the ODX file far enough to ensure that the request and subfunction are accurate.
 	    serviceId = 0
         diagnosticId = 0
 
@@ -100,61 +125,13 @@ extract each part and concatenate in the container method!!!!
 
             if(semantic == 'SERVICE-ID'):
                 serviceId = [int(param.find('CODED-VALUE').text)]
-            elif(semantic == 'ID'):
-                diagnosticId = DecodeFunctions.intArrayToIntArray([int(param.find('CODED-VALUE').text)], 'int16', 'int8')
-            elif semantic == 'DATA':
-                dataObjectElement = xmlElements[(param.find('DOP-REF')).attrib['ID-REF']]
-                longName = param.find('LONG-NAME').text
-                bytePosition = int(param.find('BYTE-POSITION').text)
-                # Catching any exceptions where we don't know the type - these will fail elsewhere, but at least we can test what does work.
-                try:
-                    encodingType = dataObjectElement.find('DIAG-CODED-TYPE').attrib['BASE-DATA-TYPE']
-                except:
-                    encodingType = "unknown"  # ... for now just drop into the "else" catch-all ??????????????????????????????????????????????
-                if(encodingType) == "A_ASCIISTRING":
-                    functionStringList = "DecodeFunctions.stringToIntList(drDict['{0}'], None)".format(longName)
-                    functionStringSingle = "DecodeFunctions.stringToIntList(dataRecord, None)"
-                elif(encodingType) == "A_INT8":
-                    functionStringList = "DecodeFunctions.intArrayToIntArray(drDict['{0}'], 'int8', 'int8')".format(longName)
-                    functionStringSingle = "DecodeFunctions.intArrayToIntArray(dataRecord, 'int8', 'int8')"
-                elif(encodingType) == "A_INT16":
-                    functionStringList = "DecodeFunctions.intArrayToIntArray(drDict['{0}'], 'int16', 'int8')".format(longName)
-                    functionStringSingle = "DecodeFunctions.intArrayToIntArray(dataRecord, 'int16', 'int8')"
-                elif(encodingType) == "A_INT32":
-                    functionStringList = "DecodeFunctions.intArrayToIntArray(drDict['{0}'], 'int32', 'int8')".format(longName)
-                    functionStringSingle = "DecodeFunctions.intArrayToIntArray(dataRecord, 'int32', 'int8')"
-                elif(encodingType) == "A_UINT8":
-                    functionStringList = "DecodeFunctions.intArrayToIntArray(drDict['{0}'], 'uint8', 'int8')".format(longName)
-                    functionStringSingle = "DecodeFunctions.intArrayToIntArray(dataRecord, 'uint8', 'int8')"
-                elif(encodingType) == "A_UINT16":
-                    functionStringList = "DecodeFunctions.intArrayToIntArray(drDict['{0}'], 'uint16', 'int8')".format(longName)
-                    functionStringSingle = "DecodeFunctions.intArrayToIntArray(dataRecord, 'uint16', 'int8')"
-                elif(encodingType) == "A_UINT32":
-                    functionStringList = "DecodeFunctions.intArrayToIntArray(drDict['{0}'], 'uint32', 'int8')".format(longName)
-                    functionStringSingle = "DecodeFunctions.intArrayToIntArray(dataRecord, 'uint32', 'int8')"
-                else:
-                    functionStringList = "drDict['{0}']".format(longName)
-                    functionStringSingle = "dataRecord"
-
-
-                # 
-                encodeFunctions.append("encoded += {1}".format(longName,
-                                                                 functionStringList))
-                encodeFunction = "    else:\n        encoded = {1}".format(longName,functionStringSingle)
-
-
-
-        # If we have only a single value for the dataRecord to send, then we can simply suppress the single value sending option.
-        # Note: in the reverse case, we do not suppress the dictionary method of sending, as this allows extra flexibility, allowing 
-        # a user to use a consistent list format in all situations if desired.
-        if len(encodeFunctions) > 1:
-            encodeFunction = ""
+            elif(semantic == 'SUBFUNCTION'):
+                shortName += param.find('SHORT-NAME').text
+                subfunction = DecodeFunctions.intArrayToIntArray([int(param.find('CODED-VALUE').text)], 'int16', 'int8')
 
         funcString = requestFuncTemplate.format(shortName,
                                                 serviceId,
-                                                diagnosticId,
-												"\n        ".join(encodeFunctions),  # ... handles input via list
-												encodeFunction)                  # ... handles input via single value
+                                                subfunction)
         exec(funcString)
         return locals()[shortName]
 

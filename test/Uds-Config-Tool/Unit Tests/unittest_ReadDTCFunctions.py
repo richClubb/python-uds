@@ -14,31 +14,57 @@ import unittest
 from unittest import mock
 from uds import Uds
 from uds.uds_config_tool.UdsConfigTool import createUdsConnection
-from uds.uds_config_tool.ISOStandard.ISOStandard import IsoReadDTCSubfunction as ReadDTCSubfunc
+from uds.uds_config_tool.ISOStandard.ISOStandard import IsoReadDTCSubfunction, IsoReadDTCStatusMask as Mask
 import sys, traceback
 
 
 class ReadDTCTestCase(unittest.TestCase):
 		
-    # patches are inserted in reverse order
+    """
+	Example calls (the tests only include options present in the ODX test file):
+	
+    a.readDTC(IsoReadDTCSubfunction.reportNumberOfDTCByStatusMask, DTCStatusMask=Mask.confirmedDtc & Mask.testFailedSinceLastClear)
+    a.readDTC(IsoReadDTCSubfunction.reportDTCByStatusMask, DTCStatusMask=Mask.confirmedDtc & Mask.testFailedSinceLastClear)
+    a.readDTC(IsoReadDTCSubfunction.reportDTCSnapshotIdentification, DTCMaskRecord=[0xF1, 0xC8, 0x55], DTCSnapshotRecordNumber=0x34)
+    a.readDTC(IsoReadDTCSubfunction.reportDTCSnapshotRecordByDTCNumber, DTCMaskRecord=[0xF1, 0xC8, 0x55], DTCSnapshotRecordNumber=0x34)
+    a.readDTC(IsoReadDTCSubfunction.reportDTCSnapshotRecordByRecordNumber, DTCSnapshotRecordNumber=0x34)
+    a.readDTC(IsoReadDTCSubfunction.reportDTCExtendedDataRecordByDTCNumber, DTCMaskRecord=[0xF1, 0xC8, 0x55], DTCExtendedRecordNumber=0x12)
+    a.readDTC(IsoReadDTCSubfunction.reportNumberOfDTCBySeverityMaskRecord, DTCStatusMask=Mask.confirmedDtc & Mask.testFailedSinceLastClear, DTCSeverityMaskRecord=Mask.confirmedDtc)
+    a.readDTC(IsoReadDTCSubfunction.reportDTCBySeverityMaskRecord, DTCStatusMask=Mask.confirmedDtc & Mask.testFailedSinceLastClear, DTCSeverityMaskRecord=Mask.confirmedDtc)
+    a.readDTC(IsoReadDTCSubfunction.reportSeverityInformationOfDTC, DTCMaskRecord=[0xF1, 0xC8, 0x55])
+    a.readDTC(IsoReadDTCSubfunction.reportSupportedDTC)
+    a.readDTC(IsoReadDTCSubfunction.reportFirstTestFailedDTC)
+    a.readDTC(IsoReadDTCSubfunction.reportFirstConfirmedDTC)
+    a.readDTC(IsoReadDTCSubfunction.reportMostRecentTestFailedDTC)
+    a.readDTC(IsoReadDTCSubfunction.reportMostRecentConfirmedDTC)
+    a.readDTC(IsoReadDTCSubfunction.reportMirrorMemoryDTCByStatusMask, DTCStatusMask=Mask.confirmedDtc & Mask.testFailedSinceLastClear)
+    a.readDTC(IsoReadDTCSubfunction.reportMirrorMemoryDTCExtendedDataRecordByDTCNumber, DTCMaskRecord=[0xF1, 0xC8, 0x55], DTCExtendedRecordNumber=0x12)
+    a.readDTC(IsoReadDTCSubfunction.reportNumberOfMirrorMemoryDTCByStatusMask, DTCStatusMask=Mask.confirmedDtc & Mask.testFailedSinceLastClear)
+    a.readDTC(IsoReadDTCSubfunction.reportNumberOfEmissionsRelatedOBDDTCByStatusMask, DTCStatusMask=Mask.confirmedDtc & Mask.testFailedSinceLastClear)
+    a.readDTC(IsoReadDTCSubfunction.reportEmissionsRelatedOBDDTCByStatusMask, DTCStatusMask=Mask.confirmedDtc & Mask.testFailedSinceLastClear)
+
+    """
+
+		# patches are inserted in reverse order
     @mock.patch('uds.TestTp.recv')
     @mock.patch('uds.TestTp.send')
-    def test_readDTCSingleSubfuncAsciiResponse(self,
+    def test_readDTC_reportDTCByStatusMask(self,
                      tp_send,
                      tp_recv):
 
         tp_send.return_value = False
         # ECU Serial Number = "ABC0011223344556"   (16 bytes as specified in "_Bootloader_87")
-        tp_recv.return_value = [0x62, 0xF1, 0x8C, 0x41, 0x42, 0x43, 0x30, 0x30, 0x31, 0x31, 0x32, 0x32, 0x33, 0x33, 0x34, 0x34, 0x35, 0x35, 0x36]
+        tp_recv.return_value = [0x59, 0x02, 0x28, 0xF1, 0xC8, 0x55, 0x01, 0xF1, 0xD0, 0x56, 0x01, 0xF1, 0xD8, 0x57, 0x01]
 
         # Parameters: xml file (odx file), ecu name (not currently used) ...
         a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader', transportProtocol="TEST")
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __readDataByIdentifier to readDataByIdentifier in the uds object, so can now call below
-?????????????????????????????????THIS IS NOT CORRECT - WIP - more at a kind of note level at present!!!!!
-        b = a.readDTC([ReadDTCSubfunc.reportDTCByStatusMask],[("TestFailed":[0x00]),("ConfirmedDTC":[0x00]),("TestNotCompletedSinceLastClear":[0x00]),("TestFailedSinceLastClear":[0x00]),("TestNotCompletedThisMonitoringCycle":[0x00])])	# ... calls __readDataByIdentifier, which does the Uds.send
+
+
+        b = a.readDTC(IsoReadDTCSubfunction.reportDTCByStatusMask, Mask=StatusMask.confirmedDtc & Mask.testFailedSinceLastClear)	# ... calls __readDataByIdentifier, which does the Uds.send
 	
-        tp_send.assert_called_with([0x22, 0xF1, 0x8C],False)
-        self.assertEqual({'?????':'????????'}, b)
+        tp_send.assert_called_with([0x19, 0x02, 0x28],False)
+        self.assertEqual({'DTCStatusAvailabilityMask':[0x28],'DTCAndStatusRecord':[{'DTC':[0xF1, 0xC8, 0x55],'statusOfDTC':[0x01]},{'DTC':[0xF1, 0xD0, 0x56],'statusOfDTC':[0x01]},{'DTC':[0xF1, 0xD8, 0x57],'statusOfDTC':[0x01]}]}, b)
 
 
     """

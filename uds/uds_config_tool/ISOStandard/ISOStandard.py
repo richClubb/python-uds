@@ -81,4 +81,17 @@ class IsoReadDTCSubfunction(IntEnum):
     reportMirrorMemoryDTCExtendedDataRecordByDTCNumber = 0x10
     reportNumberOfMirrorMemoryDTCByStatusMask = 0x11
     reportNumberOfEmissionsRelatedOBDDTCByStatusMask = 0x12
-    reportEmissionsRelatedOBDDTCByStatusMask = 0x12
+    reportEmissionsRelatedOBDDTCByStatusMask = 0x13
+
+	
+class IsoReadDTCStatusMask(IntEnum):
+
+    testFailed = 0x01
+    testFailedThisMonitoringCycle = 0x02         # ... reserved
+    pendingDtc = 0x04                            # ... reserved
+    confirmedDtc = 0x08
+    testNotCompletedSinceLastClear = 0x10
+    testFailedSinceLastClear = 0x20
+    testNotCompletedThisMonitoringCycle = 0x40
+    warningIndicatorRequested = 0x80             # ... reserved
+	
