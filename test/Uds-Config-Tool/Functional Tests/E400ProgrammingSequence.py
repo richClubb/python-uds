@@ -1,7 +1,7 @@
 from uds import createUdsConnection
 from struct import pack, unpack
 import hashlib
-from time import sleep
+from time import sleep, time
 
 
 class ihexData(object):
@@ -176,60 +176,72 @@ if __name__ == "__main__":
 
     e400 = createUdsConnection("Bootloader.odx", "Bootloader", reqId=0x600, resId=0x650, interface="peak")
 
+    startTime = time()
+    in_bootloader_flag = 0
+    while in_bootloader_flag == 0:
+        try:
+            if (time() - startTime) > 5:
+                in_bootloader_flag = 1
+                print("Timeout")
+            a = e400.diagnosticSessionControl("Programming Session")
+            in_bootloader_flag = 1
+        except:
+            pass
+
+    sleep(2)
+
     a = e400.readDataByIdentifier("ECU Serial Number")
-    print(a)
+    print("Serial Number: {0}".format(a["ECU Serial Number"]))
 
     a = e400.readDataByIdentifier("PBL Part Number")
-    print(a)
+    print("PBL Part Number: {0}".format(a["PBL Part Number"]))
 
     a = e400.readDataByIdentifier("PBL Version Number")
-    print(a)
+    print("PBL Version Number: {0}".format(a["PBL Version Number"]))
 
     a = e400.diagnosticSessionControl("Programming Session")
-    print(a)
+    print("In Programming Session")
 
     a = e400.securityAccess("Programming Request")
+    print("Security Key: {0}".format(a))
 
     b = calculateKeyFromSeed(a, [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
-    print(b)
+    print("Calculated Key: {0}".format(b))
 
     a = e400.securityAccess("Programming Key", b)
-    print(a)
+    print("Security Access Granted")
 
+    print("Setting up transfer of Secondary Bootloader")
     a = e400.requestDownload([0], [0x40, 0x03, 0xe0, 0x00], [0x00, 0x00, 0x0e, 0x56])
-    print(a)
+    #print(a)
 
-    a = e400.transferData(0x01, smallerChunks[0])
-    print(a)
+    print("Transferring Secondary Bootloader")
+    for i in range(len(smallerChunks)):
+        a = e400.transferData(i+1, smallerChunks[i])
 
-    a = e400.transferData(0x02, smallerChunks[1])
-    print(a)
-
-    a = e400.transferData(0x03, smallerChunks[2])
-    print(a)
-
+    print("Finished Transfer")
     a = e400.transferExit()
 
-    # a = e400.send([0x31, 0x01, 0x03, 0x01, 0x40, 0x03, 0xe0, 0x00])
-    # print(a)
+    print("Jumping to Secondary Bootloader")
     a = e400.routineControl("Start Secondary Bootloader", 1, [0x4003e000])
-    print(a)
+    #print(a)
 
+    print("Erasing Memory")
     a = e400.routineControl("Erase Memory", 1, [("memoryAddress",[0x00080000]), ("memorySize",[0x000088AD])])
-    print(a)
+    #print(a)
 
     working = True
     while working:
 
         a = e400.routineControl("Erase Memory", 3)
-        print(a)
+        #print(a)
         if(a['Erase Memory Status']) == [0x30]:
             print("Erased memory")
             working = False
         elif(a['Erase Memory Status'] == [0x31]):
             print("ABORTED")
             raise Exception("Erase memory unsuccessful")
-        sleep(0.02)
+        sleep(0.001)
 
     application = ihexFile("e400_uds_test_app_e400.ihex")
     blocks = application.getBlocks()
@@ -247,37 +259,54 @@ if __name__ == "__main__":
 
     if len(chunk) != 0:
         smallerChunks.append(chunk)
-    #
-    # a = e400.send([0x34, 0x00, 0x44, 0x00, 0x08, 0x00, 0x00, 0x00, 0x01, 0x4f, 0xe4])
-    # print(a)
-    #
-    # for i in range(0, 68):
-    #
-    #     a = e400.send([0x36, i+1] + smallerChunks[i])
-    #     print(a)
-    #     sleep(0.02)
-    #
-    # a = e400.send([0x37])
-    # print(a)
-    #
-    # a = e400.send([0x31, 0x01, 0x03, 0x04])
-    # print(a)
-    #
-    # working = True
-    # while working:
-    #     a = e400.send([0x31, 0x03, 0x03, 0x04])
-    #     print(a)
-    #     if a[4] == 0x30:
-    #         working = False
-    #         print("Success")
-    #     elif a[4] == 0x31:
-    #         working = False
-    #         print("Aborted")
-    #
-    #     sleep(0.02)
-    #
-    #
-    # e400.ecuReset("Hard Reset", suppressResponse=True)
+
+    print("Setting up transfer for Application")
+    a = e400.requestDownload([0], [0x00, 0x08, 0x00, 0x00], [0x00, 0x01, 0x4F, 0xe4])
+
+    print("Transferring Application")
+    for i in range(0, 68):
+
+        a = e400.transferData(i+1, smallerChunks[i])
+
+    print("Transfer Exit")
+    a = e400.transferExit()
+
+    a = e400.routineControl("Check Valid Application", 0x01)
+
+    working = True
+    while working:
+        # a = e400.send([0x31, 0x03, 0x03, 0x04])
+        # print(a)
+        # if a[4] == 0x30:
+        #     working = False
+        #     print("Success")
+        # elif a[4] == 0x31:
+        #     working = False
+        #     print("Aborted")
+        a = e400.routineControl("Check Valid Application", 0x03)
+
+        routineStatus = a["Valid Application Status"][0]
+        applicationPresent = a["Valid Application Present"][0]
+
+        if routineStatus == 0x30:
+            working = False
+            print("Routine Finished")
+
+            if applicationPresent == 0x01:
+                print("Application Invalid")
+            elif applicationPresent == 0x02:
+                print("Application Valid")
+        elif routineStatus == 0x31:
+            working = False
+            print("Aborted")
+        elif routineStatus == 0x32:
+            #print("Working")
+            pass
+
+        sleep(0.01)
+
+
+    e400.ecuReset("Hard Reset", suppressResponse=True)
 
 
 

@@ -12,6 +12,8 @@ __status__ = "Development"
 
 import can
 from can.interfaces import pcan, vector
+from time import sleep
+
 
 from uds import iTp
 from uds import ResettableTimer
@@ -283,6 +285,8 @@ class CanTp(iTp):
             # timer / exit condition checks
             if(timeoutTimer.isExpired()):
                 raise Exception("Timeout waiting for message")
+
+            sleep(0.001)
 
     ##
     # @brief recv method
