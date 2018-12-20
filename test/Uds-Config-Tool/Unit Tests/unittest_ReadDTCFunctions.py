@@ -45,7 +45,7 @@ class ReadDTCTestCase(unittest.TestCase):
 
     """
 
-		# patches are inserted in reverse order
+    # patches are inserted in reverse order
     @mock.patch('uds.TestTp.recv')
     @mock.patch('uds.TestTp.send')
     def test_readDTC_reportDTCByStatusMask(self,
@@ -61,89 +61,179 @@ class ReadDTCTestCase(unittest.TestCase):
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __readDataByIdentifier to readDataByIdentifier in the uds object, so can now call below
 
 
-        b = a.readDTC(IsoReadDTCSubfunction.reportDTCByStatusMask, Mask=StatusMask.confirmedDtc & Mask.testFailedSinceLastClear)	# ... calls __readDataByIdentifier, which does the Uds.send
+        b = a.readDTC(IsoReadDTCSubfunction.reportDTCByStatusMask, DTCStatusMask=Mask.confirmedDtc & Mask.testFailedSinceLastClear)	# ... calls __readDataByIdentifier, which does the Uds.send
 	
         tp_send.assert_called_with([0x19, 0x02, 0x28],False)
         self.assertEqual({'DTCStatusAvailabilityMask':[0x28],'DTCAndStatusRecord':[{'DTC':[0xF1, 0xC8, 0x55],'statusOfDTC':[0x01]},{'DTC':[0xF1, 0xD0, 0x56],'statusOfDTC':[0x01]},{'DTC':[0xF1, 0xD8, 0x57],'statusOfDTC':[0x01]}]}, b)
 
 
-    """
     # patches are inserted in reverse order
     @mock.patch('uds.TestTp.recv')
     @mock.patch('uds.TestTp.send')
-    def test_rdbiSingleDIDMixedResponse(self,
+    def test_readDTC_reportSupportedDTC(self,
                      tp_send,
                      tp_recv):
 
         tp_send.return_value = False
-        # numberOfModules = 0x01   (1 bytes as specified in "_Bootloader_1")
-        # Boot Software Identification = "SwId12345678901234567890"   (24 bytes as specified in "_Bootloader_71")
-        tp_recv.return_value = [0x62, 0xF1, 0x80, 0x01, 0x53, 0x77, 0x49, 0x64, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x30]
-
+        # ECU Serial Number = "ABC0011223344556"   (16 bytes as specified in "_Bootloader_87")
+        tp_recv.return_value = [0x59, 0x0A, 0x28, 0xF1, 0xC8, 0x55, 0x01, 0xF1, 0xD0, 0x56, 0x01, 0xF1, 0xD8, 0x57, 0x01]
 
         # Parameters: xml file (odx file), ecu name (not currently used) ...
         a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader', transportProtocol="TEST")
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __readDataByIdentifier to readDataByIdentifier in the uds object, so can now call below
 
-        b = a.readDataByIdentifier('Boot Software Identification')	# ... calls __readDataByIdentifier, which does the Uds.send
 
-        tp_send.assert_called_with([0x22, 0xF1, 0x80],False)
-        self.assertEqual({'Boot Software Identification': 'SwId12345678901234567890','numberOfModules': [0x01]}, b)
+        b = a.readDTC(IsoReadDTCSubfunction.reportSupportedDTC)	# ... calls __readDataByIdentifier, which does the Uds.send
+	
+        tp_send.assert_called_with([0x19, 0x0A],False)
+        self.assertEqual({'DTCStatusAvailabilityMask':[0x28],'DTCAndStatusRecord':[{'DTC':[0xF1, 0xC8, 0x55],'statusOfDTC':[0x01]},{'DTC':[0xF1, 0xD0, 0x56],'statusOfDTC':[0x01]},{'DTC':[0xF1, 0xD8, 0x57],'statusOfDTC':[0x01]}]}, b)
 
+
+    # patches are inserted in reverse order
+    @mock.patch('uds.TestTp.recv')
+    @mock.patch('uds.TestTp.send')
+    def test_readDTC_reportFirstTestFailedDTC(self,
+                     tp_send,
+                     tp_recv):
+
+        tp_send.return_value = False
+        # ECU Serial Number = "ABC0011223344556"   (16 bytes as specified in "_Bootloader_87")
+        tp_recv.return_value = [0x59, 0x0B, 0x28, 0xF1, 0xC8, 0x55, 0x01, 0xF1, 0xD0, 0x56, 0x01, 0xF1, 0xD8, 0x57, 0x01]
+
+        # Parameters: xml file (odx file), ecu name (not currently used) ...
+        a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader', transportProtocol="TEST")
+        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __readDataByIdentifier to readDataByIdentifier in the uds object, so can now call below
+
+
+        b = a.readDTC(IsoReadDTCSubfunction.reportFirstTestFailedDTC)	# ... calls __readDataByIdentifier, which does the Uds.send
+	
+        tp_send.assert_called_with([0x19, 0x0B],False)
+        self.assertEqual({'DTCStatusAvailabilityMask':[0x28],'DTCAndStatusRecord':[{'DTC':[0xF1, 0xC8, 0x55],'statusOfDTC':[0x01]},{'DTC':[0xF1, 0xD0, 0x56],'statusOfDTC':[0x01]},{'DTC':[0xF1, 0xD8, 0x57],'statusOfDTC':[0x01]}]}, b)
+
+
+    # patches are inserted in reverse order
+    @mock.patch('uds.TestTp.recv')
+    @mock.patch('uds.TestTp.send')
+    def test_readDTC_reportFirstConfirmedDTC(self,
+                     tp_send,
+                     tp_recv):
+
+        tp_send.return_value = False
+        # ECU Serial Number = "ABC0011223344556"   (16 bytes as specified in "_Bootloader_87")
+        tp_recv.return_value = [0x59, 0x0C, 0x28, 0xF1, 0xC8, 0x55, 0x01, 0xF1, 0xD0, 0x56, 0x01, 0xF1, 0xD8, 0x57, 0x01]
+
+        # Parameters: xml file (odx file), ecu name (not currently used) ...
+        a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader', transportProtocol="TEST")
+        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __readDataByIdentifier to readDataByIdentifier in the uds object, so can now call below
+
+
+        b = a.readDTC(IsoReadDTCSubfunction.reportFirstConfirmedDTC)	# ... calls __readDataByIdentifier, which does the Uds.send
+	
+        tp_send.assert_called_with([0x19, 0x0C],False)
+        self.assertEqual({'DTCStatusAvailabilityMask':[0x28],'DTCAndStatusRecord':[{'DTC':[0xF1, 0xC8, 0x55],'statusOfDTC':[0x01]},{'DTC':[0xF1, 0xD0, 0x56],'statusOfDTC':[0x01]},{'DTC':[0xF1, 0xD8, 0x57],'statusOfDTC':[0x01]}]}, b)
+
+
+    # patches are inserted in reverse order
+    @mock.patch('uds.TestTp.recv')
+    @mock.patch('uds.TestTp.send')
+    def test_readDTC_reportMostRecentTestFailedDTC(self,
+                     tp_send,
+                     tp_recv):
+
+        tp_send.return_value = False
+        # ECU Serial Number = "ABC0011223344556"   (16 bytes as specified in "_Bootloader_87")
+        tp_recv.return_value = [0x59, 0x0D, 0x28, 0xF1, 0xC8, 0x55, 0x01, 0xF1, 0xD0, 0x56, 0x01, 0xF1, 0xD8, 0x57, 0x01]
+
+        # Parameters: xml file (odx file), ecu name (not currently used) ...
+        a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader', transportProtocol="TEST")
+        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __readDataByIdentifier to readDataByIdentifier in the uds object, so can now call below
+
+
+        b = a.readDTC(IsoReadDTCSubfunction.reportMostRecentTestFailedDTC)	# ... calls __readDataByIdentifier, which does the Uds.send
+	
+        tp_send.assert_called_with([0x19, 0x0D],False)
+        self.assertEqual({'DTCStatusAvailabilityMask':[0x28],'DTCAndStatusRecord':[{'DTC':[0xF1, 0xC8, 0x55],'statusOfDTC':[0x01]},{'DTC':[0xF1, 0xD0, 0x56],'statusOfDTC':[0x01]},{'DTC':[0xF1, 0xD8, 0x57],'statusOfDTC':[0x01]}]}, b)
+
+
+    # patches are inserted in reverse order
+    @mock.patch('uds.TestTp.recv')
+    @mock.patch('uds.TestTp.send')
+    def test_readDTC_reportMostRecentConfirmedDTC(self,
+                     tp_send,
+                     tp_recv):
+
+        tp_send.return_value = False
+        # ECU Serial Number = "ABC0011223344556"   (16 bytes as specified in "_Bootloader_87")
+        tp_recv.return_value = [0x59, 0x0E, 0x28, 0xF1, 0xC8, 0x55, 0x01, 0xF1, 0xD0, 0x56, 0x01, 0xF1, 0xD8, 0x57, 0x01]
+
+        # Parameters: xml file (odx file), ecu name (not currently used) ...
+        a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader', transportProtocol="TEST")
+        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __readDataByIdentifier to readDataByIdentifier in the uds object, so can now call below
+
+
+        b = a.readDTC(IsoReadDTCSubfunction.reportMostRecentConfirmedDTC)	# ... calls __readDataByIdentifier, which does the Uds.send
+	
+        tp_send.assert_called_with([0x19, 0x0E],False)
+        self.assertEqual({'DTCStatusAvailabilityMask':[0x28],'DTCAndStatusRecord':[{'DTC':[0xF1, 0xC8, 0x55],'statusOfDTC':[0x01]},{'DTC':[0xF1, 0xD0, 0x56],'statusOfDTC':[0x01]},{'DTC':[0xF1, 0xD8, 0x57],'statusOfDTC':[0x01]}]}, b)
+
+
+    # patches are inserted in reverse order
+    @mock.patch('uds.TestTp.recv')
+    @mock.patch('uds.TestTp.send')
+    def test_readDTC_reportMirrorMemoryDTCByStatusMask(self,
+                     tp_send,
+                     tp_recv):
+
+        tp_send.return_value = False
+        # ECU Serial Number = "ABC0011223344556"   (16 bytes as specified in "_Bootloader_87")
+        tp_recv.return_value = [0x59, 0x0F, 0x28, 0xF1, 0xC8, 0x55, 0x01, 0xF1, 0xD0, 0x56, 0x01, 0xF1, 0xD8, 0x57, 0x01]
+
+        # Parameters: xml file (odx file), ecu name (not currently used) ...
+        a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader', transportProtocol="TEST")
+        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __readDataByIdentifier to readDataByIdentifier in the uds object, so can now call below
+
+        b = a.readDTC(IsoReadDTCSubfunction.reportMirrorMemoryDTCByStatusMask, DTCStatusMask=Mask.confirmedDtc & Mask.testFailedSinceLastClear)	# ... calls __readDataByIdentifier, which does the Uds.send
+	
+        tp_send.assert_called_with([0x19, 0x0F, 0x28],False)
+        self.assertEqual({'DTCStatusAvailabilityMask':[0x28],'DTCAndStatusRecord':[{'DTC':[0xF1, 0xC8, 0x55],'statusOfDTC':[0x01]},{'DTC':[0xF1, 0xD0, 0x56],'statusOfDTC':[0x01]},{'DTC':[0xF1, 0xD8, 0x57],'statusOfDTC':[0x01]}]}, b)
+	
+
+    # patches are inserted in reverse order
+    @mock.patch('uds.TestTp.recv')
+    @mock.patch('uds.TestTp.send')
+    def test_readDTC_reportEmissionsRelatedOBDDTCByStatusMask(self,
+                     tp_send,
+                     tp_recv):
+
+        tp_send.return_value = False
+        # ECU Serial Number = "ABC0011223344556"   (16 bytes as specified in "_Bootloader_87")
+        tp_recv.return_value = [0x59, 0x13, 0x28, 0xF1, 0xC8, 0x55, 0x01, 0xF1, 0xD0, 0x56, 0x01, 0xF1, 0xD8, 0x57, 0x01]
+
+        # Parameters: xml file (odx file), ecu name (not currently used) ...
+        a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader', transportProtocol="TEST")
+        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __readDataByIdentifier to readDataByIdentifier in the uds object, so can now call below
+
+
+        b = a.readDTC(IsoReadDTCSubfunction.reportEmissionsRelatedOBDDTCByStatusMask, DTCStatusMask=Mask.confirmedDtc & Mask.testFailedSinceLastClear)	# ... calls __readDataByIdentifier, which does the Uds.send
+	
+        tp_send.assert_called_with([0x19, 0x13, 0xF1, 0xC8, 0x55, 0x12],False)
+        self.assertEqual({'DTCStatusAvailabilityMask':[0x28],'DTCAndStatusRecord':[{'DTC':[0xF1, 0xC8, 0x55],'statusOfDTC':[0x01]},{'DTC':[0xF1, 0xD0, 0x56],'statusOfDTC':[0x01]},{'DTC':[0xF1, 0xD8, 0x57],'statusOfDTC':[0x01]}]}, b)
+
+        """
+		The following calls needs tests with the return type shown below them ...
+    a.readDTC(IsoReadDTCSubfunction.reportNumberOfDTCByStatusMask, DTCStatusMask=Mask.confirmedDtc & Mask.testFailedSinceLastClear)
+    a.readDTC(IsoReadDTCSubfunction.reportNumberOfDTCBySeverityMaskRecord, DTCStatusMask=Mask.confirmedDtc & Mask.testFailedSinceLastClear, DTCSeverityMaskRecord=Mask.confirmedDtc)
+    a.readDTC(IsoReadDTCSubfunction.reportNumberOfMirrorMemoryDTCByStatusMask, DTCStatusMask=Mask.confirmedDtc & Mask.testFailedSinceLastClear)
+    a.readDTC(IsoReadDTCSubfunction.reportNumberOfEmissionsRelatedOBDDTCByStatusMask, DTCStatusMask=Mask.confirmedDtc & Mask.testFailedSinceLastClear)
 		
-    # patches are inserted in reverse order
-    @mock.patch('uds.TestTp.recv')
-    @mock.patch('uds.TestTp.send')
-    def test_rdbiMultipleDIDMixedResponse(self,
-                     tp_send,
-                     tp_recv):
+        tp_recv.return_value = [0x59, 0x01, 0x28, 0x00, 0x00, 0x03]
+		
+		b = a.readDTC(IsoReadDTCSubfunction.reportNumberOfDTCByStatusMask, DTCStatusMask=Mask.confirmedDtc & Mask.testFailedSinceLastClear)
 
-        tp_send.return_value = False
-        tp_recv.return_value = [0x62, 0xF1, 0x8C, 0xF1, 0x80]
-        # ECU Serial Number = "ABC0011223344556"   (16 bytes as specified in "_Bootloader_87")
-        # numberOfModules = 0x01   (1 bytes as specified in "_Bootloader_1")
-        # Boot Software Identification = "SwId12345678901234567890"   (24 bytes as specified in "_Bootloader_71")
-        tp_recv.return_value = [0x62, 0xF1, 0x8C, 0x41, 0x42, 0x43, 0x30, 0x30, 0x31, 0x31, 0x32, 0x32, 0x33, 0x33, 0x34, 0x34, 0x35, 0x35, 0x36, 0xF1, 0x80, 0x01, 0x53, 0x77, 0x49, 0x64, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x30]
+        tp_send.assert_called_with([0x19, 0x01, 0x28],False)
+        self.assertEqual({'DTCStatusAvailabilityMask':[0x28],'DTCFormatIdentifier':[0x00],'DTCCount':[3]}}, b)
+        """
 
-
-
-        # Parameters: xml file (odx file), ecu name (not currently used) ...
-        a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader', transportProtocol="TEST")
-        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __readDataByIdentifier to readDataByIdentifier in the uds object, so can now call below
-
-        b = a.readDataByIdentifier(['ECU Serial Number','Boot Software Identification'])	# ... calls __readDataByIdentifier, which does the Uds.send
-	
-        tp_send.assert_called_with([0x22, 0xF1, 0x8C, 0xF1, 0x80],False)
-        self.assertEqual(({'ECU Serial Number':'ABC0011223344556'},{'Boot Software Identification':'SwId12345678901234567890','numberOfModules':[0x01]}), b)
-
-
-    # patches are inserted in reverse order
-    @mock.patch('uds.TestTp.recv')
-    @mock.patch('uds.TestTp.send')
-    def test_rdbiMultipleDIDAlternativeOrdering(self,
-                     tp_send,
-                     tp_recv):
-
-        tp_send.return_value = False
-        tp_recv.return_value = [0x62, 0xF1, 0x80, 0xF1, 0x8C]
-        # numberOfModules = 0x01   (1 bytes as specified in "_Bootloader_1")
-        # Boot Software Identification = "SwId12345678901234567890"   (24 bytes as specified in "_Bootloader_71")
-        # ECU Serial Number = "ABC0011223344556"   (16 bytes as specified in "_Bootloader_87")
-        tp_recv.return_value = [0x62, 0xF1, 0x80, 0x01, 0x53, 0x77, 0x49, 0x64, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x30, 0xF1, 0x8C, 0x41, 0x42, 0x43, 0x30, 0x30, 0x31, 0x31, 0x32, 0x32, 0x33, 0x33, 0x34, 0x34, 0x35, 0x35, 0x36]
-
-
-
-        # Parameters: xml file (odx file), ecu name (not currently used) ...
-        a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader', transportProtocol="TEST")
-        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __readDataByIdentifier to readDataByIdentifier in the uds object, so can now call below
-
-        b = a.readDataByIdentifier(['Boot Software Identification','ECU Serial Number'])	# ... calls __readDataByIdentifier, which does the Uds.send
-	
-        tp_send.assert_called_with([0x22, 0xF1, 0x80, 0xF1, 0x8C],False)
-        self.assertEqual(({'Boot Software Identification':'SwId12345678901234567890','numberOfModules':[0x01]},{'ECU Serial Number':'ABC0011223344556'}), b)  # ... not set with a real return value yet!!! (returns a dict or a tuple of dicts if multiple DIDs requested)
-
-    """
-    """
     # patches are inserted in reverse order
     @mock.patch('uds.TestTp.recv')
     @mock.patch('uds.TestTp.send')
@@ -156,14 +246,14 @@ class ReadDTCTestCase(unittest.TestCase):
 
         # Parameters: xml file (odx file), ecu name (not currently used) ...
         a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader', transportProtocol="TEST")
-        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __readDataByIdentifier to readDataByIdentifier in the uds object, so can now call below
+        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __readDTC to readDTC in the uds object, so can now call below
 
         try:
-            b = a.readDTC([ReadDTCSubfunc.reportDTCByStatusMask],[("????????":[0x??])])	# ... calls __readDTC, which does the Uds.send
+            b = a.readDTC(IsoReadDTCSubfunction.reportDTCByStatusMask, Mask=StatusMask.confirmedDtc & Mask.testFailedSinceLastClear)	# ... calls __readDTC, which does the Uds.send
         except:
             b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
-        tp_send.assert_called_with([0x19, 0x02, 0x???],False)
-        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x12']", b)  # ... wdbi should not return a value
+        tp_send.assert_called_with([0x19, 0x02, 0x28],False)
+        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x12']", b)
 
 
 
@@ -179,14 +269,14 @@ class ReadDTCTestCase(unittest.TestCase):
 
         # Parameters: xml file (odx file), ecu name (not currently used) ...
         a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader', transportProtocol="TEST")
-        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __readDataByIdentifier to readDataByIdentifier in the uds object, so can now call below
+        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __readDTC to readDTC in the uds object, so can now call below
 
         try:
-            b = a.readDTC([ReadDTCSubfunc.reportDTCByStatusMask],[("????????":[0x??])])	# ... calls __readDTC, which does the Uds.send
+            b = a.readDTC(IsoReadDTCSubfunction.reportDTCByStatusMask, Mask=StatusMask.confirmedDtc & Mask.testFailedSinceLastClear)	# ... calls __readDTC, which does the Uds.send
         except:
             b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
-        tp_send.assert_called_with([0x19, 0x02, 0x???],False)
-        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x13']", b)  # ... wdbi should not return a value
+        tp_send.assert_called_with([0x19, 0x02, 0x28],False)
+        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x13']", b)
 
 
     # patches are inserted in reverse order
@@ -201,17 +291,14 @@ class ReadDTCTestCase(unittest.TestCase):
 
         # Parameters: xml file (odx file), ecu name (not currently used) ...
         a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader', transportProtocol="TEST")
-        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __readDataByIdentifier to readDataByIdentifier in the uds object, so can now call below
+        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __readDTC to readDTC in the uds object, so can now call below
 
         try:
-            b = a.readDTC([ReadDTCSubfunc.reportDTCByStatusMask],[("????????":[0x??])])	# ... calls __readDTC, which does the Uds.send
+            b = a.readDTC(IsoReadDTCSubfunction.reportDTCByStatusMask, Mask=StatusMask.confirmedDtc & Mask.testFailedSinceLastClear)	# ... calls __readDTC, which does the Uds.send
         except:
             b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
-        tp_send.assert_called_with([0x19, 0x02, 0x???],False)
-        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x31']", b)  # ... wdbi should not return a value
-    """
-
-
+        tp_send.assert_called_with([0x19, 0x02, 0x28],False)
+        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x31']", b)
 
 
 
