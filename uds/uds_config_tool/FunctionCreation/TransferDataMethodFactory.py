@@ -63,12 +63,10 @@ class TransferDataMethodFactory(IServiceMethodFactory):
                     # ... locating the serviceId is sufficient for this service - semi-hardcoded, as for the request download
 
             except:
-                print(sys.exc_info())
                 pass
 
         funcString = requestFuncTemplate.format(shortName, # 0
                                                 serviceId) # 1
-        #print(funcString)
         exec(funcString)
         return locals()[shortName]
 		
@@ -111,7 +109,6 @@ class TransferDataMethodFactory(IServiceMethodFactory):
                     pass
 					
             except:
-                print(sys.exc_info())
                 pass
 
         checkFunctionString = checkFunctionTemplate.format(checkFunctionName, # 0
