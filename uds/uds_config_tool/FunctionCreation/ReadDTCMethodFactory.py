@@ -50,22 +50,25 @@ class ReadDTCMethodFactory(IServiceMethodFactory):
 
         shortName = "request_{0}".format(diagServiceElement.find('SHORT-NAME').text)
         requestElement = xmlElements[diagServiceElement.find('REQUEST-REF').attrib['ID-REF']]
+        print(("!!!!!!!!!!! shortName:",shortName))
         paramsElement = requestElement.find('PARAMS')
-
         encodeString = ""
 
         for param in paramsElement:
             semantic = None
             try:
+                print(("--- ",param.attrib," ---"))
                 semantic = param.attrib['SEMANTIC']
             except AttributeError:
+                pass
+            except KeyError:
                 pass
 
             if(semantic == 'SERVICE-ID'):
                 serviceId = [int(param.find('CODED-VALUE').text)]
             elif(semantic == 'SUBFUNCTION'):
                 shortName += param.find('SHORT-NAME').text
-                subfunction = DecodeFunctions.intArrayToIntArray([int(param.find('CODED-VALUE').text)], 'int16', 'int8')
+                subfunction = DecodeFunctions.intArrayToIntArray([int(param.find('CODED-VALUE').text)], 'int8', 'int8')
 
                 if subfunction in [0x01,0x02, 0x0F, 0x11, 0x12, 0x13]: # ... DTCStatusMask required for these subfunctions
                     encodeString = "encode += DTCStatusMask"
