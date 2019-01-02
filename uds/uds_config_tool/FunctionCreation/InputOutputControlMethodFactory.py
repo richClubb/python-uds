@@ -140,7 +140,15 @@ class InputOutputControlMethodFactory(IServiceMethodFactory):
             pass
 
         responseId = 0
-        resetType = 0
+        diagnosticId = 0
+        optionRecord = 0
+
+        responseIdStart = 0
+        responseIdEnd = 0
+        diagnosticIdStart = 0
+        diagnosticIdEnd = 0
+        optionRecordStart = 0
+        optionRecordEnd = 0
 
         shortName = diagServiceElement.find('SHORT-NAME').text
         checkFunctionName = "check_{0}".format(shortName)
