@@ -213,15 +213,15 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
 
             elif serviceId == IsoServices.ReadDTCInformation:
                 readDTCService_flag = True
-                requestFunction, qualifier = ReadDTCMethodFactory.create_requestFunctions(value, xmlElements)
+                requestFunction, qualifier = ReadDTCMethodFactory.create_requestFunction(value, xmlElements)
                 if qualifier != "":
                     readDTCContainer.add_requestFunction(requestFunction, "FaultMemoryRead"+qualifier)
 
                     negativeResponseFunction = ReadDTCMethodFactory.create_checkNegativeResponseFunction(value, xmlElements)
                     readDTCContainer.add_negativeResponseFunction(negativeResponseFunction, "FaultMemoryRead"+qualifier)
 
-                    checkFunction = ReadDTCMethodFactory.create_checkPositiveResponseFunctions(value, xmlElements)
-                    readDTCContainer.add_checkResponseFunction(checkFunction, "FaultMemoryRead"+qualifier)
+                    checkFunction = ReadDTCMethodFactory.create_checkPositiveResponseFunction(value, xmlElements)
+                    readDTCContainer.add_checkFunction(checkFunction, "FaultMemoryRead"+qualifier)
 
                     positiveResponseFunction = ReadDTCMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
                     readDTCContainer.add_positiveResponseFunction(positiveResponseFunction, "FaultMemoryRead"+qualifier)
