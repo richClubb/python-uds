@@ -148,7 +148,6 @@ Also, we will most need to handle scaling at some stage within DecodeFunctions.p
 
 
             except:
-                print(sys.exc_info())
                 pass
 
         funcString = requestFuncTemplate.format(shortName, # 0
@@ -175,7 +174,15 @@ Also, we will most need to handle scaling at some stage within DecodeFunctions.p
             pass
 
         responseId = 0
-        resetType = 0
+        controlType = 0
+        routineId = 0
+
+        responseIdStart = 0
+        responseIdEnd = 0
+        controlTypeStart = 0
+        controlTypeEnd = 0
+        routineIdStart = 0
+        routineIdEnd = 0
 
         shortName = diagServiceElement.find('SHORT-NAME').text
         checkFunctionName = "check_{0}".format(shortName)
@@ -229,7 +236,7 @@ Also, we will most need to handle scaling at some stage within DecodeFunctions.p
                 else:
                     pass
             except:
-                print(sys.exc_info())
+                #print(sys.exc_info())
                 pass
 
 

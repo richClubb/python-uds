@@ -85,11 +85,17 @@ class ReadDataByIdentifierMethodFactory(IServiceMethodFactory):
 
         return (locals()[requestSIDFuncName],locals()[requestDIDFuncName])
 
+
     @staticmethod
     def create_checkPositiveResponseFunctions(diagServiceElement, xmlElements):
 
         responseId = 0
         diagnosticId = 0
+
+        responseIdStart = 0
+        responseIdEnd = 0
+        diagnosticIdStart = 0
+        diagnosticIdEnd = 0
 
         shortName = diagServiceElement.find('SHORT-NAME').text
         checkSIDRespFuncName = "checkSIDResp_{0}".format(shortName)
@@ -144,7 +150,7 @@ class ReadDataByIdentifierMethodFactory(IServiceMethodFactory):
                 else:
                     pass
             except:
-                print(sys.exc_info())
+                #print(sys.exc_info())
                 pass
 
         checkSIDRespFuncString = checkSIDRespFuncTemplate.format(checkSIDRespFuncName, # 0

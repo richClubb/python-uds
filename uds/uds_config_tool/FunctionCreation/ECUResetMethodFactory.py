@@ -57,7 +57,7 @@ class ECUResetMethodFactory(IServiceMethodFactory):
             pass
 
         serviceId = 0
-        diagnosticId = 0
+        resetType = 0
 
         shortName = "request_{0}".format(diagServiceElement.find('SHORT-NAME').text)
         requestElement = xmlElements[diagServiceElement.find('REQUEST-REF').attrib['ID-REF']]
@@ -103,6 +103,11 @@ class ECUResetMethodFactory(IServiceMethodFactory):
 
         responseId = 0
         resetType = 0
+
+        responseIdStart = 0
+        responseIdEnd = 0
+        resetTypeStart = 0
+        resetTypeEnd = 0
 
         shortName = diagServiceElement.find('SHORT-NAME').text
         checkFunctionName = "check_{0}".format(shortName)
@@ -150,7 +155,7 @@ class ECUResetMethodFactory(IServiceMethodFactory):
                 else:
                     pass
             except:
-                print(sys.exc_info())
+                #print(sys.exc_info())
                 pass
 
 

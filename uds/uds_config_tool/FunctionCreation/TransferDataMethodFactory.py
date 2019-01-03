@@ -40,8 +40,6 @@ class TransferDataMethodFactory(IServiceMethodFactory):
     @staticmethod
     def create_requestFunction(diagServiceElement, xmlElements):
         serviceId = 0
-        controlType = 0
-        routineId = 0
 
         shortName = "requestfunction_{0}".format(diagServiceElement.find('SHORT-NAME').text)
         requestElement = xmlElements[diagServiceElement.find('REQUEST-REF').attrib['ID-REF']]
@@ -76,7 +74,9 @@ class TransferDataMethodFactory(IServiceMethodFactory):
     @staticmethod
     def create_checkPositiveResponseFunction(diagServiceElement, xmlElements):
         responseId = 0
-        resetType = 0
+
+        responseIdStart = 0
+        responseIdEnd = 0
 
         shortName = diagServiceElement.find('SHORT-NAME').text
         checkFunctionName = "check_{0}".format(shortName)
@@ -109,6 +109,7 @@ class TransferDataMethodFactory(IServiceMethodFactory):
                     pass
 					
             except:
+                #print(sys.exc_info())
                 pass
 
         checkFunctionString = checkFunctionTemplate.format(checkFunctionName, # 0

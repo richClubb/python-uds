@@ -84,7 +84,6 @@ class ReadDTCMethodFactory(IServiceMethodFactory):
                                                 serviceId,
                                                 subfunction,
                                                 encodeString)
-        #print(funcString)
         exec(funcString)
         return (locals()[shortName],str(subfunction))
 
@@ -93,7 +92,12 @@ class ReadDTCMethodFactory(IServiceMethodFactory):
     @staticmethod
     def create_checkPositiveResponseFunction(diagServiceElement, xmlElements):
         responseId = 0
-        diagnosticId = 0
+        subfunction = 0
+
+        responseIdStart = 0
+        responseIdEnd = 0
+        subfunctionStart = 0
+        subfunctionEnd = 0
 
         shortName = diagServiceElement.find('SHORT-NAME').text
         checkFunctionName = "check_{0}".format(shortName)
@@ -162,8 +166,6 @@ class ReadDTCMethodFactory(IServiceMethodFactory):
                                                            subfunctionStart, # 5
                                                            subfunctionEnd, # 6
                                                            subfunctionChecks) # 7
-
-        #print(checkFunctionString)
         exec(checkFunctionString)
         return locals()[checkFunctionName]
 
@@ -217,15 +219,12 @@ class ReadDTCMethodFactory(IServiceMethodFactory):
                             subfunctionResponse += "    for i in range(int(len(records)/6)):\n"
                             subfunctionResponse += "        recStart = i*6\n"
                             subfunctionResponse += "        retval['DTCAndSeverityRecord'].append({'DTCSeverity':records[recStart:recStart+1],'DTCFunctionalUnit':records[recStart+1:recStart+2],'DTC':records[recStart+2:recStart+5],'statusOfDTC':records[recStart+5:recStart+6]})\n"
-
             except:
-                #print(sys.exc_info())
                 pass
 
 
         encodeFunctionString = encodePositiveResponseFuncTemplate.format(encodePositiveResponseFunctionName, # 0
                                                                          subfunctionResponse) # 1
-        #print(encodeFunctionString)
         exec(encodeFunctionString)
         return locals()[encodePositiveResponseFunctionName]
 
