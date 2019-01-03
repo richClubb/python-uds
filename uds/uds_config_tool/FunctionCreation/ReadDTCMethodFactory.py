@@ -26,6 +26,8 @@ checkFunctionTemplate = str("def {0}(input):\n"
                             "    subFunctionExpected = {2}\n"
                             "    serviceId = DecodeFunctions.buildIntFromList(input[{3}:{4}])\n"
                             "    subFunction = DecodeFunctions.buildIntFromList(input[{5}:{6}])\n"
+                            "    if(serviceId != serviceIdExpected): raise Exception(\"Service Id Received not expected. Expected {{0}}; Got {{1}} \".format(serviceIdExpected, serviceId))\n"
+                            "    if(subFunction != subFunctionExpected): raise Exception(\"Sub-function Received not expected. Expected {{0}}; Got {{1}} \".format(subFunctionExpected, subFunction))\n"
                             "{7}")
 
 negativeResponseFuncTemplate = str("def {0}(input):\n"
@@ -50,14 +52,12 @@ class ReadDTCMethodFactory(IServiceMethodFactory):
 
         shortName = "request_{0}".format(diagServiceElement.find('SHORT-NAME').text)
         requestElement = xmlElements[diagServiceElement.find('REQUEST-REF').attrib['ID-REF']]
-        print(("!!!!!!!!!!! shortName:",shortName))
         paramsElement = requestElement.find('PARAMS')
         encodeString = ""
 
         for param in paramsElement:
             semantic = None
             try:
-                print(("--- ",param.attrib," ---"))
                 semantic = param.attrib['SEMANTIC']
             except AttributeError:
                 pass
@@ -69,22 +69,22 @@ class ReadDTCMethodFactory(IServiceMethodFactory):
             elif(semantic == 'SUBFUNCTION'):
                 shortName += param.find('SHORT-NAME').text
                 subfunction = DecodeFunctions.intArrayToIntArray([int(param.find('CODED-VALUE').text)], 'int8', 'int8')
-
-                if subfunction in [0x01,0x02, 0x0F, 0x11, 0x12, 0x13]: # ... DTCStatusMask required for these subfunctions
-                    encodeString = "encode += DTCStatusMask"
-                elif subfunction in [0x03,0x04, 0x06, 0x09, 0x10]: # ... DTCMaskRecord required for these subfunctions
-                    encodeString = "encode += DTCMaskRecord # ... format is [0xNN,0xNN,0xNN]"
-                elif subfunction in [0x03,0x04, 0x05]: # ... DTCSnapshotRecordNumber required for these subfunctions
-                    encodeString = "encode += DTCSnapshotRecordNumber"
-                elif subfunction in [0x06,0x10]: # ... DTCExtendedRecordNumber required for these subfunctions
-                    encodeString = "encode += DTCExtendedRecordNumber"
-                elif subfunction in [0x07,0x08]: # ... DTCSeverityMaskRecord required for these subfunctions
-                    encodeString = "encode += DTCSeverityMask+DTCStatusMask"
+                if subfunction[0] in [0x01,0x02, 0x0F, 0x11, 0x12, 0x13]: # ... DTCStatusMask required for these subfunctions
+                    encodeString = "encoded += DTCStatusMask"
+                elif subfunction[0] in [0x03,0x04, 0x06, 0x09, 0x10]: # ... DTCMaskRecord required for these subfunctions
+                    encodeString = "encoded += DTCMaskRecord # ... format is [0xNN,0xNN,0xNN]"
+                elif subfunction[0] in [0x03,0x04, 0x05]: # ... DTCSnapshotRecordNumber required for these subfunctions
+                    encodeString = "encoded += DTCSnapshotRecordNumber"
+                elif subfunction[0] in [0x06,0x10]: # ... DTCExtendedRecordNumber required for these subfunctions
+                    encodeString = "encoded += DTCExtendedRecordNumber"
+                elif subfunction[0] in [0x07,0x08]: # ... DTCSeverityMaskRecord required for these subfunctions
+                    encodeString = "encoded += DTCSeverityMask+DTCStatusMask"
 
         funcString = requestFuncTemplate.format(shortName,
                                                 serviceId,
                                                 subfunction,
                                                 encodeString)
+        #print(funcString)
         exec(funcString)
         return (locals()[shortName],str(subfunction))
 
@@ -129,7 +129,7 @@ class ReadDTCMethodFactory(IServiceMethodFactory):
                     subfunctionEnd = startByte + listLength
                     totalLength += listLength
 
-                    if subfunction in [0x01,0x02, 0x0F, 0x11, 0x12, 0x13]: # ... DTCStatusMask required for these subfunctions
+                    if subfunction in [0x02,0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x13]: # ... DTCStatusMask required for these subfunctions
                         subfunctionChecks += "    if len(input) < 3: raise Exception(\"Total length returned not as expected. Expected: greater than or equal to 3; Got {{0}}\".format(len(input)))\n"
                         subfunctionChecks += "    if (len(input)-3)%4 != 0: raise Exception(\"Total length returned not as expected. Received a partial DTC and Status Record; Got {{0}} total length\".format(len(input)))\n"
                     elif subfunction in [0x01, 0x07, 0x11, 0x12]: # ... DTCStatusMask required for these subfunctions
@@ -150,7 +150,7 @@ class ReadDTCMethodFactory(IServiceMethodFactory):
                 else:
                     pass
             except:
-                print(sys.exc_info())
+                #print(sys.exc_info())
                 pass
 
 
@@ -163,7 +163,7 @@ class ReadDTCMethodFactory(IServiceMethodFactory):
                                                            subfunctionEnd, # 6
                                                            subfunctionChecks) # 7
 
-        # print(checkFunctionString)
+        #print(checkFunctionString)
         exec(checkFunctionString)
         return locals()[checkFunctionName]
 
@@ -191,18 +191,18 @@ class ReadDTCMethodFactory(IServiceMethodFactory):
 
                 if(semantic == 'SUBFUNCTION'):
                     subfunction = int(param.find('CODED-VALUE').text)
-                    if subfunction in [0x01,0x02, 0x0F, 0x11, 0x12, 0x13]: # ... DTCStatusMask required for these subfunctions
+                    if subfunction in [0x02,0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x13]: # ... DTCStatusMask required for these subfunctions
                             subfunctionResponse += "    retval = {'DTCStatusAvailabilityMask':input[2:3], 'DTCAndStatusRecord':[]}\n"
                             subfunctionResponse += "    records = input[3:]\n"
-                            subfunctionResponse += "    for i in range(len(records)/4):\n"
+                            subfunctionResponse += "    for i in range(int(len(records)/4)):\n"
                             subfunctionResponse += "        recStart = i*4\n"
                             subfunctionResponse += "        retval['DTCAndStatusRecord'].append({'DTC':records[recStart:recStart+3],'statusOfDTC':records[recStart+3:recStart+4]})\n"
                     elif subfunction in [0x01, 0x07, 0x11, 0x12]: # ... DTCStatusMask required for these subfunctions
-                            subfunctionResponse += "    retval = {'DTCStatusAvailabilityMask':input[2:3], 'DTCFormatIdentifier':input[3:4], 'DTCCount':input[4:6]}  # ... DTCCount probably needs decoding\n"
+                            subfunctionResponse += "    retval = {'DTCStatusAvailabilityMask':input[2:3], 'DTCFormatIdentifier':input[3:4], 'DTCCount':[(input[4]<<8)+input[5]]}  # ... DTCCount decoded as int16\n"
                     elif subfunction in [0x03]: # ... DTCStatusMask required for these subfunctions
                             subfunctionResponse += "    retval = []\n"
                             subfunctionResponse += "    records = input[3:]\n"
-                            subfunctionResponse += "    for i in range(len(records)/4):\n"
+                            subfunctionResponse += "    for i in range(int(len(records)/4)):\n"
                             subfunctionResponse += "        recStart = i*4\n"
                             subfunctionResponse += "        retval.append({'DTC':records[recStart:recStart+3],'DTCSnapshotRecordNumber':records[recStart+3:recStart+4]})\n"
                     elif subfunction in [0x04]: # ... DTCStatusMask required for these subfunctions
@@ -214,17 +214,18 @@ class ReadDTCMethodFactory(IServiceMethodFactory):
                     elif subfunction in [0x08, 0x09]: # ... DTCStatusMask required for these subfunctions
                             subfunctionResponse += "    retval = {'DTCStatusAvailabilityMask':input[2:3], 'DTCAndSeverityRecord':[]}\n"
                             subfunctionResponse += "    records = input[3:]\n"
-                            subfunctionResponse += "    for i in range(len(records)/6):\n"
+                            subfunctionResponse += "    for i in range(int(len(records)/6)):\n"
                             subfunctionResponse += "        recStart = i*6\n"
                             subfunctionResponse += "        retval['DTCAndSeverityRecord'].append({'DTCSeverity':records[recStart:recStart+1],'DTCFunctionalUnit':records[recStart+1:recStart+2],'DTC':records[recStart+2:recStart+5],'statusOfDTC':records[recStart+5:recStart+6]})\n"
 
             except:
-                print(sys.exc_info())
+                #print(sys.exc_info())
                 pass
 
 
         encodeFunctionString = encodePositiveResponseFuncTemplate.format(encodePositiveResponseFunctionName, # 0
                                                                          subfunctionResponse) # 1
+        #print(encodeFunctionString)
         exec(encodeFunctionString)
         return locals()[encodePositiveResponseFunctionName]
 

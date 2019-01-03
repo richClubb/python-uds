@@ -31,13 +31,9 @@ class ReadDTCContainer(object):
     @staticmethod
     def __readDTC(target, subfunction, DTCStatusMask=None, DTCMaskRecord=None, DTCSnapshotRecordNumber=None, DTCExtendedRecordNumber=None, DTCSeverityMask=None, **kwargs):
         # Note: readDTC does not show support for DIDs or multiple subfunctions in the spec, so this is handling only a single subfunction with data record.
-        print(subfunction)
-        print("??????????????????????????")
-        print(target.readDTCContainer.requestFunctions)
-        print("??????????????????????????")
         requestFunction = target.readDTCContainer.requestFunctions["FaultMemoryRead[{0}]".format(subfunction)]
-        checkResponseFunction = target.readDTCContainer.checkResponseFunctions["FaultMemoryRead[{0}]".format(subfunction)]
-        negativeResponseFunction = target.readDTCContainer.negativeResponseFunctions["FaultMemoryRead[{0}]".format(subfunctions[0])]
+        checkFunction = target.readDTCContainer.checkFunctions["FaultMemoryRead[{0}]".format(subfunction)]
+        negativeResponseFunction = target.readDTCContainer.negativeResponseFunctions["FaultMemoryRead[{0}]".format(subfunction)]
         positiveResponseFunction = target.readDTCContainer.positiveResponseFunctions["FaultMemoryRead[{0}]".format(subfunction)]
 
         # Call the sequence of functions to execute the RDBI request/response action ...
