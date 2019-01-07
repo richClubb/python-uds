@@ -82,6 +82,9 @@ class ClearDTCMethodFactory(IServiceMethodFactory):
         responseId = 0
         diagnosticId = 0
 
+        responseIdStart = 0
+        responseIdEnd = 0
+
         shortName = diagServiceElement.find('SHORT-NAME').text
         checkFunctionName = "check_{0}".format(shortName)
         positiveResponseElement = xmlElements[(diagServiceElement.find('POS-RESPONSE-REFS')).find('POS-RESPONSE-REF').attrib['ID-REF']]
@@ -110,7 +113,7 @@ class ClearDTCMethodFactory(IServiceMethodFactory):
                 else:
                     pass
             except:
-                print(sys.exc_info())
+                #print(sys.exc_info())
                 pass
 
         checkFunctionString = checkFunctionTemplate.format(checkFunctionName, # 0
@@ -118,8 +121,6 @@ class ClearDTCMethodFactory(IServiceMethodFactory):
                                                            responseIdStart, # 2
                                                            responseIdEnd, # 3
                                                            totalLength) # 4
-
-        # print(checkFunctionString)
         exec(checkFunctionString)
         return locals()[checkFunctionName]
 

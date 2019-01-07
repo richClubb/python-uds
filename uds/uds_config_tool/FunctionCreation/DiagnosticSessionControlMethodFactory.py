@@ -58,7 +58,7 @@ class DiagnosticSessionControlMethodFactory(IServiceMethodFactory):
             pass
 
         serviceId = 0
-        diagnosticId = 0
+        sessionType = 0
 
         shortName = "request_{0}".format(diagServiceElement.find('SHORT-NAME').text)
         requestElement = xmlElements[diagServiceElement.find('REQUEST-REF').attrib['ID-REF']]
@@ -105,6 +105,11 @@ class DiagnosticSessionControlMethodFactory(IServiceMethodFactory):
 
         responseId = 0
         sessionType = 0
+
+        responseIdStart = 0
+        responseIdEnd = 0
+        sessionTypeStart = 0
+        sessionTypeEnd = 0
 
         shortName = "request_{0}".format(diagServiceElement.find('SHORT-NAME').text)
         checkFunctionName = "check_{0}".format(shortName)
@@ -155,7 +160,7 @@ class DiagnosticSessionControlMethodFactory(IServiceMethodFactory):
                 else:
                     pass
             except:
-                print(sys.exc_info())
+                #print(sys.exc_info())
                 pass
 
 

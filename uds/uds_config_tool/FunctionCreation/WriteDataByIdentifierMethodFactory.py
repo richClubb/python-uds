@@ -146,6 +146,11 @@ Also, we will most need to handle scaling at some stage within DecodeFunctions.p
         responseId = 0
         diagnosticId = 0
 
+        responseIdStart = 0
+        responseIdEnd = 0
+        diagnosticIdStart = 0
+        diagnosticIdEnd = 0
+
         shortName = diagServiceElement.find('SHORT-NAME').text
         checkFunctionName = "check_{0}".format(shortName)
         positiveResponseElement = xmlElements[(diagServiceElement.find('POS-RESPONSE-REFS')).find('POS-RESPONSE-REF').attrib['ID-REF']]
@@ -181,7 +186,7 @@ Also, we will most need to handle scaling at some stage within DecodeFunctions.p
                 else:
                     pass
             except:
-                print(sys.exc_info())
+                #print(sys.exc_info())
                 pass
 
         checkFunctionString = checkFunctionTemplate.format(checkFunctionName, # 0
@@ -192,8 +197,6 @@ Also, we will most need to handle scaling at some stage within DecodeFunctions.p
                                                            diagnosticIdStart, # 5
                                                            diagnosticIdEnd, # 6
                                                            totalLength) # 7
-
-        # print(checkFunctionString)
         exec(checkFunctionString)
         return locals()[checkFunctionName]
 

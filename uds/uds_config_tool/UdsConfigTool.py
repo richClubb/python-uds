@@ -23,6 +23,8 @@ from uds.uds_config_tool.SupportedServices.WriteDataByIdentifierContainer import
 from uds.uds_config_tool.FunctionCreation.WriteDataByIdentifierMethodFactory import WriteDataByIdentifierMethodFactory
 from uds.uds_config_tool.SupportedServices.ClearDTCContainer import ClearDTCContainer
 from uds.uds_config_tool.FunctionCreation.ClearDTCMethodFactory import ClearDTCMethodFactory
+from uds.uds_config_tool.SupportedServices.ReadDTCContainer import ReadDTCContainer
+from uds.uds_config_tool.FunctionCreation.ReadDTCMethodFactory import ReadDTCMethodFactory
 from uds.uds_config_tool.SupportedServices.InputOutputControlContainer import InputOutputControlContainer
 from uds.uds_config_tool.FunctionCreation.InputOutputControlMethodFactory import InputOutputControlMethodFactory
 from uds.uds_config_tool.SupportedServices.RoutineControlContainer import RoutineControlContainer
@@ -35,7 +37,7 @@ from uds.uds_config_tool.SupportedServices.TransferDataContainer import Transfer
 from uds.uds_config_tool.FunctionCreation.TransferDataMethodFactory import TransferDataMethodFactory
 from uds.uds_config_tool.SupportedServices.TransferExitContainer import TransferExitContainer
 from uds.uds_config_tool.FunctionCreation.TransferExitMethodFactory import TransferExitMethodFactory
-from uds.uds_config_tool.ISOStandard.ISOStandard import IsoServices, IsoRoutineControlType, IsoInputOutputControlOptionRecord
+from uds.uds_config_tool.ISOStandard.ISOStandard import IsoServices, IsoRoutineControlType, IsoInputOutputControlOptionRecord, IsoReadDTCSubfunction, IsoReadDTCStatusMask as Mask
 
 
 def get_serviceIdFromXmlElement(diagServiceElement, xmlElements):
@@ -71,6 +73,7 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
     rdbiContainer = ReadDataByIdentifierContainer()
     wdbiContainer = WriteDataByIdentifierContainer()
     clearDTCContainer = ClearDTCContainer()
+    readDTCContainer = ReadDTCContainer()
     inputOutputControlContainer = InputOutputControlContainer()
     routineControlContainer = RoutineControlContainer()
     requestDownloadContainer = RequestDownloadContainer()
@@ -82,6 +85,7 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
     rdbiService_flag = False
     wdbiService_flag = False
     clearDTCService_flag = False
+    readDTCService_flag = False
     ioCtrlService_flag = False
     routineCtrlService_flag = False
     reqDownloadService_flag = False
@@ -194,7 +198,6 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
                 wdbiContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
 
             elif serviceId == IsoServices.ClearDiagnosticInformation:
-
                 clearDTCService_flag = True
                 requestFunc = ClearDTCMethodFactory.create_requestFunction(value, xmlElements)
                 clearDTCContainer.add_requestFunction(requestFunc, humanName)
@@ -207,6 +210,21 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
 
                 positiveResponseFunction = ClearDTCMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
                 clearDTCContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
+
+            elif serviceId == IsoServices.ReadDTCInformation:
+                readDTCService_flag = True
+                requestFunction, qualifier = ReadDTCMethodFactory.create_requestFunction(value, xmlElements)
+                if qualifier != "":
+                    readDTCContainer.add_requestFunction(requestFunction, "FaultMemoryRead"+qualifier)
+
+                    negativeResponseFunction = ReadDTCMethodFactory.create_checkNegativeResponseFunction(value, xmlElements)
+                    readDTCContainer.add_negativeResponseFunction(negativeResponseFunction, "FaultMemoryRead"+qualifier)
+
+                    checkFunction = ReadDTCMethodFactory.create_checkPositiveResponseFunction(value, xmlElements)
+                    readDTCContainer.add_checkFunction(checkFunction, "FaultMemoryRead"+qualifier)
+
+                    positiveResponseFunction = ReadDTCMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
+                    readDTCContainer.add_positiveResponseFunction(positiveResponseFunction, "FaultMemoryRead"+qualifier)
 
             elif serviceId == IsoServices.InputOutputControlByIdentifier:
                 ioCtrlService_flag = True
@@ -280,6 +298,7 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
 
                 positiveResponseFunction = TransferDataMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
                 transferDataContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
+
             elif serviceId == IsoServices.RequestTransferExit:
                 transExitService_flag = True
                 requestFunc = TransferExitMethodFactory.create_requestFunction(value, xmlElements)
@@ -323,6 +342,11 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
         setattr(outputEcu, 'clearDTCContainer', clearDTCContainer)
         clearDTCContainer.bind_function(outputEcu)
 
+    # Bind any read DTC services that have been found
+    if readDTCService_flag:
+        setattr(outputEcu, 'readDTCContainer', readDTCContainer)
+        readDTCContainer.bind_function(outputEcu)
+
     # Bind any input output control services that have been found
     if ioCtrlService_flag:
         setattr(outputEcu, 'inputOutputControlContainer', inputOutputControlContainer)
@@ -365,6 +389,25 @@ if __name__ == "__main__":
     a.readDataByIdentifier('ECU Serial Number')
     a.writeDataByIdentifier('ECU Serial Number','ABC0011223344556')
     a.clearDTC([0xF1, 0xC8, 0x55])
+    #a.readDTC(IsoReadDTCSubfunction.reportNumberOfDTCByStatusMask, DTCStatusMask=Mask.confirmedDtc + Mask.testFailedSinceLastClear)
+    #a.readDTC(IsoReadDTCSubfunction.reportDTCByStatusMask, DTCStatusMask=Mask.confirmedDtc + Mask.testFailedSinceLastClear)
+    #a.readDTC(IsoReadDTCSubfunction.reportDTCSnapshotIdentification, DTCMaskRecord=[0xF1, 0xC8, 0x55], DTCSnapshotRecordNumber=0x34)
+    #a.readDTC(IsoReadDTCSubfunction.reportDTCSnapshotRecordByDTCNumber, DTCMaskRecord=[0xF1, 0xC8, 0x55], DTCSnapshotRecordNumber=0x34)
+    #a.readDTC(IsoReadDTCSubfunction.reportDTCSnapshotRecordByRecordNumber, DTCSnapshotRecordNumber=0x34)
+    #a.readDTC(IsoReadDTCSubfunction.reportDTCExtendedDataRecordByDTCNumber, DTCMaskRecord=[0xF1, 0xC8, 0x55], DTCExtendedRecordNumber=0x12)
+    #a.readDTC(IsoReadDTCSubfunction.reportNumberOfDTCBySeverityMaskRecord, DTCStatusMask=Mask.confirmedDtc + Mask.testFailedSinceLastClear, DTCSeverityMaskRecord=Mask.confirmedDtc)
+    #a.readDTC(IsoReadDTCSubfunction.reportDTCBySeverityMaskRecord, DTCStatusMask=Mask.confirmedDtc + Mask.testFailedSinceLastClear, DTCSeverityMaskRecord=Mask.confirmedDtc)
+    #a.readDTC(IsoReadDTCSubfunction.reportSeverityInformationOfDTC, DTCMaskRecord=[0xF1, 0xC8, 0x55])
+    #a.readDTC(IsoReadDTCSubfunction.reportSupportedDTC)
+    #a.readDTC(IsoReadDTCSubfunction.reportFirstTestFailedDTC)
+    #a.readDTC(IsoReadDTCSubfunction.reportFirstConfirmedDTC)
+    #a.readDTC(IsoReadDTCSubfunction.reportMostRecentTestFailedDTC)
+    #a.readDTC(IsoReadDTCSubfunction.reportMostRecentConfirmedDTC)
+    #a.readDTC(IsoReadDTCSubfunction.reportMirrorMemoryDTCByStatusMask, DTCStatusMask=Mask.confirmedDtc + Mask.testFailedSinceLastClear)
+    #a.readDTC(IsoReadDTCSubfunction.reportMirrorMemoryDTCExtendedDataRecordByDTCNumber, DTCMaskRecord=[0xF1, 0xC8, 0x55], DTCExtendedRecordNumber=0x12)
+    #a.readDTC(IsoReadDTCSubfunction.reportNumberOfMirrorMemoryDTCByStatusMask, DTCStatusMask=Mask.confirmedDtc + Mask.testFailedSinceLastClear)
+    #a.readDTC(IsoReadDTCSubfunction.reportNumberOfEmissionsRelatedOBDDTCByStatusMask, DTCStatusMask=Mask.confirmedDtc + Mask.testFailedSinceLastClear)
+    #a.readDTC(IsoReadDTCSubfunction.reportEmissionsRelatedOBDDTCByStatusMask, DTCStatusMask=Mask.confirmedDtc + Mask.testFailedSinceLastClear)
     a.inputOutputControl('Booster Target Speed',IsoInputOutputControlOptionRecord.adjust,[8000])
     a.routineControl('Erase Memory',IsoRoutineControlType.startRoutine,[('memoryAddress',[0x01]),('memorySize',[0xF000])])
     a.requestDownload(FormatIdentifier=[0x00],MemoryAddress=[0x40, 0x03, 0xE0, 0x00],MemorySize=[0x00, 0x00, 0x0E, 0x56])
