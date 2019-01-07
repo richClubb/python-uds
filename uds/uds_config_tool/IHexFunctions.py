@@ -1,9 +1,22 @@
+#!/usr/bin/env python
+
+__author__ = "Richard Clubb"
+__copyrights__ = "Copyright 2019, the python-uds project"
+__credits__ = ["Richard Clubb"]
+
+__license__ = "MIT"
+__maintainer__ = "Richard Clubb"
+__email__ = "richard.clubb@embeduk.com"
+__status__ = "Development"
+
+
 from uds import createUdsConnection
+from uds.uds_config_tool import DecodeFunctions
 from struct import pack, unpack
-import hashlib
 from time import sleep, time
-import os
 from enum import IntEnum
+import hashlib
+import os
 
 
 class ihexRecordType(IntEnum):
@@ -23,6 +36,8 @@ class ihexData(object):
         self.__startAddress = 0
         self.__size = 0
         self.__data = []
+        self.__sendChunksize = None
+        self.__sendChunks = None
 
     @property
     def startAddress(self):
@@ -40,11 +55,55 @@ class ihexData(object):
     def data(self, value):
         self.__data = value
 
+    @property
+    def dataLength(self):
+        return len(self.__data)
+
+    @property
+    def transmitChunksize(self):
+        return self.__sendChunksize
+
+    @startAddress.setter
+    def transmitChunksize(self, value):
+        # TODO: need to check permitted ranges if any!!!
+        if self.__sendChunksize != value:
+            self.__sendChunks = None  # ... send chunks needs re-calculating if required, so force this by setting to null here.
+        self.__sendChunksize = value
+
+    def transmitChunks(self, sendChunksize=None):  # ... initialising or re-setting of the chunk size is allowed here for convenience.
+        if sendChunksize is not None:
+            self.transmitChunksize = sendChunksize
+        if self.__sendChunksize is not None and self.__data != []:
+            self.__sendChunks = []
+            chunk = []
+            count = 0
+            for i in range(0, len(self.__data)):
+                chunk.append(self.__data[i])
+                count += 1
+                if count == self.__sendChunksize:
+                    self.__sendChunks.append(chunk)
+                    chunk = []
+                    count = 0
+            if len(chunk) != 0:
+                self.__sendChunks.append(chunk)
+        if self.__sendChunks is None:
+            return []		
+        return self.__sendChunks
+
+    @property
+    def transmitLength(self):  # ... this is dataLength encoded
+        return DecodeFunctions.intArrayToIntArray([self.dataLength], 'int32', 'int8')  # ... length calc'd as [0x00, 0x01, 0x4F, 0xe4] as expected
+
     def addData(self, value):
         self.__data += value
+        self.__sendChunks = None
 
     def getDataFromAddress(self, address, size):
         raise NotImplemented("getDataFromAddress Not yet implemented")
+
+    @property
+    def transmitAddress(self):
+        return DecodeFunctions.intArrayToIntArray([self.__startAddress], 'int32', 'int8')
 
 
 class ihexFile(object):
@@ -58,12 +117,12 @@ class ihexFile(object):
         eof_flag = False
         linecount = 1
 
-        currentAddress = None
         nextAddress = None
 
         currentBlock = None
         baseAddress = 0
-        data_incoming = True  # FOR DEBUG print only
+
+        self.__sendChunksize = None
 
         while not eof_flag:
             line = hexFile.readline()
@@ -105,39 +164,38 @@ class ihexFile(object):
             #                                                                                                                             checksum,
             #                                                                                                                             calculatedChecksum))
 
-
-
             if recordType == ihexRecordType.Data:   # ... We match data first as it's the most common record type, so more efficient
-                if data_incoming == False:
-                    print(("Data (Start) - ",linecount))
-                data_incoming = True
-
-                if currentAddress is None:
+                if nextAddress is None:
+                    print(("address components",baseAddress,address))
                     currentBlock.startAddress = baseAddress + address
 
+                # As each line of data is individually addressed, there may be disconuities present in the data. 
+                # If so (i.e. a gap in the addressing), and a continuous record is required, then pad the data.
+                # NOTE: by default, padding is expected.
                 if nextAddress is not None:
                     if address != nextAddress:
                         if continuousBlocking:
                             paddingBlock = []
                             [paddingBlock.append(padding) for i in range(0, address-nextAddress)]
                             currentBlock.addData(paddingBlock)
-                        else:
-                            # print("new block")
-                            pass
+
                 currentBlock.addData(data)
-                currentAddress = address
                 nextAddress = address + dataLength
 
 
             elif recordType == ihexRecordType.ExtendedLinearAddress:   # ... new block - append any existing block to the blocklist or initialise the current block record
-                print(("Extended Linear Address (new block) - ",linecount))
-                data_incoming = False
+                print(("DEBUG - Extended Linear Address (new block) - ",linecount))
 
                 if currentBlock is not None:
+                    # IMPORTANT NOTE (possible TODO): Richard indicated that the last data line may need some tail end padding - if that's the case, we would know about it
+                    # till here, so the need for such padidng would have to be detected here and added (e.g. check a "required" flag, and if true, run a moduls op on 
+                    # block length to detect if padding needed, then add padding bytes, as above in continuousBlocking case).
                     self.__blocks.append(currentBlock)
                 currentBlock = ihexData()  #... start the new block
-                baseAddress = (address << 16)
-                currentAddress = None
+                print(("DEBUG - --- - ",data))
+                baseAddress = ((data[0]<< 8) + data[1]) << 16
+                #baseAddress = (address << 16)
+                nextAddress = None
 
 
             elif recordType == ihexRecordType.EndOfFile: # ... add the final block to the block list
@@ -155,10 +213,42 @@ class ihexFile(object):
             elif recordType == ihexRecordType.StartLinearAddress:
                 raise NotImplemented("Start linear address not implemented")
 
+    @property
+    def dataLength(self):
+        return sum([self.__blocks[i].dataLength for i in range(self.numBlocks)])
 
+    @property
+    def numBlocks(self):
+        return len(self.__blocks)
 
-    def getBlocks(self):
+    @property
+    def block(self):
         return self.__blocks
+
+
+    @property
+    def transmitChunksize(self):
+        return self.__sendChunksize
+
+    @transmitChunksize.setter
+    def transmitChunksize(self, value):
+        # TODO: need to check permitted ranges if any!!!
+        self.__sendChunksize = value
+        for block in self.__blocks:
+            block.transmitChunksize = value
+
+    def transmitChunks(self, sendChunksize=None):  # ... initialising or re-setting of the chunk size is allowed here for convenience.
+        if sendChunksize is not None:
+            self.transmitChunksize = sendChunksize		
+        return sum([self.__blocks[i].transmitChunks() for i in range(self.numBlocks)],[])
+
+    @property
+    def transmitLength(self):  # ... this is dataLength encoded
+        return DecodeFunctions.intArrayToIntArray([self.dataLength], 'int32', 'int8')
+
+    @property
+    def transmitAddress(self):
+        return self.__blocks[0].transmitAddress
 
 
 """
@@ -178,29 +268,48 @@ def calculateKeyFromSeed(seed, ecuKey):
 if __name__ == "__main__":
 
     # ????????????? needs to know about the ecu's chunk size - e.g. 1280 for E400
-    app_blocks = ihexFile("../../test/Uds-Config-Tool/Functional Tests/e400_uds_test_app_e400.hex").getBlocks()  # ... the class only has the one method at present
-    #blocks = parsedBlocks.getBlocks()
+    app_blocks = ihexFile("../../test/Uds-Config-Tool/Functional Tests/e400_uds_test_app_e400.hex")
     print("")
-    print(("found num blocks : ",len(app_blocks)))
-    blockData = app_blocks[0].data
-    print(("len block data[0] : ",len(app_blocks[0].data)))
-    print(("len block data[1] : ",len(app_blocks[1].data)))
-    smallerChunks = []
-    chunk = []
-    count = 0
-    for i in range(0, len(blockData)):
-        chunk.append(blockData[i])
-        count += 1
-        if count == 1280:
-            smallerChunks.append(chunk)
-            chunk = []
-            count = 0
+    print(("found num blocks : ",app_blocks.numBlocks))
+    print(("len block data[0] : ",app_blocks.block[0].dataLength))
+    print(("len block data[1] : ",app_blocks.block[1].dataLength))
 
-    if len(chunk) != 0:
-        smallerChunks.append(chunk)
+    # TODO: The transmission  chunk size here needs to be against the connection instance, and not against the block !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    smallerChunks = app_blocks.block[0].transmitChunks(sendChunksize=1280)  # ... breaking the data block to transmittable chunks
+    print(("found num small blocks : ",len(smallerChunks)))
+    smallerChunks = app_blocks.block[1].transmitChunks(sendChunksize=1280)  # ... breaking the data block to transmittable chunks
     print(("found num small blocks : ",len(smallerChunks)))
 
+    # TODO: Do we transmit per block, or all block together? If the latter, then we need something more like ...  !!!!!!!!!!!!!!!!!!
+    transmitChunks = sum([app_blocks.block[i].transmitChunks(sendChunksize=1280) for i in range(app_blocks.numBlocks)],[])
+    print(("transmit total chunks : ",len(transmitChunks)))
+	
+    print(("transmit start address (all) : ",app_blocks.transmitAddress))
 
+    print(("transmit start address (block 0) : ",app_blocks.block[0].transmitAddress))
+    print(("transmit start address (block 1) : ",app_blocks.block[1].transmitAddress))
+    #a = e400.requestDownload([0], app_blocks[0].startAddressAsIntArray(), [0x00, 0x01, 0x4F, 0xe4])  # ... start address calc'd as [0x00, 0x08, 0x00, 0x00] as expected
+    #a = e400.requestDownload([0], [0x00, 0x08, 0x00, 0x00], [0x00, 0x01, 0x4F, 0xe4])
+    # need to match [0x00, 0x01, 0x4F, 0xe4] for memory size
+    #transmitLength = sum([len(app_blocks.block[i].data) for i in range(app_blocks.numBlocks)])
+    print(("data length (total) : ",app_blocks.dataLength))
+    print(("transmit length (total) : ",app_blocks.transmitLength))  # ... length calc'd as [0x00, 0x01, 0x4F, 0xe4] as expected
+
+    print(("transmit length (block 0): ",app_blocks.block[0].transmitLength))  # ... length calc'd as [0x00, 0x01, 0x4F, 0xe4] as expected
+
+    """
+    app_blocks = ihexFile("../../test/Uds-Config-Tool/Functional Tests/TGT-ASSY-1383_v2.1.0_sbl.hex")
+    a = e400.requestDownload([IsoDataFormatIdentifier.noCompressionMethod], app_blocks.transmitAddress, app_blocks.transmitLength)
+    transmitChunks = app_blocks.transmitChunks(sendChunksize=1280)
+    e400 = createUdsConnection("Bootloader.odx", "Bootloader", reqId=0x600, resId=0x650, interface="peak")
+	....
+    for i in range(len(transmitChunks)):
+        a = e400.transferData(i+1, transmitChunks[i])
+    ....
+    a = e400.transferExit()
+    """
+	
+	
     """
     #secondaryBootloaderContainer = chunkIhexFile("TGT-ASSY-1383_v2.1.0_sbl.hex")
     #print(secondaryBootloaderContainer)
