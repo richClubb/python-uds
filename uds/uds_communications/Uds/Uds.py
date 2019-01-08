@@ -11,6 +11,7 @@ __status__ = "Development"
 
 
 from uds.uds_config_tool.IHexFunctions import ihexFile as ihexFileParser
+from uds.uds_config_tool.ISOStandard.ISOStandard import IsoDataFormatIdentifier
 from uds import Config
 from uds import TpFactory
 from os import path
@@ -82,6 +83,32 @@ class Uds(object):
     def ihexFile(self, value):
         if value is not None:
             self.__ihexFile = ihexFileParser(value)
+
+    
+    ##
+    # @brief Currently only called from transferFile to transfer ihex files
+    def transferIHexFile(self,transmitChunkSize=None,compressionMethod=None):
+        if transmitChunkSize is not None:
+            self.__ihexFile.transmitChunksize = transmitChunkSize
+        if compressionMethod is None:
+            compressionMethod = IsoDataFormatIdentifier.noCompressionMethod
+        self.requestDownload([compressionMethod], self.__ihexFile.transmitAddress, self.__ihexFile.transmitLength)
+        self.transferData(transferBlocks=self.__ihexFile)
+        return self.transferExit()
+
+    ##
+    # @brief This will eventually support more than one file type, but for now is limited to ihex only
+    def transferFile(self,fileName=None,transmitChunkSize=None,compressionMethod=None):
+        if fileName is None and self.__ihexFile is None:
+            raise FileNotFoundError("file to transfer has not been specified")
+
+        # Currently only ihex is recognised and supported
+        if fileName[-4:] == '.hex' or fileName[-5:] == '.ihex':
+            self.__ihexFile = ihexFileParser(fileName)
+            return self.transferIHexFile(transmitChunkSize,compressionMethod)
+        else:
+            raise FileNotFoundError("file to transfer has not been recognised as a supported type ['.hex','.ihex']")
+
 
 
     ##

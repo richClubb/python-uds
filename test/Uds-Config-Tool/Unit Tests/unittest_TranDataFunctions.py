@@ -20,6 +20,30 @@ import sys, traceback
 
 class TransferDataTestCase(unittest.TestCase):
 
+    """ Note: this has been run with a modified Uds.py transferIHexFile() function to skip the reqDownload and transExit (I couldn't figure out how to mock these here)  
+    # patches are inserted in reverse order
+    @mock.patch('uds.CanTp.recv')
+    @mock.patch('uds.CanTp.send')
+    def test_transDataRequest_ihex(self,
+                     canTp_send,
+                     canTp_recv,
+                     reqDownload,
+                     transExit):
+
+        canTp_send.return_value = False
+        canTp_recv.return_value = [0x76, 0x01, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF]
+
+        # Parameters: xml file (odx file), ecu name (not currently used) ...
+        a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
+        # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __transferData to transferData in the uds object, so can now call below
+
+        b = a.transferFile("./unitTest01.hex",1280)	# ... calls __transferData, which does the Uds.send - takes blockSequenceCounter and parameterRecord
+	
+        canTp_send.assert_called_with([0x36, 0x01, 0x00, 0x08, 0x00, 0x70, 0x00, 0x09, 0x4E, 0x80, 0x45, 0x34, 0x30, 0x30, 0x2D, 0x55, 0x44, 0x53],False)
+        self.assertEqual({'blockSequenceCounter':[0x01],'transferResponseParameterRecord':[0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF]}, b)  # ... (returns a dict)
+    """
+		
+
     # patches are inserted in reverse order
     @mock.patch('uds.CanTp.recv')
     @mock.patch('uds.CanTp.send')
