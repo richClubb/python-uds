@@ -63,7 +63,7 @@ def fill_dictionary(xmlElement):
     return temp_dictionary
 
 
-def createUdsConnection(xmlFile, ecuName, **kwargs):
+def createUdsConnection(xmlFile, ecuName, ihexFile=None, **kwargs):
 
     root = ET.parse(xmlFile)
 
@@ -315,7 +315,7 @@ def createUdsConnection(xmlFile, ecuName, **kwargs):
 
 
     #need to be able to extract the reqId and resId
-    outputEcu = Uds(**kwargs)
+    outputEcu = Uds(ihexFile=ihexFile, **kwargs)
 
     # Bind any ECU Reset services that have been found
     if sessionService_flag:

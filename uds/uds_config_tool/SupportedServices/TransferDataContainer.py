@@ -30,7 +30,21 @@ class TransferDataContainer(object):
     # as one of the in-built methods. uds.transferData("something","something else") It does not operate
     # on this instance of the container class.
     @staticmethod
-    def __transferData(target, blockSequenceCounter, transferRequestParameterRecord, **kwargs):
+    def __transferData(target, blockSequenceCounter=None, transferRequestParameterRecord=None, transferBlock=None, transferBlocks=None, **kwargs):
+
+        def transferChunks(transmitChunks):
+            retval = None
+            for i in range(len(transmitChunks)):
+                retval = target.transferData(i+1, transmitChunks[i])
+            return retval
+
+        # Adding an option to send all chunks in a block (note, this could be separated off into a separate methid if required, but this is the only one bound at present)
+        if transferBlock is not None:
+            return transferChunks(transferBlock.transmitChunks())
+
+        # Adding an option to send all chunks in an ihex file (note, this could be separated off into a separate methid if required, but this is the only one bound at present)
+        if transferBlocks is not None:
+            return transferChunks(transferBlocks.transmitChunks())
 
         # Note: transferData does not show support for multiple DIDs in the spec, so this is handling only a single DID with data record.
         requestFunction = target.transferDataContainer.requestFunctions['TransferData']

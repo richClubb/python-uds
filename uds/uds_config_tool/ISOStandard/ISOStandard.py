@@ -94,4 +94,10 @@ class IsoReadDTCStatusMask(IntEnum):
     testFailedSinceLastClear = 0x20
     testNotCompletedThisMonitoringCycle = 0x40
     warningIndicatorRequested = 0x80             # ... reserved
+
+
+class IsoDataFormatIdentifier(IntEnum):
+
+    noCompressionMethod = 0x00  # ... for use during request download - all other values are manufacturer specific
+
 	

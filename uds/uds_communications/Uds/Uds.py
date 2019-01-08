@@ -10,6 +10,7 @@ __email__ = "richard.clubb@embeduk.com"
 __status__ = "Development"
 
 
+from uds.uds_config_tool.IHexFunctions import ihexFile as ihexFileParser
 from uds import Config
 from uds import TpFactory
 from os import path
@@ -22,7 +23,7 @@ class Uds(object):
     # @brief a constructor
     # @param [in] reqId The request ID used by the UDS connection, defaults to None if not used
     # @param [in] resId The response Id used by the UDS connection, defaults to None if not used
-    def __init__(self, configPath=None, **kwargs):
+    def __init__(self, configPath=None, ihexFile=None, **kwargs):
 
         self.__config = None
         self.__transportProtocol = None
@@ -41,6 +42,9 @@ class Uds(object):
 
         # used as a semaphore for the tester present
         self.__transmissionActive_flag = False
+
+        # Process any ihex file that has been associated with the ecu at initialisation
+        self.__ihexFile = ihexFileParser(ihexFile) if ihexFile is not None else None
 
     def __loadConfiguration(self, configPath=None):
 
@@ -68,6 +72,17 @@ class Uds(object):
 
         if 'P2_CAN_Client' in kwargs:
             self.__config['uds']['P2_CAN_Client'] = str(kwargs['P2_CAN_Client'])
+
+
+    @property
+    def ihexFile(self):
+        return self.__ihexFile
+
+    @ihexFile.setter
+    def ihexFile(self, value):
+        if value is not None:
+            self.__ihexFile = ihexFileParser(value)
+
 
     ##
     # @brief
