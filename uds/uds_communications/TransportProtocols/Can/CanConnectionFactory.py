@@ -2,7 +2,8 @@ import can
 from can.interfaces import pcan, vector
 from uds.uds_configuration.Config import Config
 from os import path
-
+#from uds import CanConnection
+from uds.uds_communications.TransportProtocols.Can.CanConnection import CanConnection
 
 class CanConnectionFactory(object):
 
@@ -10,7 +11,7 @@ class CanConnectionFactory(object):
     config = None
 
     @staticmethod
-    def __call__(configPath=None, **kwargs):
+    def __call__(callback=None, filter=None, configPath=None, **kwargs):
 
         CanConnectionFactory.loadConfiguration(configPath)
         CanConnectionFactory.checkKwargs(**kwargs)
@@ -21,23 +22,25 @@ class CanConnectionFactory(object):
         if connectionType == 'virtual':
             connectionName = CanConnectionFactory.config['virtual']['interfaceName']
             if connectionName not in CanConnectionFactory.connections:
-                CanConnectionFactory.connections[connectionName] = can.interface.Bus(connectionName,
-                                                                                     bustype='virtual')
+                CanConnectionFactory.connections[connectionName] = CanConnection(callback, filter,
+                                                                                 can.interface.Bus(connectionName,
+                                                                                     bustype='virtual'))
+            else:
+                CanConnectionFactory.connections[connectionName].addCallback(callback)
+                CanConnectionFactory.connections[connectionName].addFilter(filter)
             return CanConnectionFactory.connections[connectionName]
 
         elif connectionType == 'peak':
             channel = CanConnectionFactory.config['peak']['device']
             if channel not in CanConnectionFactory.connections:
                 baudrate = CanConnectionFactory.config['can']['baudrate']
-                try:
-                    CanConnectionFactory.connections[channel] = pcan.PcanBus(channel,
-                                                                             bitrate=baudrate)
-                except:
-                    pass
-                finally:
-                    CanConnectionFactory.connections[channel] = pcan.PcanBus(channel,
-                                                                             bitrate=baudrate)
-
+                CanConnectionFactory.connections[channel] = CanConnection(callback, filter,
+                                                                          pcan.PcanBus(channel,
+                                                                          bitrate=baudrate))
+            else:
+                CanConnectionFactory.connections[channel].addCallback(callback)
+                CanConnectionFactory.connections[channel].addFilter(filter)
+                
             return CanConnectionFactory.connections[channel]
 
         elif connectionType == 'vector':
@@ -46,10 +49,13 @@ class CanConnectionFactory(object):
             connectionKey = str("{0}_{1}").format(app_name, channel)
             if connectionKey not in CanConnectionFactory.connections:
                 baudrate = int(CanConnectionFactory.config['can']['baudrate'])
-                CanConnectionFactory.connections[connectionKey] = vector.VectorBus(channel,
-                                                                             app_name=app_name,
-                                                                             data_bitrate=baudrate)
-
+                CanConnectionFactory.connections[connectionKey] = CanConnection(callback, filter,
+                                                                                vector.VectorBus(channel,
+                                                                                    app_name=app_name,
+                                                                                    data_bitrate=baudrate))
+            else:
+                CanConnectionFactory.connections[connectionKey].addCallback(callback)
+                CanConnectionFactory.connections[connectionKey].addFilter(filter)
             return CanConnectionFactory.connections[connectionKey]
 
     @staticmethod
