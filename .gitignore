@@ -6,3 +6,4 @@ build/
 test/Uds-Config-Tool/Functional Tests/*.log
 test/Uds-Config-Tool/Functional Tests/*.ihex
 test/Uds-Config-Tool/Functional Tests/*.hex
+*.cdd~

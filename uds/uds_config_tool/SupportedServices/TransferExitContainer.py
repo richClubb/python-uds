@@ -30,7 +30,7 @@ class TransferExitContainer(object):
     # as one of the in-built methods. uds.transferExit("something") It does not operate
     # on this instance of the container class.
     @staticmethod
-    def __transferExit(target, transferRequestParameterRecord, **kwargs):
+    def __transferExit(target, transferRequestParameterRecord=None, **kwargs):
 
         # Note: TransferExit does not show support for multiple DIDs in the spec, so this is handling only a single DID with data record.
         requestFunction = target.transferExitContainer.requestFunctions['TransferExit']
