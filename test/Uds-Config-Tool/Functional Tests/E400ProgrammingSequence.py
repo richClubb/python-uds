@@ -176,20 +176,6 @@ if __name__ == "__main__":
 
     e400 = createUdsConnection("Bootloader.odx", "Bootloader", reqId=0x600, resId=0x650, interface="peak")
 
-    startTime = time()
-    in_bootloader_flag = 0
-    while in_bootloader_flag == 0:
-        try:
-            if (time() - startTime) > 5:
-                in_bootloader_flag = 1
-                print("Timeout")
-            a = e400.diagnosticSessionControl("Programming Session")
-            in_bootloader_flag = 1
-        except:
-            pass
-
-    sleep(2)
-
     a = e400.readDataByIdentifier("ECU Serial Number")
     print("Serial Number: {0}".format(a["ECU Serial Number"]))
 
@@ -227,7 +213,7 @@ if __name__ == "__main__":
     #print(a)
 
     print("Erasing Memory")
-    a = e400.routineControl("Erase Memory", 1, [("memoryAddress",[0x00080000]), ("memorySize",[0x000088AD])])
+    a = e400.routineControl("Erase Memory", 1, [("memoryAddress",[0x00080000]), ("memorySize",[0x000162e4])])
     #print(a)
 
     working = True
@@ -261,10 +247,10 @@ if __name__ == "__main__":
         smallerChunks.append(chunk)
 
     print("Setting up transfer for Application")
-    a = e400.requestDownload([0], [0x00, 0x08, 0x00, 0x00], [0x00, 0x01, 0x4F, 0xe4])
+    a = e400.requestDownload([0], [0x00, 0x08, 0x00, 0x00], [0x00, 0x01, 0x62, 0xe4])
 
     print("Transferring Application")
-    for i in range(0, 68):
+    for i in range(0, len(smallerChunks)):
 
         a = e400.transferData(i+1, smallerChunks[i])
 

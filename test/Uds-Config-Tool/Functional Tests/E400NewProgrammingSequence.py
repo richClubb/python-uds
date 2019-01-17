@@ -3,6 +3,7 @@ from uds import ihexFile
 from struct import pack, unpack
 import hashlib
 from time import sleep, time
+from uds import DecodeFunctions
 
 def calculateKeyFromSeed(seed, ecuKey):
 
@@ -20,11 +21,9 @@ if __name__ == "__main__":
 
     sbl = ihexFile("TGT-ASSY-1383_v2.1.0_sbl.hex")
 
-    app = ihexFile("e400_uds_test_app_e400.hex")
+    app = ihexFile("e400_uds_test_app_e400.ihex")
 
-    e400 = createUdsConnection("Bootloader.odx", "Bootloader", reqId=0x600, resId=0x650, interface="peak")
-
-    sleep(2)
+    e400 = createUdsConnection("Bootloader.odx", "Bootloader", reqId=0x601, resId=0x651, interface="peak")
 
     a = e400.readDataByIdentifier("ECU Serial Number")
     print("Serial Number: {0}".format(a["ECU Serial Number"]))
@@ -55,7 +54,7 @@ if __name__ == "__main__":
     # print(a)
 
     print("Transferring Secondary Bootloader")
-    chunks = sbl.transmitChunks()
+    chunks = sbl.transmitChunks(sendChunksize=1280)
     for i in range(len(chunks)):
         a = e400.transferData(i + 1, chunks[i])
 
@@ -63,7 +62,7 @@ if __name__ == "__main__":
     a = e400.transferExit()
 
     print("Jumping to Secondary Bootloader")
-    a = e400.routineControl("Start Secondary Bootloader", 1, [transmitAddress])
+    a = e400.routineControl("Start Secondary Bootloader", 1, [DecodeFunctions.buildIntFromList(transmitAddress)])
     # print(a)
 
 
@@ -72,17 +71,40 @@ if __name__ == "__main__":
 
     transmitAddress = app.transmitAddress
     transmitLength = app.transmitLength
-    a = e400.routineControl("Erase Memory", 1, [("memoryAddress", [transmitAddress]), ("memorySize", [transmitLength])])
+    a = e400.routineControl("Erase Memory", 1, [("memoryAddress", [DecodeFunctions.buildIntFromList(transmitAddress)]), ("memorySize", [DecodeFunctions.buildIntFromList(transmitLength)])])
     # print(a)
 
+    working = True
+    while working:
+
+        a = e400.routineControl("Erase Memory", 3)
+        #print(a)
+        if(a['Erase Memory Status']) == [0x30]:
+            print("Erased memory")
+            working = False
+        elif(a['Erase Memory Status'] == [0x31]):
+            print("ABORTED")
+            raise Exception("Erase memory unsuccessful")
+        sleep(0.001)
+
     print("Setting up transfer for Application")
-    a = e400.requestDownload([0], transmitAddress, transmitLength)
 
     print("Transferring Application")
-    chunks = app.transmitChunks()
-    for i in range(0, len(chunks)):
+    blocks = app.blocks
 
-        a = e400.transferData(i+1, chunks[i])
+    for i in blocks:
+        chunks = i.transmitChunks(1280)
+        transmitAddress = i.transmitAddress
+        transmitLength = i.transmitLength
+        a = e400.requestDownload([0], transmitAddress, transmitLength)
+
+        for j in range(0, len(chunks)):
+            a = e400.transferData(j + 1, chunks[j])
+
+
+    # for i in range(0, len(chunks)):
+    #
+    #     a = e400.transferData(i+1, chunks[i])
 
     print("Transfer Exit")
     a = e400.transferExit()
