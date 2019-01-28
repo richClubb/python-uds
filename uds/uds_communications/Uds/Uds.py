@@ -114,13 +114,18 @@ class Uds(object):
     ##
     # @brief
     def send(self, msg, responseRequired=True, functionalReq=False):
-
         # sets a current transmission in progress
         self.__transmissionActive_flag = True
 
         response = None
 
         a = self.tp.send(msg, functionalReq)
+
+        # If the diagnostic session control service is supported, record the sending time for possible use by the tester present functionality (again, if present) ...		
+        try:
+            self.sessionSetLastSend()
+        except:
+            pass  # ... if the service isn't present, just ignore
 
         if functionalReq is True:
             responseRequired = False
