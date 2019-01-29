@@ -10,7 +10,7 @@ __email__ = "richard.clubb@embeduk.com"
 __status__ = "Development"
 
 
-defaultTPTimeout = 500  # ... (ms): default to sending tester present 500ms after last request (if required) - note: this includes after previous TesterPresent for repeating operation
+defaultTPTimeout = 10000  # ... (ms): default to sending tester present 10s after last request (if required) - note: this includes after previous TesterPresent for repeating operation
 
 from uds.uds_config_tool.SupportedServices.iContainer import iContainer
 from types import MethodType
@@ -57,6 +57,8 @@ class DiagnosticSessionControlContainer(object):
         target.diagnosticSessionControlContainer.currentSession = parameter
         target.diagnosticSessionControlContainer.testerPresent[parameter] = {'reqd': True,'timeout':tpTimeout} if testerPresent else {'reqd': False,'timeout':None}
         # Note: lastSend is initialised via a call to __sessionSetLastSend() when send is called
+        if testerPresent:
+            target.testerPresentThread()
 
         if checkFunction is None or positiveResponseFunction is None:  # ... i.e. we only have a send_only service specified in the ODX
             suppressResponse = True

@@ -12,6 +12,11 @@ __status__ = "Development"
 
 from uds.uds_config_tool.SupportedServices.iContainer import iContainer
 from types import MethodType
+import threading
+import time
+
+testerPresentThreadRef = None
+testerPresentTargets = set()
 
 
 class TesterPresentContainer(object):
@@ -29,7 +34,7 @@ class TesterPresentContainer(object):
     # as one of the in-built methods. uds.testerPresentContainer() It does not operate
     # on this instance of the container class.
     @staticmethod
-    def __testerPresent(target, suppressResponse=False, disable=False, **kwargs):
+    def __testerPresent(target, suppressResponse=True, disable=False, **kwargs):
 
         # If the disable flag is set, we do nothing but remove any testerPresent behaviour for the current session
         if disable:
@@ -73,8 +78,48 @@ class TesterPresentContainer(object):
         response = target.send(request,responseRequired=False) # ... this suppresses any response handling (not expected)
         return
 
+
+    ##
+    # @brief this method is bound to an external Uds object, referenced by target, so that it can be called
+    # as one of the in-built methods. uds.testerPresentThread() It does not operate
+    # on this instance of the container class.
+    # Important Note: we always keep a single thread running in the background monitoring the testerPresent requirements.
+    # As this is static, and we can have many ECU connections via different UDS instances, this means we need to check them all!
+    @staticmethod
+    def __testerPresentThread(target, suppressResponse=False, disable=False, **kwargs):
+        global testerPresentThreadRef
+        global testerPresentTargets
+        #print("__testerPresentThread called")
+
+        def __tpWorker():
+            #print("work thread started (should be once only)")
+            while True:
+                #print("inside worker loop")
+                for tgt in testerPresentTargets:
+                    #print("target found")
+                    if not tgt.isTransmitting():
+                        #print("target not transmitting")
+                        tpSessionRecord = tgt.testerPresentSessionRecord()
+                        if tpSessionRecord['reqd']: # ... testPresent behaviour is required for the current diagnostic session
+                            #print("tp required for target")
+                            if tgt.sessionTimeSinceLastSend() >= tpSessionRecord['timeout']:
+                                #print("timed out! - sending test present")
+                                tgt.testerPresent()
+                if not threading.main_thread().is_alive():
+                    return
+                time.sleep(1.0) # ... check is tester present is required every 100ms (we almost certainly don't really need this level of granularity).
+                # Note: I'm avoiding direct wait mechanisms (of testerPresent TO) to allow for radical difference in behaviour for changing diagnostic sessions.
+                # This can of course be changed.
+
+        testerPresentTargets.add(target) # ... track a list of all possible concurrent targets, as we process tester present for all targets via one thread
+        if testerPresentThreadRef is None:
+            testerPresentThreadRef = threading.Thread(name='tpWorker', target=__tpWorker)
+            testerPresentThreadRef.start()
+
+
     def bind_function(self, bindObject):
         bindObject.testerPresent = MethodType(self.__testerPresent, bindObject)
+        bindObject.testerPresentThread = MethodType(self.__testerPresentThread, bindObject)
 
     def add_requestFunction(self, aFunction, dictionaryEntry):
         if aFunction is not None: # ... allow for a send only version being processed

@@ -15,6 +15,7 @@ from uds.uds_config_tool.ISOStandard.ISOStandard import IsoDataFormatIdentifier
 from uds import Config
 from uds import TpFactory
 from os import path
+import threading
 
 ##
 # @brief a description is needed
@@ -43,9 +44,14 @@ class Uds(object):
 
         # used as a semaphore for the tester present
         self.__transmissionActive_flag = False
+        #print(("__transmissionActive_flag initialised (clear):",self.__transmissionActive_flag))
+        # The above flag should prevent testerPresent operation, but in case of race conditions, this lock prevents actual overlapo in the sending
+        self.sendLock = threading.Lock()
 
         # Process any ihex file that has been associated with the ecu at initialisation
         self.__ihexFile = ihexFileParser(ihexFile) if ihexFile is not None else None
+
+
 
     def __loadConfiguration(self, configPath=None):
 
@@ -110,33 +116,48 @@ class Uds(object):
             raise FileNotFoundError("file to transfer has not been recognised as a supported type ['.hex','.ihex']")
 
 
+    #self.sendLock = threading.Lock()  # ... used for controlling interaction with testerPresent thread ??????????????????????????????????????
 
     ##
     # @brief
     def send(self, msg, responseRequired=True, functionalReq=False):
-        # sets a current transmission in progress
+        # sets a current transmission in progress - tester present (if running) will not send if this flag is set to true
         self.__transmissionActive_flag = True
+        #print(("__transmissionActive_flag set:",self.__transmissionActive_flag))
 
         response = None
 
-        a = self.tp.send(msg, functionalReq)
+        # We're moving to threaded operation, so putting a lock around the send operation. 
+        self.sendLock.acquire()
+        try:
+            a = self.tp.send(msg, functionalReq)
+        finally:
+            self.sendLock.release()
+
+        if functionalReq is True:
+            responseRequired = False
+
+        # Note: in automated mode (unlikely to be used any other way), there is no response from tester present, so threading is not an issue here.
+        if responseRequired:
+            response = self.tp.recv(self.__P2_CAN_Client)
 
         # If the diagnostic session control service is supported, record the sending time for possible use by the tester present functionality (again, if present) ...		
         try:
             self.sessionSetLastSend()
         except:
             pass  # ... if the service isn't present, just ignore
-
-        if functionalReq is True:
-            responseRequired = False
-
-        if responseRequired:
-            response = self.tp.recv(self.__P2_CAN_Client)
-
-        # lets go of the hold on transmissions
+			
+        # Lets go of the hold on transmissions - allows test present to resume operation (if it's running)
         self.__transmissionActive_flag = False
+        #print(("__transmissionActive_flag cleared:",self.__transmissionActive_flag))
 
         return response
+
+    ##
+    # @brief
+    def isTransmitting(self):
+        #print(("requesting __transmissionActive_flag:",self.__transmissionActive_flag))
+        return self.__transmissionActive_flag
 
 
 if __name__ == "__main__":
