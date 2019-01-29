@@ -16,7 +16,9 @@ from uds.uds_config_tool.FunctionCreation.iServiceMethodFactory import IServiceM
 
 
 requestFuncTemplate = str("def {0}(parameterRecord):\n"
-                          "    return {1} + parameterRecord")						  
+                          "    output = {1}\n"
+                          "    if parameterRecord is not None: output += parameterRecord\n"
+                          "    return {1}")
 
 checkFunctionTemplate = str("def {0}(input):\n"
                             "    serviceIdExpected = {1}\n"

@@ -223,7 +223,7 @@ class ihexFile(object):
         return len(self.__blocks)
 
     @property
-    def block(self):
+    def blocks(self):
         return self.__blocks
 
     @property

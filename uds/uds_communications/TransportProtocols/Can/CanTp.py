@@ -9,9 +9,9 @@ __maintainer__ = "Richard Clubb"
 __email__ = "richard.clubb@embeduk.com"
 __status__ = "Development"
 
-
 import can
 from can.interfaces import pcan, vector
+from time import sleep
 
 from uds import iTp
 from uds import ResettableTimer
@@ -22,6 +22,7 @@ from uds.uds_communications.TransportProtocols.Can.CanTpTypes import CANTP_MAX_P
     FIRST_FRAME_DATA_START_INDEX, SINGLE_FRAME_DATA_START_INDEX, CONSECUTIVE_FRAME_SEQUENCE_NUMBER_INDEX, \
     CONSECUTIVE_FRAME_SEQUENCE_DATA_START_INDEX, FLOW_CONTROL_BS_INDEX, FLOW_CONTROL_STMIN_INDEX
 from uds import CanConnectionFactory
+#from uds import CanConnection
 from uds import Config
 
 from os import path
@@ -56,16 +57,6 @@ class CanTp(iTp):
 
         self.__loadConfiguration(configPath)
         self.__checkKwargs(**kwargs)
-
-        # set up the CAN connection
-        canConnectionFactory = CanConnectionFactory()
-        self.__bus = canConnectionFactory(configPath, **kwargs)
-
-        self.__listener = can.Listener()
-        self.__listener.on_message_received = self.callback_onReceive
-        self.__notifier = can.Notifier(self.__bus, [self.__listener], 0)
-
-        self.__recvBuffer = []
 
         # load variables from the config
         self.__N_AE = int(self.__config['canTp']['N_AE'], 16)
@@ -108,6 +99,14 @@ class CanTp(iTp):
         ):
             self.__maxPduLength = 6
             self.__pduStartIndex = 1
+
+        # set up the CAN connection
+        canConnectionFactory = CanConnectionFactory()
+        self.__connection = canConnectionFactory(self.callback_onReceive,
+                                                 self.__resId, # <-filter
+                                                 configPath, **kwargs)
+
+        self.__recvBuffer = []
 
     ##
     # @brief used to load the local configuration options and override them with any passed in from a config file
@@ -155,28 +154,28 @@ class CanTp(iTp):
 
     ##
     # @brief connection method
-    def createBusConnection(self):
-        # check config file and load
-        connectionType = self.__config['DEFAULT']['interface']
-
-        if connectionType == 'virtual':
-            connectionName = self.__config['virtual']['interfaceName']
-            bus = can.interface.Bus(connectionName,
-                                    bustype='virtual')
-        elif connectionType == 'peak':
-            channel = self.__config['peak']['device']
-            baudrate = self.__config['connection']['baudrate']
-            bus = pcan.PcanBus(channel,
-                               bitrate=baudrate)
-        elif connectionType == 'vector':
-            channel = self.__config['vector']['channel']
-            app_name = self.__config['vector']['app_name']
-            baudrate = int(self.__config['connection']['baudrate']) * 1000
-            bus = vector.VectorBus(channel,
-                                   app_name=app_name,
-                                   data_bitrate=baudrate)
-
-        return bus
+    # def createBusConnection(self):
+    #     # check config file and load
+    #     connectionType = self.__config['DEFAULT']['interface']
+    #
+    #     if connectionType == 'virtual':
+    #         connectionName = self.__config['virtual']['interfaceName']
+    #         bus = can.interface.Bus(connectionName,
+    #                                 bustype='virtual')
+    #     elif connectionType == 'peak':
+    #         channel = self.__config['peak']['device']
+    #         baudrate = self.__config['connection']['baudrate']
+    #         bus = pcan.PcanBus(channel,
+    #                            bitrate=baudrate)
+    #     elif connectionType == 'vector':
+    #         channel = self.__config['vector']['channel']
+    #         app_name = self.__config['vector']['app_name']
+    #         baudrate = int(self.__config['connection']['baudrate']) * 1000
+    #         bus = vector.VectorBus(channel,
+    #                                app_name=app_name,
+    #                                data_bitrate=baudrate)
+    #
+    #     return bus
 
     ##
     # @brief send method
@@ -206,7 +205,8 @@ class CanTp(iTp):
         blockList = []
         currBlock = []
 
-        timeoutTimer = ResettableTimer(100)
+        ## this needs fixing to get the timing from the config
+        timeoutTimer = ResettableTimer(1)
         stMinTimer = ResettableTimer()
 
         self.clearBufferedMessages()
@@ -276,11 +276,14 @@ class CanTp(iTp):
                         else:
                             timeoutTimer.start()
                             state = CanTpState.WAIT_FLOW_CONTROL
+                            #print("waiting for flow control")
 
             txPdu = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
             # timer / exit condition checks
             if(timeoutTimer.isExpired()):
                 raise Exception("Timeout waiting for message")
+
+            sleep(0.001)
 
     ##
     # @brief recv method
@@ -428,27 +431,32 @@ class CanTp(iTp):
         return blockList
 
     ##
-    # @brief transmits the data over can
+    # @brief transmits the data over can using can connection
+    # def transmit(self, data, functionalReq=False):
+    #
+    #     # check functional request
+    #     if functionalReq:
+    #         raise Exception("Functional requests are currently not supported")
+    #     else:
+    #         self.__connection.transmit(data, self.__reqId, self.__addressingType)
+
     def transmit(self, data, functionalReq=False):
 
         # check functional request
         if functionalReq:
             raise Exception("Functional requests are currently not supported")
-        else:
-            canMsg = can.Message(arbitration_id=self.__reqId, extended_id=False)
-            canMsg.dlc = 8
 
-        canMsg.data = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+        transmitData = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
 
         if (
-                (self.__addressingType == CanTpAddressingTypes.NORMAL) |
-                (self.__addressingType == CanTpAddressingTypes.NORMAL_FIXED)
+            (self.__addressingType == CanTpAddressingTypes.NORMAL) |
+            (self.__addressingType == CanTpAddressingTypes.NORMAL_FIXED)
         ):
-            canMsg.data = data
+            transmitData = data
         elif self.__addressingType == CanTpAddressingTypes.MIXED:
-            canMsg.data[0] = self.__N_AE
-            canMsg.data[1:] = data
+            transmitData[0] = self.__N_AE
+            transmitData[1:] = data
         else:
             raise Exception("I do not know how to send this addressing type")
 
-        self.__bus.send(canMsg)
+        self.__connection.transmit(transmitData, self.__reqId, )
