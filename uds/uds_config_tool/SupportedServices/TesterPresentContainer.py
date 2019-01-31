@@ -15,13 +15,13 @@ from types import MethodType
 import threading
 import time
 
-testerPresentThreadRef = None
-testerPresentTargets = set()
-
 
 class TesterPresentContainer(object):
 
     __metaclass__ = iContainer
+	
+    testerPresentThreadRef = None
+    testerPresentTargets = set()
 
     def __init__(self):
         self.requestFunctions = {}
@@ -87,15 +87,12 @@ class TesterPresentContainer(object):
     # As this is static, and we can have many ECU connections via different UDS instances, this means we need to check them all!
     @staticmethod
     def __testerPresentThread(target, **kwargs):
-        global testerPresentThreadRef
-        global testerPresentTargets
-        #print("__testerPresentThread called")
 
         def __tpWorker():
             #print("work thread started (should be once only)")
             while True:
                 #print("inside worker loop")
-                for tgt in testerPresentTargets:
+                for tgt in TesterPresentContainer.testerPresentTargets:
                     try:
                         transmitting = tgt.isTransmitting()
                     except:
@@ -116,10 +113,10 @@ class TesterPresentContainer(object):
                 # Note: I'm avoiding direct wait mechanisms (of testerPresent TO) to allow for radical difference in behaviour for changing diagnostic sessions.
                 # This can of course be changed.
 
-        testerPresentTargets.add(target) # ... track a list of all possible concurrent targets, as we process tester present for all targets via one thread
-        if testerPresentThreadRef is None:
-            testerPresentThreadRef = threading.Thread(name='tpWorker', target=__tpWorker)
-            testerPresentThreadRef.start()
+        TesterPresentContainer.testerPresentTargets.add(target) # ... track a list of all possible concurrent targets, as we process tester present for all targets via one thread
+        if TesterPresentContainer.testerPresentThreadRef is None:
+            TesterPresentContainer.testerPresentThreadRef = threading.Thread(name='tpWorker', target=__tpWorker)
+            TesterPresentContainer.testerPresentThreadRef.start()
 
 
     def bind_function(self, bindObject):
