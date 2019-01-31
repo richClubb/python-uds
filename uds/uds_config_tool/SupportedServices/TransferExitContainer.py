@@ -45,7 +45,6 @@ class TransferExitContainer(object):
         # the recipient (the response codes 0x?? and 0x?? provide the necessary cover of errors in the request) ...
         request = requestFunction(transferRequestParameterRecord)
 
-
         # Send request and receive the response ...
         response = target.send(request,responseRequired=True) # ... this returns a single response
         negativeResponseFunction(response)  # ... throws an exception to be handled at a higher level if a negative response is received
