@@ -116,8 +116,6 @@ class Uds(object):
             raise FileNotFoundError("file to transfer has not been recognised as a supported type ['.hex','.ihex']")
 
 
-    #self.sendLock = threading.Lock()  # ... used for controlling interaction with testerPresent thread ??????????????????????????????????????
-
     ##
     # @brief
     def send(self, msg, responseRequired=True, functionalReq=False):
