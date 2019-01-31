@@ -86,7 +86,7 @@ class TesterPresentContainer(object):
     # Important Note: we always keep a single thread running in the background monitoring the testerPresent requirements.
     # As this is static, and we can have many ECU connections via different UDS instances, this means we need to check them all!
     @staticmethod
-    def __testerPresentThread(target, suppressResponse=False, disable=False, **kwargs):
+    def __testerPresentThread(target, **kwargs):
         global testerPresentThreadRef
         global testerPresentTargets
         #print("__testerPresentThread called")
