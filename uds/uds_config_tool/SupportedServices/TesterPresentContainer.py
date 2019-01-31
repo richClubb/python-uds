@@ -96,8 +96,13 @@ class TesterPresentContainer(object):
             while True:
                 #print("inside worker loop")
                 for tgt in testerPresentTargets:
+                    try:
+                        transmitting = tgt.isTransmitting()
+                    except:
+                        continue  # ... there's a problem with the stored target - e.g. target no longer in use, so a dead reference - so skip it
+                    # ... otherwise we continue outside of the try/except block to avoid trapping any exceptions that may need to be propagated upwards
                     #print("target found")
-                    if not tgt.isTransmitting():
+                    if not transmitting:
                         #print("target not transmitting")
                         tpSessionRecord = tgt.testerPresentSessionRecord()
                         if tpSessionRecord['reqd']: # ... testPresent behaviour is required for the current diagnostic session
