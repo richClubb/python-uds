@@ -15,108 +15,89 @@ import sys
 from uds.uds_config_tool.FunctionCreation.iServiceMethodFactory import IServiceMethodFactory
 
 
-requestFuncTemplate = str("def {0}(parameterRecord):\n"
-                          "    output = {1}\n"
-                          "    if parameterRecord is not None: output += parameterRecord\n"
-                          "    return output")
+requestFuncTemplate = str("def {0}(suppressResponse=False):\n"
+                          "    zeroSubFunction = [0x80] if suppressResponse else [0x00]\n"
+                          "    return {1} + zeroSubFunction")									 
 
+# Note: we do not need to cater for response suppression checking as nothing to check if response is suppressed - always unsuppressed
 checkFunctionTemplate = str("def {0}(input):\n"
-                            "    serviceIdExpected = {1}\n"
-                            "    serviceId = DecodeFunctions.buildIntFromList(input[{2}:{3}])\n"
-                            "    if(serviceId != serviceIdExpected): raise Exception(\"Service Id Received not expected. Expected {{0}}; Got {{1}} \".format(serviceIdExpected, serviceId))")
+                            "    # The tester present response is simple and fixed, so hardcoding here for simplicity.\n"
+                            "    serviceId = DecodeFunctions.buildIntFromList(input[0:1])\n"
+                            "    zeroSubFunction = DecodeFunctions.buildIntFromList(input[1:2])\n"
+                            "    if(len(input) != 2): raise Exception(\"Total length returned not as expected. Expected: 2; Got {{0}}\".format(len(input)))\n"
+                            "    if(serviceId != 0x7E): raise Exception(\"Service Id Received not expected. Expected {{0}}; Got {{1}} \".format(0x7E,serviceId))\n"
+                            "    if(zeroSubFunction != 0x00): raise Exception(\"Zero Sub Function Received not as expected. Expected {{0}}; Got {{1}}\".format(0x00,zeroSubFunction))")
 
 negativeResponseFuncTemplate = str("def {0}(input):\n"
                                    "    {1}")
 
+# Note: we do not need to cater for response suppression checking as nothing to check if response is suppressed - always unsuppressed.
+# For tester present there is no response data to return, so hardcoding an empty response.
 encodePositiveResponseFuncTemplate = str("def {0}(input):\n"
-                                         "    result = {{}}\n"
-                                         "    result['transferResponseParameterRecord']= input[1:]\n"
-                                         "    return result")
+                                         "    return {{}}")
 
 
-class TransferExitMethodFactory(IServiceMethodFactory):
+class TesterPresentMethodFactory(IServiceMethodFactory):
 
     ##
     # @brief method to create the request function for the service element
     @staticmethod
     def create_requestFunction(diagServiceElement, xmlElements):
-        serviceId = 0
+        # Some services are present in the ODX in both response and send only versions (with the same short name, so one will overwrite the other).
+        # Avoiding the overwrite by ignoring the send-only versions, i.e. these are identical other than postivie response details being missing.
+        try:
+            if diagServiceElement.attrib['TRANSMISSION-MODE'] == 'SEND-ONLY':
+                return None
+        except:
+            pass
 
-        shortName = "requestfunction_{0}".format(diagServiceElement.find('SHORT-NAME').text)
+        serviceId = 0
+        resetType = 0
+
+        shortName = "request_{0}".format(diagServiceElement.find('SHORT-NAME').text)
         requestElement = xmlElements[diagServiceElement.find('REQUEST-REF').attrib['ID-REF']]
         paramsElement = requestElement.find('PARAMS')
 
         encodeFunctions = []
-        encodeFunction = ""
+        encodeFunction = "None"
 
         for param in paramsElement:
+            semantic = None
             try:
-                semantic = None
-                try:
-                    semantic = param.attrib['SEMANTIC']
-                except AttributeError:
-                    pass
-
-                if(semantic == 'SERVICE-ID'):
-                    serviceId = [int(param.find('CODED-VALUE').text)]
-                    # ... locating the serviceId is sufficient for this service - semi-hardcoded, as for the request download
-
-            except:
+                semantic = param.attrib['SEMANTIC']
+            except AttributeError:
                 pass
 
-        funcString = requestFuncTemplate.format(shortName, # 0
-                                                serviceId) # 1
+            if(semantic == 'SERVICE-ID'):
+                serviceId = [int(param.find('CODED-VALUE').text)]
+
+        funcString = requestFuncTemplate.format(shortName,
+                                                serviceId)
         exec(funcString)
         return locals()[shortName]
-		
-		
+
     ##
     # @brief method to create the function to check the positive response for validity
+    # Note: the response for tester present is simplistic, so the details have been hardcoded;
+    # this function is really just checking that the service is supported before creating the 
+    # the hardcoded check function.
     @staticmethod
     def create_checkPositiveResponseFunction(diagServiceElement, xmlElements):
-        responseId = 0
+        # Some services are present in the ODX in both response and send only versions (with the same short name, so one will overwrite the other).
+        # Avoiding the overwrite by ignoring the send-only versions, i.e. these are identical other than positive response details being missing.
+        try:
+            if diagServiceElement.attrib['TRANSMISSION-MODE'] == 'SEND-ONLY':
+                return None
+        except:
+            pass
 
-        responseIdStart = 0
-        responseIdEnd = 0
+        responseId = 0
 
         shortName = diagServiceElement.find('SHORT-NAME').text
         checkFunctionName = "check_{0}".format(shortName)
         positiveResponseElement = xmlElements[(diagServiceElement.find('POS-RESPONSE-REFS')).find('POS-RESPONSE-REF').attrib['ID-REF']]
 
-        paramsElement = positiveResponseElement.find('PARAMS')
-
-        totalLength = 0
-        powerDownTimeLen = 0
-
-        for param in paramsElement:
-            try:
-                semantic = None
-                try:
-                    semantic = param.attrib['SEMANTIC']
-                except AttributeError:
-                    pass
-
-                startByte = int(param.find('BYTE-POSITION').text)
-
-                if(semantic == 'SERVICE-ID'):
-                    responseId = int(param.find('CODED-VALUE').text)
-                    bitLength = int((param.find('DIAG-CODED-TYPE')).find('BIT-LENGTH').text)
-                    listLength = int(bitLength / 8)
-                    responseIdStart = startByte
-                    responseIdEnd = startByte + listLength
-                    totalLength += listLength
-                    # ... locating the serviceId is sufficient for this service - semi-hardcoded, as for the request download
-                else:
-                    pass
-					
-            except:
-                #print(sys.exc_info())
-                pass
-
-        checkFunctionString = checkFunctionTemplate.format(checkFunctionName, # 0
-                                                           responseId, # 1
-                                                           responseIdStart, # 2
-                                                           responseIdEnd) # 3
+        checkFunctionString = checkFunctionTemplate.format(checkFunctionName) # 0
         exec(checkFunctionString)
         return locals()[checkFunctionName]
 
@@ -125,6 +106,14 @@ class TransferExitMethodFactory(IServiceMethodFactory):
     # @brief method to encode the positive response from the raw type to it physical representation
     @staticmethod
     def create_encodePositiveResponseFunction(diagServiceElement, xmlElements):
+        # Some services are present in the ODX in both response and send only versions (with the same short name, so one will overwrite the other).
+        # Avoiding the overwrite by ignoring the send-only versions, i.e. these are identical other than postivie response details being missing.
+        try:
+            if diagServiceElement.attrib['TRANSMISSION-MODE'] == 'SEND-ONLY':
+                return None
+        except:
+            pass
+
         # The values in the response are SID, resetType, and optionally the powerDownTime (only for resetType 0x04). Checking is handled in the check function, 
         # so must be present and ok. This function is only required to return the resetType and powerDownTime (if present).
 
@@ -132,8 +121,6 @@ class TransferExitMethodFactory(IServiceMethodFactory):
 		
         shortName = diagServiceElement.find('SHORT-NAME').text
         encodePositiveResponseFunctionName = "encode_{0}".format(shortName)
-
-        # All required details have already been checked in the check funstion, so sufficiently present in the ODX - this method is mostly hardcoded, as for the request download
 
         encodeFunctionString = encodePositiveResponseFuncTemplate.format(encodePositiveResponseFunctionName)
         exec(encodeFunctionString)
@@ -145,6 +132,14 @@ class TransferExitMethodFactory(IServiceMethodFactory):
     # @brief method to create the negative response function for the service element
     @staticmethod
     def create_checkNegativeResponseFunction(diagServiceElement, xmlElements):
+        # Some services are present in the ODX in both response and send only versions (with the same short name, so one will overwrite the other).
+        # Avoiding the overwrite by ignoring the send-only versions, i.e. these are identical other than postivie response details being missing.
+        try:
+            if diagServiceElement.attrib['TRANSMISSION-MODE'] == 'SEND-ONLY':
+                return None
+        except:
+            pass
+
         shortName = diagServiceElement.find('SHORT-NAME').text
         check_negativeResponseFunctionName = "check_negResponse_{0}".format(shortName)
 

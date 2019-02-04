@@ -10,6 +10,7 @@ __email__ = "richard.clubb@embeduk.com"
 __status__ = "Development"
 
 
+from uds.uds_config_tool import DecodeFunctions
 import sys
 from uds.uds_config_tool.FunctionCreation.iServiceMethodFactory import IServiceMethodFactory
 

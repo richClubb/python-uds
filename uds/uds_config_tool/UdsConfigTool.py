@@ -41,6 +41,8 @@ from uds.uds_config_tool.SupportedServices.TransferDataContainer import Transfer
 from uds.uds_config_tool.FunctionCreation.TransferDataMethodFactory import TransferDataMethodFactory
 from uds.uds_config_tool.SupportedServices.TransferExitContainer import TransferExitContainer
 from uds.uds_config_tool.FunctionCreation.TransferExitMethodFactory import TransferExitMethodFactory
+from uds.uds_config_tool.SupportedServices.TesterPresentContainer import TesterPresentContainer
+from uds.uds_config_tool.FunctionCreation.TesterPresentMethodFactory import TesterPresentMethodFactory
 from uds.uds_config_tool.ISOStandard.ISOStandard import IsoServices, IsoRoutineControlType, IsoInputOutputControlOptionRecord, IsoReadDTCSubfunction, IsoReadDTCStatusMask as Mask
 
 from uds.uds_config_tool.ISOStandard.ISOStandard import IsoServices
@@ -86,6 +88,7 @@ def createUdsConnection(xmlFile, ecuName, ihexFile=None, **kwargs):
     requestUploadContainer = RequestUploadContainer()
     transferDataContainer = TransferDataContainer()
     transferExitContainer = TransferExitContainer()
+    testerPresentContainer = TesterPresentContainer()
     sessionService_flag = False
     ecuResetService_flag = False
     rdbiService_flag = False
@@ -99,6 +102,7 @@ def createUdsConnection(xmlFile, ecuName, ihexFile=None, **kwargs):
     reqUploadService_flag = False
     transDataService_flag = False
     transExitService_flag = False
+    testerPresentService_flag = False
     xmlElements = {}
 
     for child in root.iter():
@@ -330,6 +334,22 @@ def createUdsConnection(xmlFile, ecuName, ihexFile=None, **kwargs):
                 positiveResponseFunction = TransferExitMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
                 transferExitContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
 
+            elif serviceId == IsoServices.TesterPresent:
+                # Note: Tester Present is presented here as an exposed service, but it will typically not be called directly, as we'll hook it 
+                # in to keep the session alive automatically if requested (details to come, but this is just getting the comms into place).
+                testerPresentService_flag = True
+                requestFunc = TesterPresentMethodFactory.create_requestFunction(value, xmlElements)
+                testerPresentContainer.add_requestFunction(requestFunc, "TesterPresent")
+
+                negativeResponseFunction = TesterPresentMethodFactory.create_checkNegativeResponseFunction(value, xmlElements)
+                testerPresentContainer.add_negativeResponseFunction(negativeResponseFunction, "TesterPresent")
+
+                checkFunc = TesterPresentMethodFactory.create_checkPositiveResponseFunction(value, xmlElements)
+                testerPresentContainer.add_checkFunction(checkFunc, "TesterPresent")
+
+                positiveResponseFunction = TesterPresentMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
+                testerPresentContainer.add_positiveResponseFunction(positiveResponseFunction, "TesterPresent")
+
 
     #need to be able to extract the reqId and resId
     outputEcu = Uds(ihexFile=ihexFile, **kwargs)
@@ -399,6 +419,11 @@ def createUdsConnection(xmlFile, ecuName, ihexFile=None, **kwargs):
         setattr(outputEcu, 'transferExitContainer', transferExitContainer)
         transferExitContainer.bind_function(outputEcu)
 
+    # Bind any tester present services that have been found
+    if testerPresentService_flag:
+        setattr(outputEcu, 'testerPresentContainer', testerPresentContainer)
+        testerPresentContainer.bind_function(outputEcu)
+
     return outputEcu
 
 
@@ -436,3 +461,4 @@ if __name__ == "__main__":
     #a.requestUpload(FormatIdentifier=[0x00],MemoryAddress=[0x40, 0x03, 0xE0, 0x00],MemorySize=[0x00, 0x00, 0x0E, 0x56])   # Not tested or runnable at present
     a.transferData(0x01,[0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF])
     a.transferExit([0xF1,0xF2,0xF3,0xF4,0xF5,0xF6,0xF7,0xF8,0xF9,0xFA,0xFB,0xFC,0xFD,0xFE,0xFF])
+    a.testerPresent(suppressResponse=False)

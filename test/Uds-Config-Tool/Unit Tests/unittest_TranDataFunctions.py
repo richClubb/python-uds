@@ -44,6 +44,7 @@ class TransferDataTestCase(unittest.TestCase):
     """
 		
 
+    """ REMOVING THIS TEST AS "block" list is no longer exposed this way ...
     # patches are inserted in reverse order
     @mock.patch('uds.CanTp.recv')
     @mock.patch('uds.CanTp.send')
@@ -65,6 +66,7 @@ class TransferDataTestCase(unittest.TestCase):
 	
         canTp_send.assert_called_with([0x36, 0x01, 0x00, 0x08, 0x00, 0x70, 0x00, 0x09, 0x4E, 0x80, 0x45, 0x34, 0x30, 0x30, 0x2D, 0x55, 0x44, 0x53],False)
         self.assertEqual({'blockSequenceCounter':[0x01],'transferResponseParameterRecord':[0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF]}, b)  # ... (returns a dict)
+    """
 
 
     # patches are inserted in reverse order
@@ -90,6 +92,7 @@ class TransferDataTestCase(unittest.TestCase):
         self.assertEqual({'blockSequenceCounter':[0x01],'transferResponseParameterRecord':[0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF]}, b)  # ... (returns a dict)
 
 
+    """ REMOVING THIS TEST AS "block" list is no longer exposed this way ...
     # patches are inserted in reverse order
     @mock.patch('uds.CanTp.recv')
     @mock.patch('uds.CanTp.send')
@@ -109,6 +112,7 @@ class TransferDataTestCase(unittest.TestCase):
 	
         canTp_send.assert_called_with([0x36, 0x01, 0x00, 0x08, 0x00, 0x70, 0x00, 0x09, 0x4E, 0x80, 0x45, 0x34, 0x30, 0x30, 0x2D, 0x55, 0x44, 0x53],False)
         self.assertEqual({'blockSequenceCounter':[0x01],'transferResponseParameterRecord':[0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF]}, b)  # ... (returns a dict)
+    """
 
 
     # patches are inserted in reverse order
