@@ -10,7 +10,7 @@ __email__ = "richard.clubb@embeduk.com"
 __status__ = "Development"
 
 
-defaultTPTimeout = 10000  # ... (ms): default to sending tester present 10s after last request (if required) - note: this includes after previous TesterPresent for repeating operation
+defaultTPTimeout = 10  # ... (s): default to sending tester present 10s after last request (if required) - note: this includes after previous TesterPresent for repeating operation
 
 from uds.uds_config_tool.SupportedServices.iContainer import iContainer
 from types import MethodType
@@ -55,6 +55,7 @@ class DiagnosticSessionControlContainer(object):
 		
         # Code additions to support interaction with tester present for a given diagnostic session ...
         target.diagnosticSessionControlContainer.currentSession = parameter
+		# Note: if testerPresent is set, then timeout is checked every second, so timeout values less than second will always be equivalent to one second.
         target.diagnosticSessionControlContainer.testerPresent[parameter] = {'reqd': True,'timeout':tpTimeout} if testerPresent else {'reqd': False,'timeout':None}
         # Note: lastSend is initialised via a call to __sessionSetLastSend() when send is called
         if testerPresent:
@@ -101,7 +102,7 @@ class DiagnosticSessionControlContainer(object):
     # The purpose of this method is to record the last send time (any message) for the current diagnostic session.
     @staticmethod
     def __sessionSetLastSend(target, **kwargs):
-        target.diagnosticSessionControlContainer.lastSend = int(round(time.time() * 1000))  # ... in ms
+        target.diagnosticSessionControlContainer.lastSend = int(round(time.time()))  # ... in seconds
 
     ##
     # @brief this method is bound to an external Uds object, referenced by target, so that it can be called
@@ -120,10 +121,10 @@ class DiagnosticSessionControlContainer(object):
     # @brief this method is bound to an external Uds object, referenced by target, so that it can be called
     # as one of the in-built methods. uds.testerPresentSessionRecord() It does not operate
     # on this instance of the container class.
-    # The purpose of this method is to inform the caller of the time (in ms) since the last message was sent for the current diagnostic session.
+    # The purpose of this method is to inform the caller of the time (in seconds) since the last message was sent for the current diagnostic session.
     @staticmethod
     def __sessionTimeSinceLastSend(target, **kwargs):
-        now = int(round(time.time() * 1000))  # ... in ms
+        now = int(round(time.time()))  # ... in seconds
         try:
             return (now - target.diagnosticSessionControlContainer.lastSend)
         except:

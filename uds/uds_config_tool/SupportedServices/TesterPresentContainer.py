@@ -109,7 +109,7 @@ class TesterPresentContainer(object):
                                 tgt.testerPresent()
                 if not threading.main_thread().is_alive():
                     return
-                time.sleep(1.0) # ... check is tester present is required every 100ms (we almost certainly don't really need this level of granularity).
+                time.sleep(1.0) # ... check if tester present is required every 1s (we are unlikely to require finer granularity).
                 # Note: I'm avoiding direct wait mechanisms (of testerPresent TO) to allow for radical difference in behaviour for changing diagnostic sessions.
                 # This can of course be changed.
 

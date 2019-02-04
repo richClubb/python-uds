@@ -160,7 +160,7 @@ class TesterPresentTestCase(unittest.TestCase):
         canTp_send.assert_called_with([0x10, 0x01],False)
         self.assertEqual({'Type':[0x01], 'P3':[0x00, 0x05], 'P3Ex':[0x00, 0x0A]}, b)  # ... diagnosticSessionControl should not return a value
         b = a.testerPresentSessionRecord()
-        self.assertEqual({'reqd':True, 'timeout':10000}, b)  # ... diagnosticSessionControl should not return a value
+        self.assertEqual({'reqd':True, 'timeout':10}, b)  # ... diagnosticSessionControl should not return a value
 
 
     # patches are inserted in reverse order
@@ -212,7 +212,7 @@ class TesterPresentTestCase(unittest.TestCase):
         self.assertEqual({'Type':[0x02], 'P3':[0x00, 0x06], 'P3Ex':[0x00, 0x09]}, b)  # ... diagnosticSessionControl should not return a value
         # Check that session record for tester present is set up correctly ...
         b = a.testerPresentSessionRecord()
-        self.assertEqual({'reqd':True, 'timeout':10000}, b)  # ... diagnosticSessionControl should not return a value
+        self.assertEqual({'reqd':True, 'timeout':10}, b)  # ... diagnosticSessionControl should not return a value
 
         # Check the time evaluation since the last message send is of the correct order ...
         t1 = a.sessionTimeSinceLastSend()
