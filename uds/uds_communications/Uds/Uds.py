@@ -151,12 +151,15 @@ class Uds(object):
 
         return response
 
+    def disconnect(self):
+
+        self.tp.closeConnection()
+        
     ##
     # @brief
     def isTransmitting(self):
         #print(("requesting __transmissionActive_flag:",self.__transmissionActive_flag))
         return self.__transmissionActive_flag
-
 
 if __name__ == "__main__":
 
