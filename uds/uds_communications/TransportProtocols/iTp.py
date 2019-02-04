@@ -27,3 +27,9 @@ class iTp(object):
     @abstractmethod
     def recv(self, timeout_ms):
         raise NotImplementedError("receive function not implemented")
+
+    ##
+    # @brief interface method
+    @abstractmethod
+    def closeConnection(self):
+        raise NotImplementedError("closeConnection function not implemented")

@@ -15,6 +15,7 @@ from time import sleep
 
 from uds import iTp
 from uds import ResettableTimer
+from uds import fillArray
 from uds.uds_communications.TransportProtocols.Can.CanTpTypes import CanTpAddressingTypes, CanTpState, \
     CanTpMessageType, CanTpFsTypes, CanTpMTypes
 from uds.uds_communications.TransportProtocols.Can.CanTpTypes import CANTP_MAX_PAYLOAD_LENGTH, SINGLE_FRAME_DL_INDEX, \
@@ -26,16 +27,6 @@ from uds import CanConnectionFactory
 from uds import Config
 
 from os import path
-
-##
-# @brief pads out an array with a fill value
-def fillArray(data, length, fillValue=0):
-    output = []
-    for i in range(0, length):
-        output.append(fillValue)
-    for i in range(0, len(data)):
-        output[i] = data[i]
-    return output
 
 
 ##
@@ -349,6 +340,13 @@ class CanTp(iTp):
                 raise Exception("Timeout in waiting for message")
 
         return list(payload[:payloadLength])
+
+    ##
+    # dummy function for the time being
+    def closeConnection(self):
+        # deregister filters, listeners and notifiers etc
+        # close can connection
+        pass
 
     ##
     # @brief clear out the receive list

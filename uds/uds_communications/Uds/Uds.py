@@ -133,6 +133,9 @@ class Uds(object):
 
         return response
 
+    def disconnect(self):
+
+        self.tp.closeConnection()
 
 if __name__ == "__main__":
 
