@@ -14,6 +14,7 @@ from os import path
 from time import sleep
 
 from lin import LinBus
+#from lin import LinBusFactory
 from uds import iTp
 from uds import Config
 from uds import ResettableTimer
@@ -47,14 +48,18 @@ class LinTp(iTp):
         self.__STMin = float(self.__config["linTp"]["STMin"])
 
         # hardcoding the baudrate for the time being
-        self.__connection = LinBus.LinBus(19200)
+        self.__connection = LinBus.LinBus(19200)  # ... TODO: replace with something like the following
+        #self.__connection = LinBusFactory.LinBusFactory(linBusType="Peak",baudrate=19200)   # ... TODO: replace with defined values rather than variables
         self.__connection.on_message_received = self.callback_onReceive
+        # self.__connection.on_message_received = self.callback_onReceive  ... needs to be replaced as handled internall in the LIN bus impl
         self.__connection.startDiagnosticSchedule()
+        #self.__connection.startSchedule()  # ... replaced by this
 
         self.__recvBuffer = []
         self.__transmitBuffer = None
 
-    def send(self, payload, functionalReq=False):
+    def send(self, payload, functionalReq=False):  # TODO: functionalReq not used???
+        #self.__connection.send(payload)  # .... implemented in the LIN bus impl, so the rest of function replaced by this
         payloadLength = len(payload)
 
         if payloadLength > LINTP_MAX_PAYLOAD_LENGTH:
@@ -128,7 +133,7 @@ class LinTp(iTp):
             if timeoutTimer.isExpired(): raise Exception("Timeout")
 
     def recv(self, timeout_s):
-
+        #return self.__connection.recv(... can pass timeout from here if required ...)  # .... implemented in the LIN bus impl, so the rest of function replaced by this
         timeoutTimer = ResettableTimer(timeout_s)
 
         payload = []
@@ -185,11 +190,10 @@ class LinTp(iTp):
     ##
     # dummy function for the time being
     def closeConnection(self):
+        #self.__connection.disconnect()  # .... implemented in the LIN bus impl, so the rest of function replaced by this
         self.__connection.closeConnection()
-        pass
 
     def callback_onReceive(self, msg):
-
         msgNad = msg.payload[0]
         msgFrameId = msg.frameId
 
@@ -244,20 +248,34 @@ class LinTp(iTp):
 
         return blockList
 
+    # This function is effectively moved down to the LIN bus impl (i.e. only called from within send() which is moving down
     def transmit(self, payload):
-
         txPdu = [self.__NAD] + payload
         self.__connection.sendMasterRequest(txPdu)
         self.__transmitBuffer = txPdu
 
-    def wakeup(self):
+    """
+    def addSchedule(self):
+        #self.__connection.addSchedule(index???)  # .... implemented in the LIN bus impl, so the rest of function replaced by this
 
+    def startSchedule(self):
+        #self.__connection.startSchedule(index???)  # .... implemented in the LIN bus impl, so the rest of function replaced by this
+
+    def pauseSchedule(self):
+        #self.__connection.pauseSchedule(index???)  # .... implemented in the LIN bus impl, so the rest of function replaced by this
+
+    def stopSchedule(self):
+        #self.__connection.stopSchedule(index???)  # .... implemented in the LIN bus impl, so the rest of function replaced by this
+    """
+
+    def wakeup(self):
+        #self.__connection.wakeBus(index???)  # .... implemented in the LIN bus impl, so the rest of function replaced by this
         self.__connection.wakeup()
+
 
     ##
     # @brief used to load the local configuration options and override them with any passed in from a config file
     def __loadConfiguration(self, configPath, **kwargs):
-
         # load the base config
         baseConfig = path.dirname(__file__) + "\config.ini"
         self.__config = Config()
@@ -276,7 +294,6 @@ class LinTp(iTp):
     ##
     # @brief goes through the kwargs and overrides any of the local configuration options
     def __checkKwargs(self, **kwargs):
-
         if 'nodeAddress' in kwargs:
             self.__config['linTp']['nodeAddress'] = str(hex(kwargs['nodeAddress']))
 
