@@ -26,4 +26,5 @@ The `final report <https://github.com/richClubb/python-uds/blob/master/docs/fina
    configuration
    interface
    services
+   developer
 
