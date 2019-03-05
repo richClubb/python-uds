@@ -25,4 +25,5 @@ The `final report <https://github.com/richClubb/python-uds/blob/master/docs/fina
    installation
    configuration
    interface
+   services
 
