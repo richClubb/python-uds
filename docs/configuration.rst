@@ -1,5 +1,6 @@
+=============
 Configuration
--------------
+=============
 
 Currently the objects have the following hierarchy.
 
