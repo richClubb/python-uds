@@ -82,4 +82,4 @@ Virtual
 -------
 These keywords are specific to the python-can virtual loopback interface:
 
-- interfaceName (DEFAULT: )(Currently STATIC)
+- interfaceName (DEFAULT: virtualInterface) This needs to be the same attempting to interface using the loopback interface with Python-CAN.
