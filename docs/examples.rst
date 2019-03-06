@@ -51,16 +51,29 @@ Once this is initialised then the communication with the ECU is the same as Exam
 Example 4 - Using the ODX Parser
 --------------------------------
 
-CAN using Peak Interface with Bootloader Example ODX file
+CAN using Peak Interface with Bootloader Example ODX file.
 
+::
 
+    bootloader = createUdsConnection("Bootloader.odx", "", reqId=0x600, resId=0x650, interface="peak")
+    serialNumber = bootloader.readDataByIdentifier("ECU Serial Number")
+    print(serialNumber)
+    bootloader.writeDataByIdentifier("Engine Speed Cutoff", 5000)
+    
+This example uses the readDataByIdentifier and writeDataByIdentifier to get the Serial Number and set the Engine Speed Cutoff parameter used by the model. The string used to identify the instance of the service is defined in the ODX file as a human readable value to ease interfacing with the module.
 
-Example 5 - Using the ODX Parser
---------------------------------
-
-CAN using Peak Interface with Bootloader Example ODX file
+The returned values are encoded into their physical datatype defined in the ODX file rather than the user having to know the encoding format.
 
 Programming Sequence 1
 ----------------------
 
-This sequence is part of the standard programming sequence for an ECU over CAN. It includes a dummy seed-key exchange
+This sequence is part of the standard programming sequence for an ECU over CAN. It includes a dummy seed-key exchange.
+
+The file E400NewProgrammingSequence_ defines the programming sequence based on the Bootloader.odx_ file
+
+.. _E400NewProgrammingSequence: https://github.com/richClubb/python-uds/blob/master/test/Uds-Config-Tool/Functional%20Tests/E400NewProgrammingSequence.py 
+
+.. _Bootloader.odx: https://github.com/richClubb/python-uds/blob/master/test/Uds-Config-Tool/Functional%20Tests/Bootloader.odx 
+
+
+
