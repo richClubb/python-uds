@@ -32,6 +32,7 @@ The following sections detail the different keywords for each class
 Uds
 ---
 These keywords are used to configure the UDS instance:
+
 - P2_CAN_Server (DEFAULT: 1)
 - P2_CAN_Client (DEFAULT: 1)
 - transportProtocol (DEFAULT: CAN) Currently CAN is the only supported transport protocol
@@ -40,6 +41,7 @@ CanTp
 -----
 These keywords are used to configure the CAN Transport Protocol Instance (ISO 14229):
 
+- addressingType (DEFAULT: NORMAL)
 - reqId (DEFAULT: 0x600) This is just a default ID used by the author
 - resId (DEFAULT: 0x650) This is just a default ID used by the author
 - N_SA (DEFAULT: 0xFF) This is currently NOT SUPPORTED
@@ -52,6 +54,7 @@ LinTp
 These keywords are used to configure the CAN Transport Protocol Instance:
 
 - nodeAddress (DEFAULT: 1)
+- STMin (DEFAULT: 0.001)
 
 
 Can Interface
