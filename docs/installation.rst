@@ -15,6 +15,6 @@ as a dependency if it is not already installed.
 
 Source Install
 --------------
-To install from source you can checkout the latest github code
+To install from source you can checkout the latest github code.
 
 Make sure to add the path to your PYTHONPATH variable to use the source in your code.
