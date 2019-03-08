@@ -4,11 +4,15 @@ Configuration
 
 Currently the objects have the following hierarchy.
 
-Uds -> Tp -> Device
+::
+
+  Uds -> Tp -> Device
 
 For CAN this would be
 
-Uds -> CanTp -> CanInterface
+::
+
+  Uds -> CanTp -> CanInterface
 
 Each class has its own config file which includes parameters relevant to that scope,
 however these can be passed "down the chain" from an upper level object to initialise
@@ -23,11 +27,12 @@ E.g.
 Keyword Arguments
 -----------------
 To configure a UDS connection instance the kwargs are passed down to each called object down the chain. The configuration can be passed down either by a config file, or by manually typing the keyword into the function call. The precidence is as follows:
-Default Config
-Config File
-Keyword argument
 
-The following sections detail the different keywords for each class
+- Default Config
+- Config File
+- Keyword argument
+
+The following sections detail the different keywords for each class.
 
 Uds
 ---
