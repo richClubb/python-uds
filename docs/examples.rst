@@ -3,7 +3,7 @@ Examples
 ========
 
 Example 1 - Simple Peak
-----------------
+-----------------------
 
 This example sets up the connection using CAN with the Peak-USB Interface. This is using an E400 with the standard Embed bootloader which supports ISO-14229 UDS. The serial number of the ECU is an ASCII encoded string, in this case "0000000000000001".
 
