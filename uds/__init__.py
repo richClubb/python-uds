@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+name = "uds"
 
 from uds.uds_configuration.Config import Config
 
