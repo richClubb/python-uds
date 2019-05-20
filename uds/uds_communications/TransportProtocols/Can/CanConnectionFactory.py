@@ -2,8 +2,13 @@ import can
 from can.interfaces import pcan, vector
 from uds.uds_configuration.Config import Config
 from os import path
+from platform import system
 #from uds import CanConnection
 from uds.uds_communications.TransportProtocols.Can.CanConnection import CanConnection
+
+# used to conditionally import socketcan for linux to avoid error messages
+if system() == "Linux":
+    from can.interface import socketcan
 
 class CanConnectionFactory(object):
 
@@ -57,6 +62,19 @@ class CanConnectionFactory(object):
                 CanConnectionFactory.connections[connectionKey].addCallback(callback)
                 CanConnectionFactory.connections[connectionKey].addFilter(filter)
             return CanConnectionFactory.connections[connectionKey]
+
+        elif connectionType == 'socketcan':
+            if system() == "Linux":
+                channel = CanConnectionFactory.config['socketcan']['channel']
+                if channel not in CanConnectionFactory.connections:
+                    CanConnectionFactory.connections[channel] = CanConnection(callback, filter,
+                                                                              socketcan.SocketcanBus(channel=channel))
+                else:
+                    CanConnectionFactory.connections[channel].addCallback(callback)
+                    CanConnectionFactory.connections[channel].addFilter(filter)
+                return CanConnectionFactory.connections[channel]
+            else:
+                raise Exception("SocketCAN on Pythoncan currently only supported in Linux")
 
     @staticmethod
     def loadConfiguration(configPath=None):
