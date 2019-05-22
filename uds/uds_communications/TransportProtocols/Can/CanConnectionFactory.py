@@ -81,7 +81,7 @@ class CanConnectionFactory(object):
 
         CanConnectionFactory.config = Config()
 
-        localConfig = path.dirname(__file__) + "\config.ini"
+        localConfig = path.dirname(__file__) + "/config.ini"
         CanConnectionFactory.config.read(localConfig)
 
         if configPath is not None:

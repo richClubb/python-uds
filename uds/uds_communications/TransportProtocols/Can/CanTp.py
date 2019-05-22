@@ -104,7 +104,7 @@ class CanTp(iTp):
     def __loadConfiguration(self, configPath, **kwargs):
 
         #load the base config
-        baseConfig = path.dirname(__file__) + "\config.ini"
+        baseConfig = path.dirname(__file__) + "/config.ini"
         self.__config = Config()
         if path.exists(baseConfig):
             self.__config.read(baseConfig)

@@ -52,7 +52,7 @@ class TpFactory(object):
     def loadConfiguration(configPath=None):
 
         #load the base config
-        baseConfig = path.dirname(__file__) + "\config.ini"
+        baseConfig = path.dirname(__file__) + "/config.ini"
         config = Config()
         if path.exists(baseConfig):
             config.read(baseConfig)
