@@ -8,7 +8,7 @@ from uds.uds_communications.TransportProtocols.Can.CanConnection import CanConne
 
 # used to conditionally import socketcan for linux to avoid error messages
 if system() == "Linux":
-    from can.interface import socketcan
+    from can.interfaces import socketcan
 
 class CanConnectionFactory(object):
 
