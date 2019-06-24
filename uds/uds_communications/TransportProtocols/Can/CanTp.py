@@ -99,6 +99,8 @@ class CanTp(iTp):
 
         self.__recvBuffer = []
 
+        self.__discardNegResp = bool(self.__config['canTp']['discardNegResp'])
+
     ##
     # @brief used to load the local configuration options and override them with any passed in from a config file
     def __loadConfiguration(self, configPath, **kwargs):
@@ -142,6 +144,9 @@ class CanTp(iTp):
 
         if 'Mtype' in kwargs:
             self.__config['canTp']['Mtype'] = str(kwargs['Mtype'])
+
+        if 'discardNegResp' in kwargs:
+            self.__config['canTp']['discardNegResp'] = str(kwargs['discardNegResp'])
 
     ##
     # @brief connection method
@@ -322,6 +327,7 @@ class CanTp(iTp):
                             sequenceNumberExpected = (sequenceNumberExpected + 1) % 16
                         payload += rxPdu[CONSECUTIVE_FRAME_SEQUENCE_DATA_START_INDEX:]
                         payloadPtr += (self.__maxPduLength)
+                        timeoutTimer.restart()
                     else:
                         raise Exception("Unexpected PDU received")
 
@@ -334,7 +340,17 @@ class CanTp(iTp):
 
             if payloadLength is not None:
                 if payloadPtr >= payloadLength:
-                    endOfMessage_flag = True
+                    if (payload[0] == 0x7F) and (self.__discardNegResp):
+                        payload = []
+                        payloadPtr = 0
+                        payloadLength = None
+                        sequenceNumberExpected = 1
+                        txPdu = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+                        endOfMessage_flag = False
+                        state = CanTpState.IDLE
+                        timeoutTimer.restart()
+                    else:
+                        endOfMessage_flag = True
 
             if timeoutTimer.isExpired():
                 raise Exception("Timeout in waiting for message")
