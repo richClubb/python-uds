@@ -119,7 +119,7 @@ class Uds(object):
 
     ##
     # @brief
-    def send(self, msg, responseRequired=True, functionalReq=False):
+    def send(self, msg, responseRequired=True, functionalReq=False, ignoreFirstNegativeResp=False):
         # sets a current transmission in progress - tester present (if running) will not send if this flag is set to true
         self.__transmissionActive_flag = True
         #print(("__transmissionActive_flag set:",self.__transmissionActive_flag))
@@ -138,6 +138,9 @@ class Uds(object):
 
         # Note: in automated mode (unlikely to be used any other way), there is no response from tester present, so threading is not an issue here.
         if responseRequired:
+            response = self.tp.recv(self.__P2_CAN_Client)
+
+        if ignoreFirstNegativeResp and (response[0] == 0x7F):
             response = self.tp.recv(self.__P2_CAN_Client)
 
         # If the diagnostic session control service is supported, record the sending time for possible use by the tester present functionality (again, if present) ...		

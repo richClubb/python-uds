@@ -340,17 +340,7 @@ class CanTp(iTp):
 
             if payloadLength is not None:
                 if payloadPtr >= payloadLength:
-                    if (payload[0] == 0x7F) and (self.__discardNegResp):
-                        payload = []
-                        payloadPtr = 0
-                        payloadLength = None
-                        sequenceNumberExpected = 1
-                        txPdu = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
-                        endOfMessage_flag = False
-                        state = CanTpState.IDLE
-                        timeoutTimer.restart()
-                    else:
-                        endOfMessage_flag = True
+                    endOfMessage_flag = True
 
             if timeoutTimer.isExpired():
                 raise Exception("Timeout in waiting for message")
