@@ -56,7 +56,7 @@ class Uds(object):
     def __loadConfiguration(self, configPath=None):
 
         baseConfig = path.dirname(__file__) + "/config.ini"
-        print(baseConfig)
+        # print(baseConfig)
         self.__config = Config()
         if path.exists(baseConfig):
             self.__config.read(baseConfig)
