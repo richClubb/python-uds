@@ -8,8 +8,9 @@ Example 1 - Simple Peak
 This example sets up the connection using CAN with the Peak-USB Interface. This is using an E400 with the standard Embed bootloader which supports ISO-14229 UDS. The serial number of the ECU is an ASCII encoded string, in this case "0000000000000001".
 
 ::
+from uds import Uds
 
-    E400 = Uds(resId=0x600, reqId=0x650, transportProtocol="can", interface="peak", device="PCAN_USBBUS1")
+    E400 = Uds(resId=0x600, reqId=0x650, transportProtocol="CAN", interface="peak", device="PCAN_USBBUS1")
     try:
         response = E400.send([0x22, 0xF1, 0x8C]) # gets the entire response from the ECU
     except:
