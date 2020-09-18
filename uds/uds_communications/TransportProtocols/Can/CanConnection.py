@@ -11,6 +11,7 @@ __status__ = "Development"
 
 
 import can
+from uds import fillArray
 
 ##
 # @brief Small class to wrap the CAN Bus/Notifier/Listeners to allow multiple clients for each bus/connection
@@ -47,8 +48,27 @@ class CanConnection(object):
     def transmit(self, data, reqId, extended=False):
         canMsg = can.Message(arbitration_id=reqId, extended_id=extended)
         canMsg.dlc = 8
+        
+        length = len(data)
+        if length <= 8:
+            canMsg.dlc = 8
+        elif length <= 12:
+            canMsg.dlc = 12
+        elif length <= 16:
+            canMsg.dlc = 16
+        elif length <= 20:
+            canMsg.dlc = 20
+        elif length <= 24:
+            canMsg.dlc = 24
+        elif length <= 32:
+            canMsg.dlc = 32
+        elif length <= 48:
+            canMsg.dlc = 48
+        elif length <= 64:
+            canMsg.dlc = 64
 
         canMsg.data = data
+        canMsg.is_fd = True
 
         self.__bus.send(canMsg)
 
