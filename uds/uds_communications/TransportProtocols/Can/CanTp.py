@@ -82,13 +82,15 @@ class CanTp(iTp):
                 (self.__addressingType == CanTpAddressingTypes.NORMAL) |
                 (self.__addressingType == CanTpAddressingTypes.NORMAL_FIXED)
         ):
-            self.__maxPduLength = 7
+            self.__minPduLength = 7
+            self.__maxPduLength = 63
             self.__pduStartIndex = 0
         elif(
                 (self.__addressingType == CanTpAddressingTypes.EXTENDED) |
                 (self.__addressingType == CanTpAddressingTypes.MIXED)
         ):
-            self.__maxPduLength = 6
+            self.__minPduLength = 6
+            self.__maxPduLength = 62
             self.__pduStartIndex = 1
 
         # set up the CAN connection
@@ -241,9 +243,14 @@ class CanTp(iTp):
                     raise Exception("Unexpected response from device")
 
             if state == CanTpState.SEND_SINGLE_FRAME:
-                txPdu[N_PCI_INDEX] += (CanTpMessageType.SINGLE_FRAME << 4)
-                txPdu[SINGLE_FRAME_DL_INDEX] += payloadLength
-                txPdu[SINGLE_FRAME_DATA_START_INDEX:] = fillArray(payload, self.__maxPduLength)
+                if len(payload) < self.__minPduLength:
+                    txPdu[N_PCI_INDEX] += (CanTpMessageType.SINGLE_FRAME << 4)
+                    txPdu[SINGLE_FRAME_DL_INDEX] += payloadLength
+                    txPdu[SINGLE_FRAME_DATA_START_INDEX:] = fillArray(payload, self.__minPduLength)
+                else:
+                    txPdu[N_PCI_INDEX] = 0
+                    txPdu[FIRST_FRAME_DL_INDEX_LOW] = payloadLength
+                    txPdu[FIRST_FRAME_DATA_START_INDEX:] = payload
                 self.transmit(txPdu, functionalReq)
                 endOfMessage_flag = True
             elif state == CanTpState.SEND_FIRST_FRAME:
@@ -279,7 +286,7 @@ class CanTp(iTp):
             if(timeoutTimer.isExpired()):
                 raise Exception("Timeout waiting for message")
 
-            sleep(0.001)
+            #sleep(0.01)
 
     ##
     # @brief recv method
@@ -307,7 +314,11 @@ class CanTp(iTp):
             rxPdu = self.getNextBufferedMessage()
 
             if rxPdu is not None:
-                N_PCI = (rxPdu[N_PCI_INDEX] & 0xF0) >> 4
+                if rxPdu[N_PCI_INDEX] == 0x00:
+                    rxPdu = rxPdu[1:]
+                    N_PCI = 0
+                else:
+                    N_PCI = (rxPdu[N_PCI_INDEX] & 0xF0) >> 4
                 if state == CanTpState.IDLE:
                     if N_PCI == CanTpMessageType.SINGLE_FRAME:
                         payloadLength = rxPdu[N_PCI_INDEX & 0x0F]
