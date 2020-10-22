@@ -57,7 +57,7 @@ class CanConnectionFactory(object):
             if connectionKey not in CanConnectionFactory.connections:
                 baudrate = int(CanConnectionFactory.config['can']['baudrate'])
                 CanConnectionFactory.connections[connectionKey] = CanConnection(callback, filter,
-                                                                                can.interface.Bus(bustype='vector', poll_interval=0.001, channel=channel, bitrate=baudrate, data_bitrate=data_baudrate, fd=useFd))
+                                                                                can.interface.Bus(bustype='vector', poll_interval=0.001, channel=channel, bitrate=baudrate, data_bitrate=data_baudrate, fd=useFd, app_name=app_name))
             else:
                 CanConnectionFactory.connections[connectionKey].addCallback(callback)
                 CanConnectionFactory.connections[connectionKey].addFilter(filter)
