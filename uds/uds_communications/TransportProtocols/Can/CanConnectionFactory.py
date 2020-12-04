@@ -25,7 +25,7 @@ class CanConnectionFactory(object):
         connectionType = CanConnectionFactory.config['can']['interface']
         useFd = CanConnectionFactory.config['can']['canfd']
         baudrate = CanConnectionFactory.config['can']['baudrate']
-        data_baudrate = CanConnectionFactory.config['can']['data_baudrate']
+        data_baudrate = int(CanConnectionFactory.config['can']['data_baudrate'])
 
         if connectionType == 'virtual':
             connectionName = CanConnectionFactory.config['virtual']['interfaceName']
