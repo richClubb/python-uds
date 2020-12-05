@@ -72,3 +72,11 @@ class CanConnection(object):
 
         self.__bus.send(canMsg)
 
+    def shutdown(self):
+        self.__notifier.stop()
+        self.__bus.reset()
+        self.__bus.shutdown()
+        self.__bus = None
+    
+    def get_bus(self):
+        return self.__bus
