@@ -14,6 +14,7 @@ class CanConnectionFactory(object):
 
     connections = {}
     config = None
+    bus = None
 
     @staticmethod
     def __call__(callback=None, filter=None, configPath=None, **kwargs):
@@ -24,7 +25,7 @@ class CanConnectionFactory(object):
         # check config file and load
         connectionType = CanConnectionFactory.config['can']['interface']
         useFd = CanConnectionFactory.config['can']['canfd']
-        baudrate = CanConnectionFactory.config['can']['baudrate']
+        baudrate = int(CanConnectionFactory.config['can']['baudrate'])
         data_baudrate = int(CanConnectionFactory.config['can']['data_baudrate'])
 
         if connectionType == 'virtual':
@@ -39,11 +40,35 @@ class CanConnectionFactory(object):
             return CanConnectionFactory.connections[connectionName]
 
         elif connectionType == 'peak':
-            channel = CanConnectionFactory.config['peak']['device']
+            channel = CanConnectionFactory.config['peak']['device']            
             if channel not in CanConnectionFactory.connections:
-                CanConnectionFactory.connections[channel] = CanConnection(callback, filter,
-                                                                          pcan.PcanBus(channel,
-                                                                          bitrate=baudrate, data_bitrate=data_baudrate, fd=useFd))
+                if CanConnectionFactory.bus:
+                    CanConnectionFactory.connections[channel] = CanConnection(callback, filter, CanConnectionFactory.bus)
+                else:
+                    f_clock_mhz = int(CanConnectionFactory.config['peak']['f_clock_mhz'])
+                    nom_brp = int(CanConnectionFactory.config['peak']['nom_brp'])
+                    nom_tseg1 = int(CanConnectionFactory.config['peak']['nom_tseg1'])
+                    nom_tseg2 = int(CanConnectionFactory.config['peak']['nom_tseg2'])
+                    nom_sjw = int(CanConnectionFactory.config['peak']['nom_sjw'])
+                    data_brp = int(CanConnectionFactory.config['peak']['data_brp'])
+                    data_tseg1 = int(CanConnectionFactory.config['peak']['data_tseg1'])
+                    data_tseg2 = int(CanConnectionFactory.config['peak']['data_tseg2'])
+                    data_sjw = int(CanConnectionFactory.config['peak']['data_sjw'])
+                    CanConnectionFactory.connections[channel] = CanConnection(callback, filter,
+                                                                            can.interface.Bus(interface='pcan', 
+                                                                                                channel=channel, 
+                                                                                                state=can.bus.BusState['ACTIVE'],
+                                                                                                bitrate=500000, 
+                                                                                                fd=useFd, 
+                                                                                                f_clock_mhz=f_clock_mhz,
+                                                                                                nom_brp=nom_brp,
+                                                                                                nom_tseg1=nom_tseg1,
+                                                                                                nom_tseg2=nom_tseg2,
+                                                                                                nom_sjw=nom_sjw,
+                                                                                                data_brp=data_brp,
+                                                                                                data_tseg1=data_tseg1,
+                                                                                                data_tseg2=data_tseg2,
+                                                                                                data_sjw=data_sjw))
             else:
                 CanConnectionFactory.connections[channel].addCallback(callback)
                 CanConnectionFactory.connections[channel].addFilter(filter)
@@ -52,12 +77,15 @@ class CanConnectionFactory(object):
 
         elif connectionType == 'vector':
             channel = int(CanConnectionFactory.config['vector']['channel'])
-            app_name = CanConnectionFactory.config['vector']['appName']
+            app_name = CanConnectionFactory.config['vector']['appName']            
             connectionKey = str("{0}_{1}").format(app_name, channel)
             if connectionKey not in CanConnectionFactory.connections:
-                baudrate = int(CanConnectionFactory.config['can']['baudrate'])
-                CanConnectionFactory.connections[connectionKey] = CanConnection(callback, filter,
-                                                                                can.interface.Bus(bustype='vector', poll_interval=0.001, channel=channel, bitrate=baudrate, data_bitrate=data_baudrate, fd=useFd, app_name=app_name))
+                if CanConnectionFactory.bus:
+                    CanConnectionFactory.connections[channel] = CanConnection(callback, filter, CanConnectionFactory.bus)
+                else:
+                    serial = int(CanConnectionFactory.config['vector']['serial'])
+                    CanConnectionFactory.connections[connectionKey] = CanConnection(callback, filter,
+                                                                                    can.interface.Bus(bustype='vector', poll_interval=0.001, channel=channel, serial=serial, bitrate=baudrate, data_bitrate=data_baudrate, fd=useFd, app_name=app_name))
             else:
                 CanConnectionFactory.connections[connectionKey].addCallback(callback)
                 CanConnectionFactory.connections[connectionKey].addFilter(filter)
@@ -108,4 +136,7 @@ class CanConnectionFactory(object):
 
         if 'channel' in kwargs:
             CanConnectionFactory.config['vector']['channel'] = kwargs['channel']
+
+        if 'bus' in kwargs:
+            CanConnectionFactory.bus = kwargs['bus']
 
