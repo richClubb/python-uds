@@ -43,7 +43,7 @@ class CanConnectionFactory(object):
             channel = CanConnectionFactory.config['peak']['device']            
             if channel not in CanConnectionFactory.connections:
                 if CanConnectionFactory.bus:
-                    CanConnectionFactory.connections[channel] = CanConnection(callback, filter, CanConnectionFactory.bus)
+                    CanConnectionFactory.connections[channel] = CanConnection(callback, filter, CanConnectionFactory.bus, True)
                 else:
                     f_clock_mhz = int(CanConnectionFactory.config['peak']['f_clock_mhz'])
                     nom_brp = int(CanConnectionFactory.config['peak']['nom_brp'])
@@ -81,7 +81,7 @@ class CanConnectionFactory(object):
             connectionKey = str("{0}_{1}").format(app_name, channel)
             if connectionKey not in CanConnectionFactory.connections:
                 if CanConnectionFactory.bus:
-                    CanConnectionFactory.connections[channel] = CanConnection(callback, filter, CanConnectionFactory.bus)
+                    CanConnectionFactory.connections[connectionKey] = CanConnection(callback, filter, CanConnectionFactory.bus, True)
                 else:
                     serial = int(CanConnectionFactory.config['vector']['serial'])
                     CanConnectionFactory.connections[connectionKey] = CanConnection(callback, filter,
