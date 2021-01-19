@@ -83,7 +83,9 @@ class CanConnectionFactory(object):
                 if CanConnectionFactory.bus:
                     CanConnectionFactory.connections[connectionKey] = CanConnection(callback, filter, CanConnectionFactory.bus, True)
                 else:
-                    serial = int(CanConnectionFactory.config['vector']['serial'])
+                    serial = None;
+                    if CanConnectionFactory.config['vector']['serial'] != None:
+                        serial = int(CanConnectionFactory.config['vector']['serial'])
                     CanConnectionFactory.connections[connectionKey] = CanConnection(callback, filter,
                                                                                     can.interface.Bus(bustype='vector', poll_interval=0.001, channel=channel, serial=serial, bitrate=baudrate, data_bitrate=data_baudrate, fd=useFd, app_name=app_name))
             else:
