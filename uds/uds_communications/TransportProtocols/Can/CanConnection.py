@@ -47,7 +47,7 @@ class CanConnection(object):
     ##
     # @brief transmits the data over can using can connection
     def transmit(self, data, reqId, extended=False):
-        canMsg = can.Message(arbitration_id=reqId, extended_id=extended)
+        canMsg = can.Message(arbitration_id=reqId, is_extended_id=extended)
         canMsg.dlc = len(data)
         
         canMsg.data = data
