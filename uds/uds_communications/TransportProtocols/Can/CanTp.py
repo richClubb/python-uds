@@ -243,7 +243,7 @@ class CanTp(iTp):
                     raise Exception("Unexpected response from device")
 
             if state == CanTpState.SEND_SINGLE_FRAME:
-                if len(payload) < self.__minPduLength:
+                if len(payload) <= self.__minPduLength:
                     txPdu[N_PCI_INDEX] += (CanTpMessageType.SINGLE_FRAME << 4)
                     txPdu[SINGLE_FRAME_DL_INDEX] += payloadLength
                     txPdu[SINGLE_FRAME_DATA_START_INDEX:] = fillArray(payload, self.__minPduLength)
