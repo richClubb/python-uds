@@ -76,6 +76,20 @@ class CanConnectionFactory(object):
             else:
                 raise Exception("SocketCAN on Pythoncan currently only supported in Linux")
 
+        elif connectionType == 'neovi':
+            channel = int(CanConnectionFactory.config['neovi']['channel'])
+            baudrate = int(CanConnectionFactory.config['can']['baudrate'])
+            CanConnectionFactory.connections[channel] = CanConnection(callback, filter,
+                                                                      ics_neovi.NeoViBus(channel,
+                                                                      bitrate=baudrate))
+            return CanConnectionFactory.connections[channel]
+        elif connectionType == 'kvaser':
+            channel = int(CanConnectionFactory.config['kvaser']['channel'])
+            baudrate = int(CanConnectionFactory.config['can']['baudrate'])
+            CanConnectionFactory.connections[channel] = CanConnection(callback, filter,
+                                                                      kvaser.canlib.KvaserBus(channel,
+                                                                      bitrate=baudrate))
+            return CanConnectionFactory.connections[channel]
     @staticmethod
     def loadConfiguration(configPath=None):
 
