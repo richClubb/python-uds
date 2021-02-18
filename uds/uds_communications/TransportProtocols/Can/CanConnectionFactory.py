@@ -1,5 +1,5 @@
 import can
-from can.interfaces import pcan, vector
+from can.interfaces import pcan, vector, kvaser, ics_neovi
 from uds.uds_configuration.Config import Config
 from os import path
 from platform import system
@@ -121,4 +121,6 @@ class CanConnectionFactory(object):
 
         if 'channel' in kwargs:
             CanConnectionFactory.config['vector']['channel'] = kwargs['channel']
+            CanConnectionFactory.config['kvaser']['channel'] = kwargs['channel']
+            CanConnectionFactory.config['neovi']['channel'] = kwargs['channel']
 
