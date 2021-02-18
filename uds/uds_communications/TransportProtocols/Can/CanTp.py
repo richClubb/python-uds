@@ -457,7 +457,6 @@ class CanTp(iTp):
     #         self.__connection.transmit(data, self.__reqId, self.__addressingType)
 
     def transmit(self, data, functionalReq=False):
-
         # check functional request
         if functionalReq:
             raise Exception("Functional requests are currently not supported")
@@ -476,3 +475,21 @@ class CanTp(iTp):
             raise Exception("I do not know how to send this addressing type")
 
         self.__connection.transmit(transmitData, self.__reqId, )
+
+    @property
+    def reqIdAddress(self):
+        return self.__reqId
+
+    @reqIdAddress.setter
+    def reqIdAddress(self, value):
+        self.__reqId = value
+
+    @property
+    def resIdAddress(self):
+        return self.__resId
+
+    @resIdAddress.setter
+    def resIdAddress(self, value):
+        self.__resId = value
+
+    
