@@ -1,5 +1,5 @@
 import can
-from can.interfaces import pcan, vector, kvaser, ics_neovi
+from can.interfaces import pcan, vector, kvaser
 from uds.uds_configuration.Config import Config
 from os import path
 from platform import system
@@ -9,6 +9,8 @@ from uds.uds_communications.TransportProtocols.Can.CanConnection import CanConne
 # used to conditionally import socketcan for linux to avoid error messages
 if system() == "Linux":
     from can.interfaces import socketcan
+else:
+    from can.interfaces import ics_neovi
 
 class CanConnectionFactory(object):
 
