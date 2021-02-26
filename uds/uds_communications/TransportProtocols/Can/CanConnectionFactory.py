@@ -1,5 +1,6 @@
 import can
 from can.interfaces import pcan, vector
+from can.interfaces.vector.canlib import get_channel_configs
 from uds.uds_configuration.Config import Config
 from os import path
 from platform import system
@@ -85,7 +86,10 @@ class CanConnectionFactory(object):
                 else:
                     serial = None;
                     if 'serial' in CanConnectionFactory.config['vector']:
-                        serial = int(CanConnectionFactory.config['vector']['serial'])
+                        if str(CanConnectionFactory.config['vector']['serial']).upper() == "AUTO":
+                            serial = CanConnectionFactory.detectVectorSerial()
+                        else:
+                            serial = int(CanConnectionFactory.config['vector']['serial'])
                     CanConnectionFactory.connections[connectionKey] = CanConnection(callback, filter,
                                                                                     can.interface.Bus(bustype='vector', poll_interval=0.001, channel=channel, serial=serial, bitrate=baudrate, data_bitrate=data_baudrate, fd=useFd, app_name=app_name))
             else:
@@ -136,9 +140,27 @@ class CanConnectionFactory(object):
         if 'appName' in kwargs:
             CanConnectionFactory.config['vector']['appName'] = kwargs['appName']
 
+        if 'serial' in kwargs:
+            CanConnectionFactory.config['vector']['serial'] = kwargs['serial']
+
         if 'channel' in kwargs:
             CanConnectionFactory.config['vector']['channel'] = kwargs['channel']
 
         if 'bus' in kwargs:
             CanConnectionFactory.bus = kwargs['bus']
 
+    @staticmethod
+    def detectVectorSerial() -> int:
+        # Get all channels configuration
+        channel_configs = get_channel_configs()
+        # Getting all serial numbers
+        serial_numbers = set()
+        for channel_config in channel_configs:
+            serial_number = channel_config.serialNumber
+            if serial_number != 0:
+                serial_numbers.add(channel_config.serialNumber)
+        if serial_numbers:
+            # if several devices are discovered, the first Vector Box is chosen
+            serial_number = min(serial_numbers)
+            return serial_number
+        return None
