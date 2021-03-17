@@ -286,7 +286,6 @@ class CanTp(iTp):
     # @param [in] timeout_ms The timeout to wait before exiting
     # @return a list
     def recv(self, timeout_s):
-
         timeoutTimer = ResettableTimer(timeout_s)
 
         payload = []
