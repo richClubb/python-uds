@@ -168,7 +168,11 @@ class ihexFile(object):
 
             if recordType == ihexRecordType.Data:   # ... We match data first as it's the most common record type, so more efficient
                 if nextAddress is None:
-                    currentBlock.startAddress = baseAddress + address
+                    if currentBlock is None:
+                        currentBlock = ihexData()  #... start a new block
+                        currentBlock.startAddress = address
+                    else:
+                        currentBlock.startAddress = baseAddress + address
 
                 # As each line of data is individually addressed, there may be disconuities present in the data. 
                 # If so (i.e. a gap in the addressing), and a continuous record is required, then pad the data.
