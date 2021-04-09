@@ -164,3 +164,8 @@ class CanConnectionFactory(object):
             serial_number = min(serial_numbers)
             return serial_number
         return None
+
+    @staticmethod
+    def clearConnections():
+        # purge connections dict at can disconnect
+        CanConnectionFactory.connections = {}

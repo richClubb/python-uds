@@ -363,6 +363,7 @@ class CanTp(iTp):
     def closeConnection(self):
         # deregister filters, listeners and notifiers etc
         # close can connection
+        CanConnectionFactory.clearConnections()
         self.__connection.shutdown()
         self.__connection = None
 
