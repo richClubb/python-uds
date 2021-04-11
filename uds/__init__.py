@@ -34,6 +34,10 @@ from uds.uds_config_tool import DecodeFunctions
 from uds.uds_config_tool import FunctionCreation
 from uds.uds_config_tool import SupportedServices
 from uds.uds_config_tool.ISOStandard.ISOStandard import IsoServices
+from uds.uds_config_tool.ISOStandard.ISOStandard import IsoRoutineControlType
+from uds.uds_config_tool.ISOStandard.ISOStandard import IsoInputOutputControlOptionRecord
+from uds.uds_config_tool.ISOStandard.ISOStandard import IsoReadDTCSubfunction
+from uds.uds_config_tool.ISOStandard.ISOStandard import IsoReadDTCStatusMask
 from uds.uds_config_tool.IHexFunctions import ihexFile
 
 # main uds import

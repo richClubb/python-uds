@@ -82,6 +82,24 @@ def intArrayToIntArray(aArray, inputType, outputType):
     output = list(map(buildIntFromList, [result[(i * size):(i * size + size)] for i in range(numberOfEntries)]))
     return output
 
+##
+# @brief convert an data input of integer type to a list of bytes.
+def intValueToByteArray(intInput, bitLength):
+    if not isinstance(intInput, int):
+        return intInput
+    
+    if (bitLength <= 8):
+        inputFunc = lambda x: [x]
+    elif (bitLength <= 16):
+        inputFunc = lambda x: [extractIntFromPosition(x, 8, 8), extractIntFromPosition(x, 8, 0)]
+    elif (bitLength <= 24):
+        inputFunc = lambda x: [extractIntFromPosition(x, 8, 16), extractIntFromPosition(x, 8, 8), extractIntFromPosition(x, 8, 0)]
+    elif (bitLength <= 32):
+        inputFunc = lambda x: [extractIntFromPosition(x, 8, 24), extractIntFromPosition(x, 8, 16), extractIntFromPosition(x, 8, 8), extractIntFromPosition(x, 8, 0)]
+    else:
+        raise TypeError('input length of integer type is too long!')
+
+    return(inputFunc(intInput))
 
 if __name__ == "__main__":
     a = intArrayToIntArray([0x5AA55AA5, 0xA55AA55A], 'int32', 'int32')
@@ -120,3 +138,19 @@ if __name__ == "__main__":
 
     a = intArrayToUInt8Array([0x01], 'int8')
     print(a)
+
+    a= intValueToByteArray([0x00, 0xB1], 16)
+    print(a)
+    assert ([0x00, 0xB1] == a)
+
+    a= intValueToByteArray([0x00, 0xB1], 32)
+    print(a)
+    assert ([0x00, 0xB1] == a)
+
+    a= intValueToByteArray(0xB1, 16)
+    print(a)
+    assert ([0x00, 0xB1] == a)
+
+    a= intValueToByteArray(0xB1, 32)
+    print(a)
+    assert ([0x00, 0x00, 0x00, 0xB1] == a)

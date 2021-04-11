@@ -38,7 +38,12 @@ checkFunctionTemplate = str("def {0}(input):\n"
                             "    if(optionRecord != optionRecordExpected): raise Exception(\"Option Record Received not as expected. Expected: {{0}}; Got {{1}}\".format(optionRecordExpected, optionRecord))")
 
 negativeResponseFuncTemplate = str("def {0}(input):\n"
-                                   "    {1}")
+                                   "    result = {{}}\n"
+                                   "    nrcList = {5}\n"
+                                   "    if input[{1}:{2}] == [{3}]:\n"
+                                   "        result['NRC'] = input[{4}]\n"
+                                   "        result['NRC_Label'] = nrcList.get(result['NRC'])\n"
+                                   "    return result")
 
 encodePositiveResponseFuncTemplate = str("def {0}(input):\n"
                                          "    result = {{}}\n"
@@ -83,29 +88,15 @@ class InputOutputControlMethodFactory(IServiceMethodFactory):
                 # Catching any exceptions where we don't know the type - these will fail elsewhere, but at least we can test what does work.
                 try:
                     encodingType = dataObjectElement.find('DIAG-CODED-TYPE').attrib['BASE-DATA-TYPE']
+                    bitLength = dataObjectElement.find('DIAG-CODED-TYPE').find('BIT-LENGTH').text
                 except:
                     encodingType = "unknown"  # ... for now just drop into the "else" catch-all
                 if(encodingType) == "A_ASCIISTRING":
                     functionStringList = "DecodeFunctions.stringToIntList(drDict['{0}'], None)".format(longName)
                     functionStringSingle = "DecodeFunctions.stringToIntList(dataRecord, None)"
-                elif(encodingType) == "A_INT8":
-                    functionStringList = "DecodeFunctions.intArrayToIntArray(drDict['{0}'], 'int8', 'int8')".format(longName)
-                    functionStringSingle = "DecodeFunctions.intArrayToIntArray(dataRecord, 'int8', 'int8')"
-                elif(encodingType) == "A_INT16":
-                    functionStringList = "DecodeFunctions.intArrayToIntArray(drDict['{0}'], 'int16', 'int8')".format(longName)
-                    functionStringSingle = "DecodeFunctions.intArrayToIntArray(dataRecord, 'int16', 'int8')"
-                elif(encodingType) == "A_INT32":
-                    functionStringList = "DecodeFunctions.intArrayToIntArray(drDict['{0}'], 'int32', 'int8')".format(longName)
-                    functionStringSingle = "DecodeFunctions.intArrayToIntArray(dataRecord, 'int32', 'int8')"
-                elif(encodingType) == "A_UINT8":
-                    functionStringList = "DecodeFunctions.intArrayToIntArray(drDict['{0}'], 'uint8', 'int8')".format(longName)
-                    functionStringSingle = "DecodeFunctions.intArrayToIntArray(dataRecord, 'uint8', 'int8')"
-                elif(encodingType) == "A_UINT16":
-                    functionStringList = "DecodeFunctions.intArrayToIntArray(drDict['{0}'], 'uint16', 'int8')".format(longName)
-                    functionStringSingle = "DecodeFunctions.intArrayToIntArray(dataRecord, 'uint16', 'int8')"
-                elif(encodingType) == "A_UINT32":
-                    functionStringList = "DecodeFunctions.intArrayToIntArray(drDict['{0}'], 'uint32', 'int8')".format(longName)
-                    functionStringSingle = "DecodeFunctions.intArrayToIntArray(dataRecord, 'uint32', 'int8')"
+                elif (encodingType in ("A_INT8", "A_INT16", "A_INT32", "A_UINT8", "A_UINT16", "A_UINT32")):
+                    functionStringList = "DecodeFunctions.intValueToByteArray(drDict['{0}'], {1})".format(longName, bitLength)
+                    functionStringSingle = "DecodeFunctions.intValueToByteArray(dataRecord, {0})".format(bitLength)
                 else:
                     functionStringList = "drDict['{0}']".format(longName)
                     functionStringSingle = "dataRecord"
@@ -348,6 +339,8 @@ class InputOutputControlMethodFactory(IServiceMethodFactory):
                 except:
                     semantic = None
 
+                bytePosition = int(param.find('BYTE-POSITION').text)
+
                 if semantic == 'SERVICE-ID':
                     serviceId = param.find('CODED-VALUE').text
                     start = int(param.find('BYTE-POSITION').text)
@@ -355,16 +348,18 @@ class InputOutputControlMethodFactory(IServiceMethodFactory):
                     bitLength = int((param.find('DIAG-CODED-TYPE')).find('BIT-LENGTH').text)
                     listLength = int(bitLength/8)
                     end = start + listLength
-
-                    checkString = "if input[{0}:{1}] == [{2}]: raise Exception(\"Detected negative response: {{0}}\".format(str([hex(n) for n in input])))".format(start,
-                                                                                                                                                                   end,
-                                                                                                                                                                   serviceId)
-                    negativeResponseChecks.append(checkString)
-
-                    pass
+                elif bytePosition == 2:
+                    nrcPos = bytePosition
+                    expectedNrcDict = {}
+                    try:
+                        dataObjectElement = xmlElements[(param.find('DOP-REF')).attrib['ID-REF']]
+                        nrcList = dataObjectElement.find('COMPU-METHOD').find('COMPU-INTERNAL-TO-PHYS').find('COMPU-SCALES')
+                        for nrcElem in nrcList:
+                            expectedNrcDict[int(nrcElem.find('UPPER-LIMIT').text)] = nrcElem.find('COMPU-CONST').find('VT').text
+                    except:
+                        pass
                 pass
 
-        negativeResponseFunctionString = negativeResponseFuncTemplate.format(check_negativeResponseFunctionName,
-                                                                             "\n....".join(negativeResponseChecks))
+        negativeResponseFunctionString = negativeResponseFuncTemplate.format(check_negativeResponseFunctionName, start, end, serviceId, nrcPos, expectedNrcDict)
         exec(negativeResponseFunctionString)
         return locals()[check_negativeResponseFunctionName]

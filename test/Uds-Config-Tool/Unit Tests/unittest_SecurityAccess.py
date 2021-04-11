@@ -45,17 +45,17 @@ class WDBITestCase(unittest.TestCase):
                               tp_send,
                               tp_recv):
         tp_send.return_value = False
-        tp_recv.return_value = [0x7F, 0x00, 0x00]
+        tp_recv.return_value = [0x7F, 0x21, 0x31]
 
         # Parameters: xml file (odx file), ecu name (not currently used) ...
         a = createUdsConnection('../Functional Tests/Bootloader.odx',
                                 'bootloader',
                                 transportProtocol="TEST")
 
-        with self.assertRaises(Exception) as context:
-            b = a.securityAccess('Programming Request')
+        b = a.securityAccess('Programming Request')
 
-        self.assertTrue("Found negative response" in str(context.exception))
+        tp_send.assert_called_with([0x27, 0x01], False)
+        self.assertEqual(0x31, b['NRC'])
 
     # patches are inserted in reverse order
     @mock.patch('uds.TestTp.recv')

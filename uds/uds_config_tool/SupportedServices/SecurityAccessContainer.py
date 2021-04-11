@@ -41,9 +41,11 @@ class SecurityAccessContainer(object):
             response = target.send(requestFunction(key, suppressResponse), responseRequired=not(suppressResponse))
         else:
             response = target.send(requestFunction(suppressResponse))
-
+        
         if suppressResponse is False:
-            checkNegativeResponseFunction(response)
+            nrc = checkNegativeResponseFunction(response) # ... return nrc value if a negative response is received
+            if nrc:
+                return nrc
 
         if checkDataFunction is None:
             output = None
