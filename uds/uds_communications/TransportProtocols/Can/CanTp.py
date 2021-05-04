@@ -67,7 +67,7 @@ class CanTp(iTp):
             self.__addressingType = CanTpAddressingTypes.NORMAL
         elif addressingType == "NORMAL_FIXED":
             self.__addressingType = CanTpAddressingTypes.NORMAL_FIXED
-        elif self.__addressingType == "EXTENDED":
+        elif addressingType == "EXTENDED":
             self.__addressingType = CanTpAddressingTypes.EXTENDED
         elif addressingType == "MIXED":
             self.__addressingType = CanTpAddressingTypes.MIXED
@@ -452,15 +452,16 @@ class CanTp(iTp):
 
         transmitData = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
 
-        if (
-            (self.__addressingType == CanTpAddressingTypes.NORMAL) |
-            (self.__addressingType == CanTpAddressingTypes.NORMAL_FIXED)
-        ):
+        if self.__addressingType == CanTpAddressingTypes.NORMAL or \
+                self.__addressingType == CanTpAddressingTypes.NORMAL_FIXED:
             transmitData = data
+            self.__connection.transmit(transmitData, self.__reqId)
         elif self.__addressingType == CanTpAddressingTypes.MIXED:
             transmitData[0] = self.__N_AE
             transmitData[1:] = data
+            self.__connection.transmit(transmitData, self.__reqId)
+        elif self.__addressingType == CanTpAddressingTypes.EXTENDED:
+            transmitData = data
+            self.__connection.transmit(transmitData, self.__reqId)
         else:
             raise Exception("I do not know how to send this addressing type")
-
-        self.__connection.transmit(transmitData, self.__reqId, )
