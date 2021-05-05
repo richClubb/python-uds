@@ -51,6 +51,8 @@ def intArrayToUInt8Array(aArray, inputType):
 
 
 def intArrayToIntArray(aArray, inputType, outputType):
+    if type(aArray) != list:
+        aArray = [aArray]
     if (inputType == 'uint32'):
         inputFunc = lambda x: [extractIntFromPosition(x, 8, 24), extractIntFromPosition(x, 8, 16),
                           extractIntFromPosition(x, 8, 8), extractIntFromPosition(x, 8, 0)]

@@ -461,7 +461,8 @@ class CanTp(iTp):
             transmitData[1:] = data
             self.__connection.transmit(transmitData, self.__reqId)
         elif self.__addressingType == CanTpAddressingTypes.EXTENDED:
-            transmitData = data
-            self.__connection.transmit(transmitData, self.__reqId)
+            transmitData[0] = self.__N_AE
+            transmitData[1:] = data
+            self.__connection.transmit(transmitData, self.__reqId, extended=True)
         else:
             raise Exception("I do not know how to send this addressing type")
