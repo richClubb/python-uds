@@ -243,7 +243,7 @@ class LinTp(iTp):
                 counter = 0
                 currBlock = []
 
-        if len(currBlock) is not 0:
+        if len(currBlock) != 0:
             blockList.append(fillArray(currBlock, self.__maxPduLength))
 
         return blockList
