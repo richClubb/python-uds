@@ -36,7 +36,7 @@ class DoipTp(iTp):
         self.__activation_type = int(self.__config["DoIP"]["activationType"], 16)
         self.__protocol_version = int(self.__config["DoIP"]["protocolVersion"], 16)
         self.__client_logical_address = int(self.__config["DoIP"]["clientLogicalAddress"], 16)
-        self.__use_secure = self.__config["DoIP"]["useSecure"]
+        self.__use_secure = self.__config["DoIP"]["useSecure"] == 'True'
 
         self.__connection = DoIPClient(
             self.__ecu_ip,
@@ -51,7 +51,7 @@ class DoipTp(iTp):
         self.__connection.send_diagnostic(bytearray(payload))
 
     def recv(self, timeout_s):
-        return list(self._connection.receive_diagnostic(timeout=timeout_s))
+        return list(self.__connection.receive_diagnostic(timeout=timeout_s))
 
     def closeConnection(self):
         self.__connection.close()
@@ -59,7 +59,7 @@ class DoipTp(iTp):
     ##
     # @brief clear out the receive list
     def clearBufferedMessages(self):
-        self._connection.empty_rxqueue()
+        self.__connection.empty_rxqueue()
 
     ##
     # @brief used to load the local configuration options and override them with any passed in from a config file
@@ -95,4 +95,4 @@ class DoipTp(iTp):
         if 'client_logical_address' in kwargs:
             self.__config['DoIP']['clientLogicalAddress'] = hex(kwargs['client_logical_address'])
         if 'use_secure' in kwargs:
-            self.__config['DoIP']['useSecure'] = True if kwargs['use_secure'] else False
+            self.__config['DoIP']['useSecure'] = 'True' if kwargs['use_secure'] else 'False'

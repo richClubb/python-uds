@@ -73,7 +73,7 @@ Example 5 - Simpole DOIP Using Media Converter
 
     from uds import Uds
 
-    ecu = Uds(transportProtocol="DoIP")
+    ecu = Uds(transportProtocol="DoIP", ecu_ip="192.168.1.1", ecu_logical_address=1)
     try:
         response = ecu.send([0x3E, 0x00])
         print(TesterPresent)  # This should be [0x7E, 0x00]
