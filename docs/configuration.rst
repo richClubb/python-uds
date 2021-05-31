@@ -42,6 +42,17 @@ These keywords are used to configure the UDS instance:
 - P2_CAN_Client (DEFAULT: 1)
 - transportProtocol (DEFAULT: CAN) Currently CAN is the only supported transport protocol
 
+DoipTP
+------
+These keywords are used to configure the DoIP Transport Protocol Instance (ISO 13400):
+ - ecuIP (DEFAULT: 127.0.0.1) This it the IP of the target ECU
+ - ecuLogicalAddress (DEFAULT: 0x00E0) This is the logical address of the target ECU
+ - tcpPort (DEFAULT: 13400) This is the TCP port of the target ECU. Defined in the spec
+ - activationType (DEFAULT: 0) This is the activation request type to use
+ - protocolVersion (DEFAULT: 0x02) This is the DoIP Protocol Version. Shouldn't need to change
+ - clientLogicalAddress (DEFAULT: 0x0E00) This is the logical address of the tester
+ - useSecure (DEFAULT: False) Enables TLS if required
+
 CanTp
 -----
 These keywords are used to configure the CAN Transport Protocol Instance (ISO 14229):

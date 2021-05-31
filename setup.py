@@ -25,9 +25,9 @@ setup(
     # Needed to actually package something
     packages=find_packages(exclude=["test", "test.*"]),
     # Needed for dependencies
-    install_requires=['python-can>=3.0.0', 'python-lin>=0.1.0'],
+    install_requires=['python-can>=3.0.0', 'python-lin>=0.1.0', 'doipclient>=1.0.1'],
     # *strongly* suggested for sharing
-    version='1.1.0',
+    version='1.2.0',
     # The license can be anything you like
     license='MIT',
     description='A library for interfacing with UDS using python',

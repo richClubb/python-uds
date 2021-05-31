@@ -8,7 +8,8 @@ Example 1 - Simple Peak
 This example sets up the connection using CAN with the Peak-USB Interface. This is using an E400 with the standard Embed bootloader which supports ISO-14229 UDS. The serial number of the ECU is an ASCII encoded string, in this case "0000000000000001".
 
 ::
-from uds import Uds
+
+    from uds import Uds
 
     E400 = Uds(resId=0x600, reqId=0x650, transportProtocol="CAN", interface="peak", device="PCAN_USBBUS1")
     try:
@@ -64,6 +65,21 @@ CAN using Peak Interface with Bootloader Example ODX file.
 This example uses the readDataByIdentifier and writeDataByIdentifier to get the Serial Number and set the Engine Speed Cutoff parameter used by the model. The string used to identify the instance of the service is defined in the ODX file as a human readable value to ease interfacing with the module.
 
 The returned values are encoded into their physical datatype defined in the ODX file rather than the user having to know the encoding format.
+
+Example 5 - Simpole DOIP Using Media Converter
+----------------------------------------------
+
+::
+
+    from uds import Uds
+
+    ecu = Uds(transportProtocol="DoIP")
+    try:
+        response = ecu.send([0x3E, 0x00])
+        print(TesterPresent)  # This should be [0x7E, 0x00]
+    except:
+        print("Send did not complete")
+
 
 Programming Sequence 1
 ----------------------

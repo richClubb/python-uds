@@ -13,6 +13,9 @@ from uds.uds_communications.TransportProtocols.iTp import iTp
 
 from uds.uds_communications.TransportProtocols.Can.CanConnectionFactory import CanConnectionFactory
 
+# DoIP Imports
+from uds.uds_communications.TransportProtocols.DoIP.DoipTp import DoipTp
+
 # CAN Imports
 from uds.uds_communications.TransportProtocols.Can import CanTpTypes
 from uds.uds_communications.TransportProtocols.Can.CanTp import CanTp
