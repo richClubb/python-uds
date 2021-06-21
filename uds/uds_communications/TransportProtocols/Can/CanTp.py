@@ -187,35 +187,39 @@ class CanTp(iTp):
     # @param payload the payload to be sent
     # @param use_external_snd_rcv_functions boolean to state if external sending and receiving functions shall be used
     def encode_isotp(self, payload, functionalReq: bool = False, use_external_snd_rcv_functions: bool = False):
-        data = None
+
+        payloadLength = len(payload)
+        payloadPtr = 0
+
+        state = CanTpState.IDLE
+
+        if payloadLength > CANTP_MAX_PAYLOAD_LENGTH:
+            raise Exception("Payload too large for CAN Transport Protocol")
+
+        if payloadLength < self.__maxPduLength:
+            state = CanTpState.SEND_SINGLE_FRAME
+        else:
+            # we might need a check for functional request as we may not be able to service functional requests for
+            # multi frame requests
+            state = CanTpState.SEND_FIRST_FRAME
+
+        txPdu = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+
+        sequenceNumber = 1
         endOfMessage_flag = False
+
+        blockList = []
+        currBlock = []
+
+        # this needs fixing to get the timing from the config
+        timeoutTimer = ResettableTimer(1)
+        stMinTimer = ResettableTimer()
+
+        data = None
+
         while endOfMessage_flag is False:
             rxPdu = self.getNextBufferedMessage()
-            payloadLength = len(payload)
-            payloadPtr = 0
 
-            state = CanTpState.IDLE
-
-            if payloadLength > CANTP_MAX_PAYLOAD_LENGTH:
-                raise Exception("Payload too large for CAN Transport Protocol")
-
-            if payloadLength < self.__maxPduLength:
-                state = CanTpState.SEND_SINGLE_FRAME
-            else:
-                # we might need a check for functional request as we may not be able to service functional requests for
-                # multi frame requests
-                state = CanTpState.SEND_FIRST_FRAME
-
-            txPdu = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
-
-            sequenceNumber = 1
-
-            blockList = []
-            currBlock = []
-
-            # this needs fixing to get the timing from the config
-            timeoutTimer = ResettableTimer(1)
-            stMinTimer = ResettableTimer()
             if rxPdu is not None:
                 N_PCI = (rxPdu[0] & 0xF0) >> 4
                 if N_PCI == CanTpMessageType.FLOW_CONTROL:
