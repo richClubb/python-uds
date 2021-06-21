@@ -119,7 +119,7 @@ class Uds(object):
 
     ##
     # @brief
-    def send(self, msg, responseRequired=True, functionalReq=False):
+    def send(self, msg, responseRequired=True, functionalReq=False, tpWaitTime = 0.01):
         # sets a current transmission in progress - tester present (if running) will not send if this flag is set to true
         self.__transmissionActive_flag = True
         #print(("__transmissionActive_flag set:",self.__transmissionActive_flag))
@@ -129,7 +129,7 @@ class Uds(object):
         # We're moving to threaded operation, so putting a lock around the send operation. 
         self.sendLock.acquire()
         try:
-            a = self.tp.send(msg, functionalReq)
+            a = self.tp.send(msg, functionalReq, toWaitTime)
         finally:
             self.sendLock.release()
 

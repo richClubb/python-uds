@@ -27,7 +27,7 @@ setup(
     # Needed for dependencies
     install_requires=['python-can>=3.0.0', 'python-lin>=0.1.0'],
     # *strongly* suggested for sharing
-    version='1.2.2',
+    version='1.2.3',
     # The license can be anything you like
     license='MIT',
     description='A library for interfacing with UDS using python',
