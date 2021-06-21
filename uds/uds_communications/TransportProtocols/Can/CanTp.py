@@ -174,8 +174,9 @@ class CanTp(iTp):
     # @param [in] payload the payload to be sent
     def send(self, payload, functionalReq=False, tpWaitTime = 0.01):
         self.clearBufferedMessages()
-        self.encode_isotp(payload, functionalReq)
+        result = self.encode_isotp(payload, functionalReq)
         sleep(tpWaitTime)
+        return result
 
     ##
     # @brief encoding method
@@ -290,7 +291,7 @@ class CanTp(iTp):
     # @param [in] timeout_ms The timeout to wait before exiting
     # @return a list
     def recv(self, timeout_s=1):
-        self.decode_isotp(timeout_s)
+        return self.decode_isotp(timeout_s)
 
     ##
     # @breif decoding method
