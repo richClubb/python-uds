@@ -176,17 +176,18 @@ class CanTp(iTp):
     ##
     # @brief send method
     # @param [in] payload the payload to be sent
+    # @param [in] tpWaitTime time to wait inside loop
     def send(self, payload, functionalReq=False, tpWaitTime = 0.01):
         self.clearBufferedMessages()
-        result = self.encode_isotp(payload, functionalReq)
-        sleep(tpWaitTime)
+        result = self.encode_isotp(payload, functionalReq, tpWaitTime = tpWaitTime)
         return result
 
     ##
     # @brief encoding method
     # @param payload the payload to be sent
     # @param use_external_snd_rcv_functions boolean to state if external sending and receiving functions shall be used
-    def encode_isotp(self, payload, functionalReq: bool = False, use_external_snd_rcv_functions: bool = False):
+    # @param [in] tpWaitTime time to wait inside loop
+    def encode_isotp(self, payload, functionalReq: bool = False, use_external_snd_rcv_functions: bool = False, tpWaitTime = 0.01):
 
         payloadLength = len(payload)
         payloadPtr = 0
@@ -287,6 +288,8 @@ class CanTp(iTp):
                             timeoutTimer.start()
                             state = CanTpState.WAIT_FLOW_CONTROL
                             # print("waiting for flow control")
+            else:
+                sleep(tpWaitTime)
             txPdu = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
             # timer / exit condition checks
             if timeoutTimer.isExpired():
