@@ -97,6 +97,10 @@ class CanTp(iTp):
                                                  self.__resId, # <-filter
                                                  configPath, **kwargs)
 
+        self.__recvBuffer = []
+
+        self.__discardNegResp = bool(self.__config['canTp']['discardNegResp'])
+
     ##
     # @brief used to load the local configuration options and override them with any passed in from a config file
     def __loadConfiguration(self, configPath, **kwargs):
