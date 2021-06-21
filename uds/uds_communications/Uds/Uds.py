@@ -129,7 +129,7 @@ class Uds(object):
         # We're moving to threaded operation, so putting a lock around the send operation. 
         self.sendLock.acquire()
         try:
-            a = self.tp.send(msg, functionalReq, toWaitTime)
+            a = self.tp.send(msg, functionalReq, tpWaitTime)
         finally:
             self.sendLock.release()
 
