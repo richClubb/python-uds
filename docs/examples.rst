@@ -66,7 +66,7 @@ This example uses the readDataByIdentifier and writeDataByIdentifier to get the 
 
 The returned values are encoded into their physical datatype defined in the ODX file rather than the user having to know the encoding format.
 
-Example 5 - Simpole DOIP Using Media Converter
+Example 5 - Simple DOIP Using Media Converter
 ----------------------------------------------
 
 ::
