@@ -84,7 +84,7 @@ class CanConnectionFactory(object):
                 if CanConnectionFactory.bus:
                     CanConnectionFactory.connections[connectionKey] = CanConnection(callback, filter, CanConnectionFactory.bus, True)
                 else:
-                    serial = None;
+                    serial = None
                     if 'serial' in CanConnectionFactory.config['vector']:
                         if str(CanConnectionFactory.config['vector']['serial']).upper() == "AUTO":
                             serial = CanConnectionFactory.detectVectorSerial()

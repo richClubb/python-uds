@@ -359,6 +359,8 @@ class CanTp(iTp):
                         timeoutTimer.restart()
                     else:
                         raise Exception("Unexpected PDU received")
+            else:
+                sleep(0.01)
 
             if state == CanTpState.SEND_FLOW_CONTROL:
                 txPdu[N_PCI_INDEX] = 0x30
