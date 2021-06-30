@@ -47,6 +47,10 @@ from uds.uds_config_tool.ISOStandard.ISOStandard import IsoServices, IsoRoutineC
 
 from uds.uds_config_tool.ISOStandard.ISOStandard import IsoServices
 
+class UdsContainerAccess:
+    containers: list = []
+
+
 def get_serviceIdFromXmlElement(diagServiceElement, xmlElements):
 
     requestKey = diagServiceElement.find('REQUEST-REF').attrib['ID-REF']
@@ -139,6 +143,8 @@ def createUdsConnection(xmlFile, ecuName, ihexFile=None, **kwargs):
 
                 positiveResponseFunction = DiagnosticSessionControlMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
                 diagnosticSessionControlContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
+                if diagnosticSessionControlContainer not in UdsContainerAccess.containers:
+                    UdsContainerAccess.containers.append(diagnosticSessionControlContainer)
 
             elif serviceId == IsoServices.EcuReset:
                 ecuResetService_flag = True
@@ -165,6 +171,8 @@ def createUdsConnection(xmlFile, ecuName, ihexFile=None, **kwargs):
 
                 ecuResetContainer.add_checkFunction(checkFunc, humanName)
                 ecuResetContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
+                if ecuResetContainer not in UdsContainerAccess.containers:
+                    UdsContainerAccess.containers.append(ecuResetContainer)
                 pass
 
             elif serviceId == IsoServices.ReadDataByIdentifier:
@@ -189,6 +197,9 @@ def createUdsConnection(xmlFile, ecuName, ihexFile=None, **kwargs):
 
                 positiveResponseFunction = ReadDataByIdentifierMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
                 rdbiContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
+                
+                if rdbiContainer not in UdsContainerAccess.containers:
+                    UdsContainerAccess.containers.append(rdbiContainer)
 
             elif serviceId == IsoServices.SecurityAccess:
                 if isDiagServiceTransmissionOnly(value) == False:
@@ -202,6 +213,9 @@ def createUdsConnection(xmlFile, ecuName, ihexFile=None, **kwargs):
                     securityAccessContainer.add_positiveResponseFunction(checkFunction, humanName)
 
                     securityAccess_flag = True
+
+                    if securityAccessContainer not in UdsContainerAccess.containers:
+                        UdsContainerAccess.containers.append(securityAccessContainer)
 
             elif serviceId == IsoServices.WriteDataByIdentifier:
 
@@ -218,6 +232,9 @@ def createUdsConnection(xmlFile, ecuName, ihexFile=None, **kwargs):
                 positiveResponseFunction = WriteDataByIdentifierMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
                 wdbiContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
 
+                if wdbiContainer not in UdsContainerAccess.containers:
+                    UdsContainerAccess.containers.append(wdbiContainer)
+
             elif serviceId == IsoServices.ClearDiagnosticInformation:
                 clearDTCService_flag = True
                 requestFunc = ClearDTCMethodFactory.create_requestFunction(value, xmlElements)
@@ -231,6 +248,9 @@ def createUdsConnection(xmlFile, ecuName, ihexFile=None, **kwargs):
 
                 positiveResponseFunction = ClearDTCMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
                 clearDTCContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
+
+                if clearDTCContainer not in UdsContainerAccess.containers:
+                    UdsContainerAccess.containers.append(clearDTCContainer)
 
             elif serviceId == IsoServices.ReadDTCInformation:
                 readDTCService_flag = True
@@ -247,6 +267,9 @@ def createUdsConnection(xmlFile, ecuName, ihexFile=None, **kwargs):
                     positiveResponseFunction = ReadDTCMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
                     readDTCContainer.add_positiveResponseFunction(positiveResponseFunction, "FaultMemoryRead"+qualifier)
 
+                    if readDTCContainer not in UdsContainerAccess.containers:
+                        UdsContainerAccess.containers.append(readDTCContainer)
+
             elif serviceId == IsoServices.InputOutputControlByIdentifier:
                 ioCtrlService_flag = True
                 requestFunc, qualifier  = InputOutputControlMethodFactory.create_requestFunction(value, xmlElements)
@@ -261,6 +284,9 @@ def createUdsConnection(xmlFile, ecuName, ihexFile=None, **kwargs):
 
                     positiveResponseFunction = InputOutputControlMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
                     inputOutputControlContainer.add_positiveResponseFunction(positiveResponseFunction, humanName+qualifier)
+
+                    if inputOutputControlContainer not in UdsContainerAccess.containers:
+                        UdsContainerAccess.containers.append(inputOutputControlContainer)
 
             elif serviceId == IsoServices.RoutineControl:
                 routineCtrlService_flag = True
@@ -278,6 +304,9 @@ def createUdsConnection(xmlFile, ecuName, ihexFile=None, **kwargs):
                     positiveResponseFunction = RoutineControlMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
                     routineControlContainer.add_positiveResponseFunction(positiveResponseFunction, humanName+qualifier)
 
+                    if routineControlContainer not in UdsContainerAccess.containers:
+                        UdsContainerAccess.containers.append(routineControlContainer)
+
             elif serviceId == IsoServices.RequestDownload:
                 reqDownloadService_flag = True
                 requestFunc = RequestDownloadMethodFactory.create_requestFunction(value, xmlElements)
@@ -291,6 +320,9 @@ def createUdsConnection(xmlFile, ecuName, ihexFile=None, **kwargs):
 
                 positiveResponseFunction = RequestDownloadMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
                 requestDownloadContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
+
+                if requestDownloadContainer not in UdsContainerAccess.containers:
+                    UdsContainerAccess.containers.append(requestDownloadContainer)
 
             elif serviceId == IsoServices.RequestUpload:
                 reqUploadService_flag = True
@@ -306,6 +338,9 @@ def createUdsConnection(xmlFile, ecuName, ihexFile=None, **kwargs):
                 positiveResponseFunction = RequestUploadMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
                 requestUploadContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
 
+                if requestUploadContainer not in UdsContainerAccess.containers:
+                    UdsContainerAccess.containers.append(requestUploadContainer)
+
             elif serviceId == IsoServices.TransferData:
                 transDataService_flag = True
                 requestFunc = TransferDataMethodFactory.create_requestFunction(value, xmlElements)
@@ -320,6 +355,9 @@ def createUdsConnection(xmlFile, ecuName, ihexFile=None, **kwargs):
                 positiveResponseFunction = TransferDataMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
                 transferDataContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
 
+                if transferDataContainer not in UdsContainerAccess.containers:
+                    UdsContainerAccess.containers.append(transferDataContainer)
+
             elif serviceId == IsoServices.RequestTransferExit:
                 transExitService_flag = True
                 requestFunc = TransferExitMethodFactory.create_requestFunction(value, xmlElements)
@@ -333,6 +371,9 @@ def createUdsConnection(xmlFile, ecuName, ihexFile=None, **kwargs):
 
                 positiveResponseFunction = TransferExitMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
                 transferExitContainer.add_positiveResponseFunction(positiveResponseFunction, humanName)
+
+                if transferExitContainer not in UdsContainerAccess.containers:
+                    UdsContainerAccess.containers.append(transferExitContainer)
 
             elif serviceId == IsoServices.TesterPresent:
                 # Note: Tester Present is presented here as an exposed service, but it will typically not be called directly, as we'll hook it 
@@ -349,6 +390,9 @@ def createUdsConnection(xmlFile, ecuName, ihexFile=None, **kwargs):
 
                 positiveResponseFunction = TesterPresentMethodFactory.create_encodePositiveResponseFunction(value, xmlElements)
                 testerPresentContainer.add_positiveResponseFunction(positiveResponseFunction, "TesterPresent")
+
+                if testerPresentContainer not in UdsContainerAccess.containers:
+                    UdsContainerAccess.containers.append(testerPresentContainer)
 
 
     #need to be able to extract the reqId and resId

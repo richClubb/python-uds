@@ -11,16 +11,18 @@ __status__ = "Development"
 
 
 import can
+from uds import fillArray
 
 ##
 # @brief Small class to wrap the CAN Bus/Notifier/Listeners to allow multiple clients for each bus/connection
 class CanConnection(object):
 
-    def __init__(self, callback, filter, bus):
+    def __init__(self, callback, filter, bus, is_external=False):
         self.__bus = bus
+        self.__is_external = is_external
         listener = can.Listener()
         listener.on_message_received = callback
-        self.__notifier = can.Notifier(self.__bus, [listener], 0)
+        self.__notifier = can.Notifier(self.__bus, [listener], 1.0)
         self.__listeners = [listener]
         self.addFilter(filter)
 
@@ -45,10 +47,20 @@ class CanConnection(object):
     ##
     # @brief transmits the data over can using can connection
     def transmit(self, data, reqId, extended=False):
-        canMsg = can.Message(arbitration_id=reqId, extended_id=extended)
-        canMsg.dlc = 8
-
+        canMsg = can.Message(arbitration_id=reqId, is_extended_id=extended)
+        canMsg.dlc = len(data)
+        
         canMsg.data = data
+        canMsg.is_fd = True
 
         self.__bus.send(canMsg)
 
+    def shutdown(self):
+        self.__notifier.stop()
+        if self.__is_external == False:
+            self.__bus.reset()
+            self.__bus.shutdown()
+            self.__bus = None
+    
+    def get_bus(self):
+        return self.__bus

@@ -89,7 +89,9 @@ class ReadDataByIdentifierContainer(object):
 
         # Send request and receive the response ...
         response = target.send(request) # ... this returns a single response which may cover 1 or more DID response values
-        negativeResponseFunction(response)  # ... throws an exception to be handled at a higher level if a negative response is received
+        negativeResponse = negativeResponseFunction(response)  # ... return nrc value if a negative response is received
+        if negativeResponse:
+            return negativeResponse
 
         # We have a positive response so check that it makes sense to us ...
         SIDLength = checkSIDLengthFunction()

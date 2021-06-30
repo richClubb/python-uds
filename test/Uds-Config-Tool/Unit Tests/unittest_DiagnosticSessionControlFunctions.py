@@ -20,8 +20,8 @@ import sys, traceback
 class DiagnosticSessionControlTestCase(unittest.TestCase):
 
     # patches are inserted in reverse order
-    @mock.patch('uds.CanTp.recv')
-    @mock.patch('uds.CanTp.send')
+    @mock.patch('uds.TestTp.recv')
+    @mock.patch('uds.TestTp.send')
     def test_diagSessCtrlRequestDfltNoSuppress(self,
                      canTp_send,
                      canTp_recv):
@@ -30,7 +30,7 @@ class DiagnosticSessionControlTestCase(unittest.TestCase):
         canTp_recv.return_value = [0x50, 0x01, 0x00, 0x05, 0x00, 0x0A] # ... can return 1 to N bytes in the sessionParameterRecord - looking into this one
 
         # Parameters: xml file (odx file), ecu name (not currently used) ...
-        a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
+        a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader', transportProtocol="TEST")
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __diagnosticSessionControl to diagnosticSessionControl in the uds object, so can now call below
 
         b = a.diagnosticSessionControl('Default Session')	# ... calls __diagnosticSessionControl, which does the Uds.send
@@ -39,8 +39,8 @@ class DiagnosticSessionControlTestCase(unittest.TestCase):
 
 
     # patches are inserted in reverse order
-    @mock.patch('uds.CanTp.recv')
-    @mock.patch('uds.CanTp.send')
+    @mock.patch('uds.TestTp.recv')
+    @mock.patch('uds.TestTp.send')
     def test_diagSessCtrlRequestNoSuppress(self,
                      canTp_send,
                      canTp_recv):
@@ -49,7 +49,7 @@ class DiagnosticSessionControlTestCase(unittest.TestCase):
         canTp_recv.return_value = [0x50, 0x01, 0x00, 0x05, 0x00, 0x0A] # ... can return 1 to N bytes in the sessionParameterRecord - looking into this one
 
         # Parameters: xml file (odx file), ecu name (not currently used) ...
-        a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
+        a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader', transportProtocol="TEST")
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __diagnosticSessionControl to diagnosticSessionControl in the uds object, so can now call below
 
         b = a.diagnosticSessionControl('Default Session',suppressResponse=False)	# ... calls __diagnosticSessionControl, which does the Uds.send
@@ -58,14 +58,14 @@ class DiagnosticSessionControlTestCase(unittest.TestCase):
 
 
     # patches are inserted in reverse order
-    @mock.patch('uds.CanTp.send')
+    @mock.patch('uds.TestTp.send')
     def test_diagSessCtrlRequestSuppress(self,
                      canTp_send):
 
         canTp_send.return_value = False
 
         # Parameters: xml file (odx file), ecu name (not currently used) ...
-        a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
+        a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader', transportProtocol="TEST")
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __diagnosticSessionControl to diagnosticSessionControl in the uds object, so can now call below
 
         b = a.diagnosticSessionControl('Default Session',suppressResponse=True)	# ... calls __diagnosticSessionControl, which does the Uds.send
@@ -76,8 +76,8 @@ class DiagnosticSessionControlTestCase(unittest.TestCase):
 
 
     # patches are inserted in reverse order
-    @mock.patch('uds.CanTp.recv')
-    @mock.patch('uds.CanTp.send')
+    @mock.patch('uds.TestTp.recv')
+    @mock.patch('uds.TestTp.send')
     def test_diagSessCtrlRequestProgrammingSession(self,
                      canTp_send,
                      canTp_recv):
@@ -86,7 +86,7 @@ class DiagnosticSessionControlTestCase(unittest.TestCase):
         canTp_recv.return_value = [0x50, 0x02, 0x00, 0x06, 0x00, 0x09] # ... can return 1 to N bytes in the sessionParameterRecord - looking into this one
 
         # Parameters: xml file (odx file), ecu name (not currently used) ...
-        a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
+        a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader', transportProtocol="TEST")
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __diagnosticSessionControl to diagnosticSessionControl in the uds object, so can now call below
 
         b = a.diagnosticSessionControl('Programming Session')	# ... calls __diagnosticSessionControl, which does the Uds.send
@@ -95,8 +95,8 @@ class DiagnosticSessionControlTestCase(unittest.TestCase):
 
 
     # patches are inserted in reverse order
-    @mock.patch('uds.CanTp.recv')
-    @mock.patch('uds.CanTp.send')
+    @mock.patch('uds.TestTp.recv')
+    @mock.patch('uds.TestTp.send')
     def test_diagSessCtrlRequestExtendedDiagnosticSession(self,
                      canTp_send,
                      canTp_recv):
@@ -105,7 +105,7 @@ class DiagnosticSessionControlTestCase(unittest.TestCase):
         canTp_recv.return_value = [0x50, 0x03, 0x00, 0x07, 0x00, 0x08] # ... can return 1 to N bytes in the sessionParameterRecord - looking into this one
 
         # Parameters: xml file (odx file), ecu name (not currently used) ...
-        a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
+        a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader', transportProtocol="TEST")
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __diagnosticSessionControl to diagnosticSessionControl in the uds object, so can now call below
 
         b = a.diagnosticSessionControl('Extended Diagnostic Session')	# ... calls __diagnosticSessionControl, which does the Uds.send
@@ -115,17 +115,17 @@ class DiagnosticSessionControlTestCase(unittest.TestCase):
 
 
     # patches are inserted in reverse order
-    @mock.patch('uds.CanTp.recv')
-    @mock.patch('uds.CanTp.send')
+    @mock.patch('uds.TestTp.recv')
+    @mock.patch('uds.TestTp.send')
     def test_diagSessCtrlNegResponse_0x12(self,
                      canTp_send,
                      canTp_recv):
 
         canTp_send.return_value = False
-        canTp_recv.return_value = [0x7F, 0x12]
+        canTp_recv.return_value = [0x7F, 0x10, 0x12]
 
         # Parameters: xml file (odx file), ecu name (not currently used) ...
-        a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
+        a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader', transportProtocol="TEST")
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __diagnosticSessionControl to diagnosticSessionControl in the uds object, so can now call below
 
         try:
@@ -133,21 +133,21 @@ class DiagnosticSessionControlTestCase(unittest.TestCase):
         except:
             b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
         canTp_send.assert_called_with([0x10, 0x01],False)
-        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x12']", b)  # ... diagnosticSessionControl should not return a value
+        self.assertEqual(0x12, b['NRC'])
 
 
     # patches are inserted in reverse order
-    @mock.patch('uds.CanTp.recv')
-    @mock.patch('uds.CanTp.send')
+    @mock.patch('uds.TestTp.recv')
+    @mock.patch('uds.TestTp.send')
     def test_diagSessCtrlNegResponse_0x13(self,
                      canTp_send,
                      canTp_recv):
 
         canTp_send.return_value = False
-        canTp_recv.return_value = [0x7F, 0x13]
+        canTp_recv.return_value = [0x7F, 0x10, 0x13]
 
         # Parameters: xml file (odx file), ecu name (not currently used) ...
-        a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
+        a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader', transportProtocol="TEST")
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __diagnosticSessionControl to diagnosticSessionControl in the uds object, so can now call below
 
         try:
@@ -155,21 +155,21 @@ class DiagnosticSessionControlTestCase(unittest.TestCase):
         except:
             b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
         canTp_send.assert_called_with([0x10, 0x01],False)
-        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x13']", b)  # ... diagnosticSessionControl should not return a value
+        self.assertEqual(0x13, b['NRC'])
 
 
     # patches are inserted in reverse order
-    @mock.patch('uds.CanTp.recv')
-    @mock.patch('uds.CanTp.send')
+    @mock.patch('uds.TestTp.recv')
+    @mock.patch('uds.TestTp.send')
     def test_diagSessCtrlNegResponse_0x22(self,
                      canTp_send,
                      canTp_recv):
 
         canTp_send.return_value = False
-        canTp_recv.return_value = [0x7F, 0x22]
+        canTp_recv.return_value = [0x7F, 0x10, 0x22]
 
         # Parameters: xml file (odx file), ecu name (not currently used) ...
-        a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader')
+        a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader', transportProtocol="TEST")
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __diagnosticSessionControl to diagnosticSessionControl in the uds object, so can now call below
 
         try:
@@ -177,7 +177,7 @@ class DiagnosticSessionControlTestCase(unittest.TestCase):
         except:
             b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
         canTp_send.assert_called_with([0x10, 0x01],False)
-        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x22']", b)  # ... diagnosticSessionControl should not return a value
+        self.assertEqual(0x22, b['NRC'])
 
 
 

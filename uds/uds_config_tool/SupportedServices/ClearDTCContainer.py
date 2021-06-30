@@ -46,7 +46,9 @@ class ClearDTCContainer(object):
 
         # Send request and receive the response ...
         response = target.send(request) # ... this returns a single response
-        negativeResponseFunction(response)  # ... throws an exception to be handled at a higher level if a negative response is received
+        nrc = negativeResponseFunction(response)  # ... return nrc value if a negative response is received
+        if nrc:
+            return nrc
 
         # We have a positive response so check that it makes sense to us ...
         checkFunction(response)
