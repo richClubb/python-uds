@@ -107,4 +107,5 @@ class CanConnectionFactory(object):
 
         if 'channel' in kwargs:
             CanConnectionFactory.config['vector']['channel'] = kwargs['channel']
+            CanConnectionFactory.config['socketcan']['channel'] = kwargs['channel']
 
