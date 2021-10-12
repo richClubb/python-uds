@@ -181,12 +181,12 @@ Also, we will most need to handle scaling at some stage within DecodeFunctions.p
 
                     # 
                     encodeFunctions.append("encoded += {}".format(functionStringList))
-                    encodeFunction = "    else:\n" \
-                                     "      if type(optionRecord) == list:\n" \
-                                     "          for elem in dataRecord:\n" \
-                                     "              encoded += {0}\n" \
-                                     "      else:\n" \
-                                     "          encoded = {1}".format(
+                    encodeFunction = "        else:\n" \
+                                     "          if type(optionRecord) == list:\n" \
+                                     "              for elem in optionRecord:\n" \
+                                     "                  encoded += {0}\n" \
+                                     "          else:\n" \
+                                     "              encoded = {1}".format(
                         functionStringSingle.replace("optionRecord", "elem"),
                         functionStringSingle)
 
