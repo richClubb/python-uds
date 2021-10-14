@@ -32,7 +32,7 @@ setup(
     license='MIT',
     description='A library for interfacing with UDS using python',
     classifiers=[
-        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.8",
         "Operating System :: OS Independent"
     ],
     include_package_data=True
