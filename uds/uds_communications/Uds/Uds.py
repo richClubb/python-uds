@@ -44,24 +44,14 @@ class Uds(object):
 
         # used as a semaphore for the tester present
         self.__transmissionActive_flag = False
-        #print(("__transmissionActive_flag initialised (clear):",self.__transmissionActive_flag))
-        # The above flag should prevent testerPresent operation, but in case of race conditions, this lock prevents actual overlapo in the sending
         self.sendLock = threading.Lock()
 
         # Process any ihex file that has been associated with the ecu at initialisation
         self.__ihexFile = ihexFileParser(ihexFile) if ihexFile is not None else None
 
-
-
     def __loadConfiguration(self, configPath=None):
-
         baseConfig = path.dirname(__file__) + "/config.ini"
-        # print(baseConfig)
         self.__config = Config()
-        if path.exists(baseConfig):
-            self.__config.read(baseConfig)
-        else:
-            raise FileNotFoundError("No base config file")
 
         # check the config path
         if configPath is not None:
@@ -69,6 +59,11 @@ class Uds(object):
                 self.__config.read(configPath)
             else:
                 raise FileNotFoundError("specified config not found")
+        else:
+            if path.exists(baseConfig):
+                self.__config.read(baseConfig)
+            else:
+                raise FileNotFoundError("No base config file")
 
     def __checkKwargs(self, **kwargs):
 

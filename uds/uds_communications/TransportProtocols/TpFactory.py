@@ -54,10 +54,6 @@ class TpFactory(object):
         #load the base config
         baseConfig = path.dirname(__file__) + "/config.ini"
         config = Config()
-        if path.exists(baseConfig):
-            config.read(baseConfig)
-        else:
-            raise FileNotFoundError("No base config file")
 
         # check the config path
         if configPath is not None:
@@ -65,6 +61,11 @@ class TpFactory(object):
                 config.read(configPath)
             else:
                 raise FileNotFoundError("specified config not found")
+        else:
+            if path.exists(baseConfig):
+                config.read(baseConfig)
+            else:
+                raise FileNotFoundError("No base config file")
 
         TpFactory.config = config
 
