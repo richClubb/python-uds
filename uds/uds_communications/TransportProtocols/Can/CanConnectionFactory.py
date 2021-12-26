@@ -38,7 +38,7 @@ class CanConnectionFactory(object):
         elif connectionType == 'peak':
             channel = CanConnectionFactory.config['peak']['device']
             if channel not in CanConnectionFactory.connections:
-                baudrate = CanConnectionFactory.config['can']['baudrate']
+                baudrate = int( CanConnectionFactory.config['can']['baudrate'] )
                 CanConnectionFactory.connections[channel] = CanConnection(callback, filter,
                                                                           pcan.PcanBus(channel,
                                                                           bitrate=baudrate))
