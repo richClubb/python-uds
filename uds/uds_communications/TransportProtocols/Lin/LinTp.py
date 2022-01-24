@@ -279,10 +279,6 @@ class LinTp(iTp):
         # load the base config
         baseConfig = path.dirname(__file__) + "/config.ini"
         self.__config = Config()
-        if path.exists(baseConfig):
-            self.__config.read(baseConfig)
-        else:
-            raise FileNotFoundError("No base config file")
 
         # check the config path
         if configPath is not None:
@@ -290,6 +286,11 @@ class LinTp(iTp):
                 self.__config.read(configPath)
             else:
                 raise FileNotFoundError("specified config not found")
+        else:
+            if path.exists(baseConfig):
+                self.__config.read(baseConfig)
+            else:
+                raise FileNotFoundError("No base config file")
 
     ##
     # @brief goes through the kwargs and overrides any of the local configuration options
