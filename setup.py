@@ -19,7 +19,7 @@ with open("README.md", "r") as fh:
 setup(
     # Needed to silence warnings (and to be a worthwhile package)
     name='python-uds',
-    url='https://github.com/richClubb/python-uds',
+    url= 'https://github.com/1atabey1/python-uds',
     author='Richard Clubb',
     author_email='richard.clubb@embeduk.com',
     # Needed to actually package something
@@ -27,14 +27,12 @@ setup(
     # Needed for dependencies
     install_requires=['python-can>=3.0.0', 'python-lin>=0.1.0'],
     # *strongly* suggested for sharing
-    version='1.1.0',
+    version='1.1.1',
     # The license can be anything you like
     license='MIT',
     description='A library for interfacing with UDS using python',
-    # We will also need a readme eventually (there will be a warning)
-    # long_description=open('README.txt').read(),
     classifiers=[
-        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.8",
         "Operating System :: OS Independent"
     ],
     include_package_data=True

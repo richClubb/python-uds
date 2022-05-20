@@ -80,11 +80,22 @@ class InputOutputControlMethodFactory(IServiceMethodFactory):
                 dataObjectElement = xmlElements[(param.find('DOP-REF')).attrib['ID-REF']]
                 longName = param.find('LONG-NAME').text
                 bytePosition = int(param.find('BYTE-POSITION').text)
-                # Catching any exceptions where we don't know the type - these will fail elsewhere, but at least we can test what does work.
+
+                # If data object is a structure
+                if dataObjectElement.find('DIAG-CODED-TYPE') is None:
+                    dataObjectElement = xmlElements[dataObjectElement.find('PARAMS').find('PARAM').find('DOP-REF').attrib['ID-REF']]
+
                 try:
                     encodingType = dataObjectElement.find('DIAG-CODED-TYPE').attrib['BASE-DATA-TYPE']
                 except:
                     encodingType = "unknown"  # ... for now just drop into the "else" catch-all
+
+                # We need to always respect given bit lengths!
+                try:
+                    bitLength = int(dataObjectElement.find('DIAG-CODED-TYPE').find('BIT-LENGTH').text)
+                except:
+                    bitLength = 32  # just assume maximum length when in doubt
+
                 if(encodingType) == "A_ASCIISTRING":
                     functionStringList = "DecodeFunctions.stringToIntList(drDict['{0}'], None)".format(longName)
                     functionStringSingle = "DecodeFunctions.stringToIntList(dataRecord, None)"
@@ -94,26 +105,55 @@ class InputOutputControlMethodFactory(IServiceMethodFactory):
                 elif(encodingType) == "A_INT16":
                     functionStringList = "DecodeFunctions.intArrayToIntArray(drDict['{0}'], 'int16', 'int8')".format(longName)
                     functionStringSingle = "DecodeFunctions.intArrayToIntArray(dataRecord, 'int16', 'int8')"
+                    if bitLength < 16:
+                        functionStringList = functionStringList + "[1:]"
+                        functionStringSingle = functionStringSingle + "[1:]"
                 elif(encodingType) == "A_INT32":
                     functionStringList = "DecodeFunctions.intArrayToIntArray(drDict['{0}'], 'int32', 'int8')".format(longName)
                     functionStringSingle = "DecodeFunctions.intArrayToIntArray(dataRecord, 'int32', 'int8')"
+                    if bitLength == 8:
+                        functionStringList = functionStringList + "[3:]"
+                        functionStringSingle = functionStringSingle + "[3:]"
+                    elif bitLength == 16:
+                        functionStringList = functionStringList + "[2:]"
+                        functionStringSingle = functionStringSingle + "[2:]"
+                    elif bitLength == 24:
+                        functionStringList = functionStringList + "[1:]"
+                        functionStringSingle = functionStringSingle + "[1:]"
                 elif(encodingType) == "A_UINT8":
                     functionStringList = "DecodeFunctions.intArrayToIntArray(drDict['{0}'], 'uint8', 'int8')".format(longName)
                     functionStringSingle = "DecodeFunctions.intArrayToIntArray(dataRecord, 'uint8', 'int8')"
                 elif(encodingType) == "A_UINT16":
                     functionStringList = "DecodeFunctions.intArrayToIntArray(drDict['{0}'], 'uint16', 'int8')".format(longName)
                     functionStringSingle = "DecodeFunctions.intArrayToIntArray(dataRecord, 'uint16', 'int8')"
+                    if bitLength < 16:
+                        functionStringList = functionStringList + "[1:]"
+                        functionStringSingle = functionStringSingle + "[1:]"
                 elif(encodingType) == "A_UINT32":
                     functionStringList = "DecodeFunctions.intArrayToIntArray(drDict['{0}'], 'uint32', 'int8')".format(longName)
                     functionStringSingle = "DecodeFunctions.intArrayToIntArray(dataRecord, 'uint32', 'int8')"
+                    if bitLength == 8:
+                        functionStringList = functionStringList + "[3:]"
+                        functionStringSingle = functionStringSingle + "[3:]"
+                    elif bitLength == 16:
+                        functionStringList = functionStringList + "[2:]"
+                        functionStringSingle = functionStringSingle + "[2:]"
+                    elif bitLength == 24:
+                        functionStringList = functionStringList + "[1:]"
+                        functionStringSingle = functionStringSingle + "[1:]"
                 else:
                     functionStringList = "drDict['{0}']".format(longName)
                     functionStringSingle = "dataRecord"
 
                 # 
-                encodeFunctions.append("encoded += {1}".format(longName,
-                                                                 functionStringList))
-                encodeFunction = "    else:\n        encoded = {1}".format(longName,functionStringSingle)
+                encodeFunctions.append("encoded += {}".format(functionStringList))
+                encodeFunction = "    else:\n" \
+                                 "      if type(dataRecord) == list:\n" \
+                                 "          for elem in dataRecord:\n" \
+                                 "              encoded += {0}\n" \
+                                 "      else:\n" \
+                                 "          encoded = {1}".format(functionStringSingle.replace("dataRecord", "elem"),
+                                                                  functionStringSingle)
 
         funcString = requestFuncTemplate.format(shortName,
                                                 serviceId,
@@ -197,7 +237,12 @@ class InputOutputControlMethodFactory(IServiceMethodFactory):
                         bitLength = int(dataObjectElement.find('DIAG-CODED-TYPE').find('BIT-LENGTH').text)
                         listLength = int(bitLength/8)
                         totalLength += listLength
-                    else:
+                    elif(dataObjectElement.tag == "STRUCTURE"):
+                        dataObjectElement = xmlElements[dataObjectElement.find('PARAMS').find('PARAM').find('DOP-REF').attrib['ID-REF']]
+                        start = int(param.find('BYTE-POSITION').text)
+                        bitLength = int(dataObjectElement.find('DIAG-CODED-TYPE').find('BIT-LENGTH').text)
+                        listLength = int(bitLength / 8)
+                        totalLength += listLength
                         pass
                 else:
                     pass
@@ -217,6 +262,7 @@ class InputOutputControlMethodFactory(IServiceMethodFactory):
                                                            optionRecordStart, # 8
                                                            optionRecordEnd, # 9
                                                            totalLength) # 10
+
         exec(checkFunctionString)
         return locals()[checkFunctionName]
 

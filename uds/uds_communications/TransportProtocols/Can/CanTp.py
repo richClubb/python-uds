@@ -67,7 +67,7 @@ class CanTp(iTp):
             self.__addressingType = CanTpAddressingTypes.NORMAL
         elif addressingType == "NORMAL_FIXED":
             self.__addressingType = CanTpAddressingTypes.NORMAL_FIXED
-        elif self.__addressingType == "EXTENDED":
+        elif addressingType == "EXTENDED":
             self.__addressingType = CanTpAddressingTypes.EXTENDED
         elif addressingType == "MIXED":
             self.__addressingType = CanTpAddressingTypes.MIXED
@@ -104,14 +104,9 @@ class CanTp(iTp):
     ##
     # @brief used to load the local configuration options and override them with any passed in from a config file
     def __loadConfiguration(self, configPath, **kwargs):
-
         #load the base config
         baseConfig = path.dirname(__file__) + "/config.ini"
         self.__config = Config()
-        if path.exists(baseConfig):
-            self.__config.read(baseConfig)
-        else:
-            raise FileNotFoundError("No base config file")
 
         # check the config path
         if configPath is not None:
@@ -119,6 +114,11 @@ class CanTp(iTp):
                 self.__config.read(configPath)
             else:
                 raise FileNotFoundError("specified config not found")
+        else:
+            if path.exists(baseConfig):
+                self.__config.read(baseConfig)
+            else:
+                raise FileNotFoundError("No base config file")
 
     ##
     # @brief goes through the kwargs and overrides any of the local configuration options
@@ -352,7 +352,8 @@ class CanTp(iTp):
     def closeConnection(self):
         # deregister filters, listeners and notifiers etc
         # close can connection
-        pass
+        for _, conn in CanConnectionFactory.connections.items():
+            conn.close()
 
     ##
     # @brief clear out the receive list
@@ -452,15 +453,17 @@ class CanTp(iTp):
 
         transmitData = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
 
-        if (
-            (self.__addressingType == CanTpAddressingTypes.NORMAL) |
-            (self.__addressingType == CanTpAddressingTypes.NORMAL_FIXED)
-        ):
+        if self.__addressingType == CanTpAddressingTypes.NORMAL or \
+                self.__addressingType == CanTpAddressingTypes.NORMAL_FIXED:
             transmitData = data
+            self.__connection.transmit(transmitData, self.__reqId)
         elif self.__addressingType == CanTpAddressingTypes.MIXED:
             transmitData[0] = self.__N_AE
             transmitData[1:] = data
+            self.__connection.transmit(transmitData, self.__reqId)
+        elif self.__addressingType == CanTpAddressingTypes.EXTENDED:
+            transmitData[0] = self.__N_AE
+            transmitData[1:] = data
+            self.__connection.transmit(transmitData, self.__reqId, extended=True)
         else:
             raise Exception("I do not know how to send this addressing type")
-
-        self.__connection.transmit(transmitData, self.__reqId, )

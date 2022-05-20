@@ -199,7 +199,14 @@ class ReadDataByIdentifierMethodFactory(IServiceMethodFactory):
                     dataObjectElement = xmlElements[(param.find('DOP-REF')).attrib['ID-REF']]
                     longName = param.find('LONG-NAME').text
                     bytePosition = int(param.find('BYTE-POSITION').text)
-                    bitLength = int(dataObjectElement.find('DIAG-CODED-TYPE').find('BIT-LENGTH').text)
+                    # catch exceptions when querying for bit length
+                    try:
+                        bitLength = int(dataObjectElement.find('DIAG-CODED-TYPE').find('BIT-LENGTH').text)
+                    except:    # dataObjectElement might be pointing to higher level structure
+                        dataObjectElement = \
+                            xmlElements[(dataObjectElement.find('PARAMS')).find('PARAM').find('DOP-REF').attrib['ID-REF']]
+                        bitLength = int(dataObjectElement.find('DIAG-CODED-TYPE').find('BIT-LENGTH').text)
+
                     listLength = int(bitLength / 8)
                     endPosition = bytePosition + listLength
                     encodingType = dataObjectElement.find('DIAG-CODED-TYPE').attrib['BASE-DATA-TYPE']
