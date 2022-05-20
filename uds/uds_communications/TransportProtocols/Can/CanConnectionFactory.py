@@ -5,14 +5,14 @@ from os import path
 from platform import system
 #from uds import CanConnection
 from uds.uds_communications.TransportProtocols.Can.CanConnection import CanConnection
-
+from typing import Dict
 # used to conditionally import socketcan for linux to avoid error messages
 if system() == "Linux":
     from can.interfaces import socketcan
 
 class CanConnectionFactory(object):
 
-    connections = {}
+    connections: Dict[str, CanConnection] = {}
     config = None
 
     @staticmethod

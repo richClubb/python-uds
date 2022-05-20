@@ -352,7 +352,8 @@ class CanTp(iTp):
     def closeConnection(self):
         # deregister filters, listeners and notifiers etc
         # close can connection
-        pass
+        for _, conn in CanConnectionFactory.connections.items():
+            conn.close()
 
     ##
     # @brief clear out the receive list

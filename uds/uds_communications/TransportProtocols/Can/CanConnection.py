@@ -17,7 +17,7 @@ import can
 class CanConnection(object):
 
     def __init__(self, callback, filter, bus):
-        self.__bus = bus
+        self.__bus: can.interface.Bus = bus
         listener = can.Listener()
         listener.on_message_received = callback
         self.__notifier = can.Notifier(self.__bus, [listener], 0)
@@ -51,4 +51,9 @@ class CanConnection(object):
         canMsg.data = data
 
         self.__bus.send(canMsg)
+
+    def close(self):
+        self.__notifier.stop()
+        [listener.stop() for listener in self.__listeners]
+        self.__bus.shutdown()
 
