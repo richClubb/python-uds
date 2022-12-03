@@ -14,6 +14,7 @@ from uds import Config
 from uds import CanTp
 from uds import LinTp
 from uds import TestTp
+from uds import DoipTp
 from os import path
 
 
@@ -32,11 +33,10 @@ class TpFactory(object):
     def __call__(tpType, configPath=None, **kwargs):
 
         #TpFactory.loadConfiguration(configPath)
-
         if(tpType == "CAN"):
             return CanTp(configPath=configPath, **kwargs)
         elif(tpType == "DoIP"):
-            raise NotImplementedError("DoIP transport not currently supported")
+            return DoipTp(configPath=configPath, **kwargs)
         elif(tpType == "K-LINE"):
             raise NotImplementedError("K-Line Transport not currently supported")
         elif(tpType == "LIN"):

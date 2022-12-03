@@ -4,7 +4,7 @@ from uds import Uds
 if __name__ == "__main__":
 
     # This creates an Uds object from the Bootloader.odx file
-    odxEcu = uds.createUdsConnection("Bootloader.odx", "", inteface="peak")
+    odxEcu = uds.createUdsConnection("Bootloader.odx", "", interface="peak")
     
     # This sends a request for Ecu Serial number and stores the result
     esn = odxEcu.readDataByIdentifier("ECU Serial Number")
