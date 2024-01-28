@@ -20,7 +20,7 @@ class CanConnection(object):
         self.__bus = bus
         listener = can.Listener()
         listener.on_message_received = callback
-        self.__notifier = can.Notifier(self.__bus, [listener], 0)
+        self.__notifier = can.Notifier(self.__bus, [listener])
         self.__listeners = [listener]
         self.addFilter(filter)
 

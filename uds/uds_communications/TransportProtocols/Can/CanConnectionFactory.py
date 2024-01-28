@@ -1,5 +1,5 @@
 import can
-from can.interfaces import pcan, vector
+from can.interfaces import pcan, vector, kvaser
 from uds.uds_configuration.Config import Config
 from os import path
 from platform import system
@@ -9,6 +9,8 @@ from uds.uds_communications.TransportProtocols.Can.CanConnection import CanConne
 # used to conditionally import socketcan for linux to avoid error messages
 if system() == "Linux":
     from can.interfaces import socketcan
+else:
+    from can.interfaces import ics_neovi
 
 class CanConnectionFactory(object):
 
@@ -76,6 +78,20 @@ class CanConnectionFactory(object):
             else:
                 raise Exception("SocketCAN on Pythoncan currently only supported in Linux")
 
+        elif connectionType == 'neovi':
+            channel = int(CanConnectionFactory.config['neovi']['channel'])
+            baudrate = int(CanConnectionFactory.config['can']['baudrate'])
+            CanConnectionFactory.connections[channel] = CanConnection(callback, filter,
+                                                                      ics_neovi.NeoViBus(channel,
+                                                                      bitrate=baudrate))
+            return CanConnectionFactory.connections[channel]
+        elif connectionType == 'kvaser':
+            channel = int(CanConnectionFactory.config['kvaser']['channel'])
+            baudrate = int(CanConnectionFactory.config['can']['baudrate'])
+            CanConnectionFactory.connections[channel] = CanConnection(callback, filter,
+                                                                      kvaser.canlib.KvaserBus(channel,
+                                                                      bitrate=baudrate))
+            return CanConnectionFactory.connections[channel]
     @staticmethod
     def loadConfiguration(configPath=None):
 
@@ -107,4 +123,6 @@ class CanConnectionFactory(object):
 
         if 'channel' in kwargs:
             CanConnectionFactory.config['vector']['channel'] = kwargs['channel']
+            CanConnectionFactory.config['kvaser']['channel'] = kwargs['channel']
+            CanConnectionFactory.config['neovi']['channel'] = kwargs['channel']
 

@@ -176,8 +176,7 @@ class CanTp(iTp):
     ##
     # @brief send method
     # @param [in] payload the payload to be sent
-    def send(self, payload, functionalReq=False):
-
+    def send(self, payload, functionalReq=False,nodelay=False):
         payloadLength = len(payload)
         payloadPtr = 0
 
@@ -278,15 +277,15 @@ class CanTp(iTp):
             # timer / exit condition checks
             if(timeoutTimer.isExpired()):
                 raise Exception("Timeout waiting for message")
-
-            sleep(0.001)
+            if state != CanTpState.SEND_CONSECUTIVE_FRAME or nodelay==False:
+                sleep(.001)
 
     ##
     # @brief recv method
     # @param [in] timeout_ms The timeout to wait before exiting
     # @return a list
     def recv(self, timeout_s):
-
+        #print("timeout_s passed to recv is " + str(timeout_s))
         timeoutTimer = ResettableTimer(timeout_s)
 
         payload = []
