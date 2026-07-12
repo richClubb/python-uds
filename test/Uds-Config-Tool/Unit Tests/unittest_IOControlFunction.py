@@ -34,7 +34,7 @@ class IOControlTestCase(unittest.TestCase):
         a = createUdsConnection('../Functional Tests/EBC-Diagnostics_old.odx', 'bootloader', transportProtocol="TEST")
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __inputOutputControl to inputOutputControl in the uds object, so can now call below
 
-        b = a.inputOutputControl('Booster Target Speed',IsoOptionRecord.adjust,[8000])	# ... calls __inputOutputControl, which does the Uds.send
+        b = a.inputOutputControl('Booster Target Speed', IsoOptionRecord.adjust, 8000)	# ... calls __inputOutputControl, which does the Uds.send
 
         tp_send.assert_called_with([0x2F, 0xFE, 0x16, 0x03, 0x00, 0x00, 0x1F, 0x40],False)
         self.assertEqual({'Identifier':[0xFE, 0x16],'ControlOptionRecord':[IsoOptionRecord.adjust],'TargetSpeed':[0x00, 0x00, 0x1F, 0x40]}, b)
@@ -68,18 +68,18 @@ class IOControlTestCase(unittest.TestCase):
                      tp_recv):
 
         tp_send.return_value = False
-        tp_recv.return_value = [0x7F, 0x13]
+        tp_recv.return_value = [0x7F, 0x2F, 0x13]
 
         # Parameters: xml file (odx file), ecu name (not currently used) ...
         a = createUdsConnection('../Functional Tests/EBC-Diagnostics_old.odx', 'bootloader', transportProtocol="TEST")
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __inputOutputControl to inputOutputControl in the uds object, so can now call below
 
         try:
-            b = a.inputOutputControl('Booster Target Speed',IsoOptionRecord.adjust,[8000])	# ... calls __inputOutputControl, which does the Uds.send
+            b = a.inputOutputControl('Booster Target Speed', IsoOptionRecord.adjust, 8000)	# ... calls __inputOutputControl, which does the Uds.send
         except:
             b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
         tp_send.assert_called_with([0x2F, 0xFE, 0x16, 0x03, 0x00, 0x00, 0x1F, 0x40],False)
-        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x13']", b)
+        self.assertEqual(0x13, b['NRC'])
 
 
 
@@ -91,18 +91,18 @@ class IOControlTestCase(unittest.TestCase):
                      tp_recv):
 
         tp_send.return_value = False
-        tp_recv.return_value = [0x7F, 0x22]
+        tp_recv.return_value = [0x7F, 0x2F, 0x22]
 
         # Parameters: xml file (odx file), ecu name (not currently used) ...
         a = createUdsConnection('../Functional Tests/EBC-Diagnostics_old.odx', 'bootloader', transportProtocol="TEST")
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __inputOutputControl to inputOutputControl in the uds object, so can now call below
 
         try:
-            b = a.inputOutputControl('Booster Target Speed',IsoOptionRecord.adjust,[8000])	# ... calls __inputOutputControl, which does the Uds.send
+            b = a.inputOutputControl('Booster Target Speed', IsoOptionRecord.adjust, 8000)	# ... calls __inputOutputControl, which does the Uds.send
         except:
             b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
         tp_send.assert_called_with([0x2F, 0xFE, 0x16, 0x03, 0x00, 0x00, 0x1F, 0x40],False)
-        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x22']", b)
+        self.assertEqual(0x22, b['NRC'])
 
 
 
@@ -114,18 +114,18 @@ class IOControlTestCase(unittest.TestCase):
                      tp_recv):
 
         tp_send.return_value = False
-        tp_recv.return_value = [0x7F, 0x31]
+        tp_recv.return_value = [0x7F, 0x2F, 0x31]
 
         # Parameters: xml file (odx file), ecu name (not currently used) ...
         a = createUdsConnection('../Functional Tests/EBC-Diagnostics_old.odx', 'bootloader', transportProtocol="TEST")
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __inputOutputControl to inputOutputControl in the uds object, so can now call below
 
         try:
-            b = a.inputOutputControl('Booster Target Speed',IsoOptionRecord.adjust,[8000])	# ... calls __inputOutputControl, which does the Uds.send
+            b = a.inputOutputControl('Booster Target Speed', IsoOptionRecord.adjust, 8000)	# ... calls __inputOutputControl, which does the Uds.send
         except:
             b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
         tp_send.assert_called_with([0x2F, 0xFE, 0x16, 0x03, 0x00, 0x00, 0x1F, 0x40],False)
-        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x31']", b)
+        self.assertEqual(0x31, b['NRC'])
 
 
 
@@ -137,18 +137,18 @@ class IOControlTestCase(unittest.TestCase):
                      tp_recv):
 
         tp_send.return_value = False
-        tp_recv.return_value = [0x7F, 0x33]
+        tp_recv.return_value = [0x7F, 0x2F, 0x33]
 
         # Parameters: xml file (odx file), ecu name (not currently used) ...
         a = createUdsConnection('../Functional Tests/EBC-Diagnostics_old.odx', 'bootloader', transportProtocol="TEST")
         # ... creates the uds object and returns it; also parses out the rdbi info and attaches the __inputOutputControl to inputOutputControl in the uds object, so can now call below
 
         try:
-            b = a.inputOutputControl('Booster Target Speed',IsoOptionRecord.adjust,[8000])	# ... calls __inputOutputControl, which does the Uds.send
+            b = a.inputOutputControl('Booster Target Speed', IsoOptionRecord.adjust, 8000)	# ... calls __inputOutputControl, which does the Uds.send
         except:
             b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
         tp_send.assert_called_with([0x2F, 0xFE, 0x16, 0x03, 0x00, 0x00, 0x1F, 0x40],False)
-        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x33']", b)
+        self.assertEqual(0x33, b['NRC'])
 
 	
 

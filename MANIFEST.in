@@ -1,5 +1,5 @@
-include uds\uds_configuration\defaultConfig.ini
-include uds\uds_communications\Uds\config.ini
-include uds\uds_communications\TransportProtocols\config.ini
-include uds\uds_communications\TransportProtocols\Can\config.ini
-include uds\uds_communications\TransportProtocols\Lin\config.ini
+include uds/uds_configuration/defaultConfig.ini
+include uds/uds_communications/Uds/config.ini
+include uds/uds_communications/TransportProtocols/config.ini
+include uds/uds_communications/TransportProtocols/Can/config.ini
+include uds/uds_communications/TransportProtocols/Lin/config.ini

@@ -84,7 +84,7 @@ class ECUResetTestCase(unittest.TestCase):
                      tp_recv):
 
         tp_send.return_value = False
-        tp_recv.return_value = [0x7F, 0x12]
+        tp_recv.return_value = [0x7F, 0x11, 0x12]
 
         # Parameters: xml file (odx file), ecu name (not currently used) ...
         a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader', transportProtocol="TEST")
@@ -95,7 +95,7 @@ class ECUResetTestCase(unittest.TestCase):
         except:
             b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
         tp_send.assert_called_with([0x11, 0x01],False)
-        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x12']", b)  # ... wdbi should not return a value
+        self.assertEqual(0x12, b['NRC'])
 
 	
     # patches are inserted in reverse order
@@ -106,7 +106,7 @@ class ECUResetTestCase(unittest.TestCase):
                      tp_recv):
 
         tp_send.return_value = False
-        tp_recv.return_value = [0x7F, 0x13]
+        tp_recv.return_value = [0x7F, 0x11, 0x13]
 
         # Parameters: xml file (odx file), ecu name (not currently used) ...
         a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader', transportProtocol="TEST")
@@ -117,7 +117,7 @@ class ECUResetTestCase(unittest.TestCase):
         except:
             b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
         tp_send.assert_called_with([0x11, 0x01],False)
-        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x13']", b)  # ... wdbi should not return a value
+        self.assertEqual(0x13, b['NRC'])
 
 
     # patches are inserted in reverse order
@@ -128,7 +128,7 @@ class ECUResetTestCase(unittest.TestCase):
                      tp_recv):
 
         tp_send.return_value = False
-        tp_recv.return_value = [0x7F, 0x22]
+        tp_recv.return_value = [0x7F, 0x11, 0x22]
 
         # Parameters: xml file (odx file), ecu name (not currently used) ...
         a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader', transportProtocol="TEST")
@@ -139,7 +139,7 @@ class ECUResetTestCase(unittest.TestCase):
         except:
             b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
         tp_send.assert_called_with([0x11, 0x01],False)
-        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x22']", b)  # ... wdbi should not return a value
+        self.assertEqual(0x22, b['NRC'])
 	
 
 

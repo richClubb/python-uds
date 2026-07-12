@@ -29,7 +29,12 @@ checkFunctionTemplate = str("def {0}(input):\n"
                             "    if(zeroSubFunction != 0x00): raise Exception(\"Zero Sub Function Received not as expected. Expected {{0}}; Got {{1}}\".format(0x00,zeroSubFunction))")
 
 negativeResponseFuncTemplate = str("def {0}(input):\n"
-                                   "    {1}")
+                                   "    result = {{}}\n"
+                                   "    nrcList = {5}\n"
+                                   "    if input[{1}:{2}] == [{3}]:\n"
+                                   "        result['NRC'] = input[{4}]\n"
+                                   "        result['NRC_Label'] = nrcList.get(result['NRC'])\n"
+                                   "    return result")
 
 # Note: we do not need to cater for response suppression checking as nothing to check if response is suppressed - always unsuppressed.
 # For tester present there is no response data to return, so hardcoding an empty response.
@@ -160,6 +165,8 @@ class TesterPresentMethodFactory(IServiceMethodFactory):
                 except:
                     semantic = None
 
+                bytePosition = int(param.find('BYTE-POSITION').text)
+
                 if semantic == 'SERVICE-ID':
                     serviceId = param.find('CODED-VALUE').text
                     start = int(param.find('BYTE-POSITION').text)
@@ -167,16 +174,18 @@ class TesterPresentMethodFactory(IServiceMethodFactory):
                     bitLength = int((param.find('DIAG-CODED-TYPE')).find('BIT-LENGTH').text)
                     listLength = int(bitLength/8)
                     end = start + listLength
-
-                    checkString = "if input[{0}:{1}] == [{2}]: raise Exception(\"Detected negative response: {{0}}\".format(str([hex(n) for n in input])))".format(start,
-                                                                                                                                                                   end,
-                                                                                                                                                                   serviceId)
-                    negativeResponseChecks.append(checkString)
-
-                    pass
+                elif bytePosition == 2:
+                    nrcPos = bytePosition
+                    expectedNrcDict = {}
+                    try:
+                        dataObjectElement = xmlElements[(param.find('DOP-REF')).attrib['ID-REF']]
+                        nrcList = dataObjectElement.find('COMPU-METHOD').find('COMPU-INTERNAL-TO-PHYS').find('COMPU-SCALES')                       
+                        for nrcElem in nrcList:
+                            expectedNrcDict[int(nrcElem.find('UPPER-LIMIT').text)] = nrcElem.find('COMPU-CONST').find('VT').text
+                    except:
+                        pass
                 pass
 
-        negativeResponseFunctionString = negativeResponseFuncTemplate.format(check_negativeResponseFunctionName,
-                                                                             "\n....".join(negativeResponseChecks))
+        negativeResponseFunctionString = negativeResponseFuncTemplate.format(check_negativeResponseFunctionName, start, end, serviceId, nrcPos, expectedNrcDict)
         exec(negativeResponseFunctionString)
         return locals()[check_negativeResponseFunctionName]

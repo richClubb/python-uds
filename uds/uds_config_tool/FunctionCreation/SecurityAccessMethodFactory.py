@@ -47,10 +47,13 @@ checkReturnedDataTemplate = str("def {0}(data):\n"
                                "    if expectedDataLength != len(data): raise Exception(\"Returned data length not expected\")"
                                )
 
-checkNegativeResponseTemplate = str("def {0}(data):\n"
-                                    "    if data[0] == 0x7F: raise Exception(\"Found negative response\")"
-                                    )
-
+checkNegativeResponseTemplate = str("def {0}(input):\n"
+                                   "    result = {{}}\n"
+                                   "    nrcList = {1}\n"
+                                   "    if input[0] == 0x7F:\n"
+                                   "        result['NRC'] = input[2]\n"
+                                   "        result['NRC_Label'] = nrcList.get(result['NRC'])\n"
+                                   "    return result")
 ##
 # inputs:
 # Length
@@ -179,8 +182,31 @@ class SecurityAccessMethodFactory(object):
 
         checkNegativeResponseFunctionName = "check_{0}_negResponse".format(diagInstanceQualifier)
 
-        checkNegativeResponseFunctionString = checkNegativeResponseTemplate.format(checkNegativeResponseFunctionName)
+        negativeResponsesElement = diagServiceElement.find('NEG-RESPONSE-REFS')
 
+        negativeResponseChecks = []
+
+        for negativeResponse in negativeResponsesElement:
+            negativeResponseRef = xmlElements[negativeResponse.attrib['ID-REF']]
+
+            negativeResponseParams = negativeResponseRef.find('PARAMS')
+
+            for param in negativeResponseParams:
+                bytePosition = int(param.find('BYTE-POSITION').text)
+
+                if bytePosition == 2:
+                    nrcPos = bytePosition
+                    expectedNrcDict = {}
+                    try:
+                        dataObjectElement = xmlElements[(param.find('DOP-REF')).attrib['ID-REF']]
+                        nrcList = dataObjectElement.find('COMPU-METHOD').find('COMPU-INTERNAL-TO-PHYS').find('COMPU-SCALES')
+                        for nrcElem in nrcList:
+                            expectedNrcDict[int(nrcElem.find('UPPER-LIMIT').text)] = nrcElem.find('COMPU-CONST').find('VT').text
+                    except:
+                        pass
+                pass
+
+        checkNegativeResponseFunctionString = checkNegativeResponseTemplate.format(checkNegativeResponseFunctionName, expectedNrcDict)
         exec(checkNegativeResponseFunctionString)
 
         return locals()[checkNegativeResponseFunctionName]

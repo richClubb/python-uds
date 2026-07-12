@@ -117,12 +117,12 @@ class RDBITestCase(unittest.TestCase):
     # patches are inserted in reverse order
     @mock.patch('uds.TestTp.recv')
     @mock.patch('uds.TestTp.send')
-    def test_ecuResetNegResponse_0x13(self,
+    def test_rdbiNegResponse_0x13(self,
                      tp_send,
                      tp_recv):
 
         tp_send.return_value = False
-        tp_recv.return_value = [0x7F, 0x13]
+        tp_recv.return_value = [0x7F, 0x22, 0x13]
 
         # Parameters: xml file (odx file), ecu name (not currently used) ...
         a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader', transportProtocol="TEST")
@@ -133,18 +133,18 @@ class RDBITestCase(unittest.TestCase):
         except:
             b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
         tp_send.assert_called_with([0x22, 0xF1, 0x8C],False)
-        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x13']", b)  # ... wdbi should not return a value
+        self.assertEqual(0x13, b['NRC'])
 
 
     # patches are inserted in reverse order
     @mock.patch('uds.TestTp.recv')
     @mock.patch('uds.TestTp.send')
-    def test_ecuResetNegResponse_0x22(self,
+    def test_rdbiNegResponse_0x22(self,
                      tp_send,
                      tp_recv):
 
         tp_send.return_value = False
-        tp_recv.return_value = [0x7F, 0x22]
+        tp_recv.return_value = [0x7F, 0x22, 0x22]
 
         # Parameters: xml file (odx file), ecu name (not currently used) ...
         a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader', transportProtocol="TEST")
@@ -155,18 +155,18 @@ class RDBITestCase(unittest.TestCase):
         except:
             b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
         tp_send.assert_called_with([0x22, 0xF1, 0x8C],False)
-        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x22']", b)  # ... wdbi should not return a value
+        self.assertEqual(0x22, b['NRC'])
 
 
     # patches are inserted in reverse order
     @mock.patch('uds.TestTp.recv')
     @mock.patch('uds.TestTp.send')
-    def test_ecuResetNegResponse_0x31(self,
+    def test_rdbiNegResponse_0x31(self,
                      tp_send,
                      tp_recv):
 
         tp_send.return_value = False
-        tp_recv.return_value = [0x7F, 0x31]
+        tp_recv.return_value = [0x7F, 0x22, 0x31]
 
         # Parameters: xml file (odx file), ecu name (not currently used) ...
         a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader', transportProtocol="TEST")
@@ -177,18 +177,18 @@ class RDBITestCase(unittest.TestCase):
         except:
             b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
         tp_send.assert_called_with([0x22, 0xF1, 0x8C],False)
-        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x31']", b)  # ... wdbi should not return a value
+        self.assertEqual(0x31, b['NRC'])
 
 
     # patches are inserted in reverse order
     @mock.patch('uds.TestTp.recv')
     @mock.patch('uds.TestTp.send')
-    def test_ecuResetNegResponse_0x33(self,
+    def test_rdbiNegResponse_0x33(self,
                      tp_send,
                      tp_recv):
 
         tp_send.return_value = False
-        tp_recv.return_value = [0x7F, 0x33]
+        tp_recv.return_value = [0x7F, 0x22, 0x33]
 
         # Parameters: xml file (odx file), ecu name (not currently used) ...
         a = createUdsConnection('../Functional Tests/Bootloader.odx', 'bootloader', transportProtocol="TEST")
@@ -199,7 +199,7 @@ class RDBITestCase(unittest.TestCase):
         except:
             b = traceback.format_exc().split("\n")[-2:-1][0] # ... extract the exception text
         tp_send.assert_called_with([0x22, 0xF1, 0x8C],False)
-        self.assertEqual("Exception: Detected negative response: ['0x7f', '0x33']", b)  # ... wdbi should not return a value
+        self.assertEqual(0x33, b['NRC'])
 
 
 
